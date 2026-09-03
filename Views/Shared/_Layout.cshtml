@@ -1,47 +1,79 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@{
+    // Henter ut hvilken Controller/Action som vises akkurat nå, slik at vi kan
+    // style riktig lenke som "aktiv" i navigasjonen og vise ulik meny avhengig
+    // av om noen er logget inn eller ikke.
+    var gjeldendeController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var gjeldendeAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var erInnlogget = User.Identity?.IsAuthenticated ?? false;
+
+    bool ErAktiv(string controller) => string.Equals(gjeldendeController, controller, StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html>
+<html lang="no">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Christian er supergay</title>
+    <title>@ViewData["Title"] - BeredskapsPortalen</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Beredskapsportal.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Beredskapsportal</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+    <header class="bp-header">
+        <nav class="bp-navbar">
+            <a class="bp-logo" asp-controller="Home" asp-action="Index">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
+                    <line x1="12" y1="8" x2="12" y2="13" />
+                    <circle cx="12" cy="16.2" r="0.6" fill="currentColor" />
+                </svg>
+                BeredskapsPortalen
+            </a>
+
+            @if (erInnlogget)
+            {
+                <ul class="bp-nav-lenker">
+                    <li><a class="bp-nav-link @(ErAktiv("Oversikt") ? "aktiv" : "")" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
+                    <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
+                    <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
+                    <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
+                    <li>
+                        <form asp-controller="Konto" asp-action="LoggUt" method="post" class="d-inline">
+                            <button type="submit" class="bp-bruker-info" title="Logg ut">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            }
+            else
+            {
+                <ul class="bp-nav-lenker">
+                    <li><a class="bp-nav-link @(ErAktiv("Home") ? "aktiv" : "")" asp-controller="Home" asp-action="Index">Hjem</a></li>
+                    <li><a class="bp-nav-link" asp-controller="Kart" asp-action="Index">Kart</a></li>
+                    @if (!ErAktiv("Home"))
+                    {
+                        <li><a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a></li>
+                    }
+                </ul>
+            }
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Beredskapsportal - <a asp-area="" asp-controller="Christian er supergay" asp-action="Privacy">Privacy</a>
-        </div>
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="bp-footer">
+        <p>BeredskapsPortalen &mdash; Et studentprosjekt for ressurskoordinering i Kristiansand-regionen.</p>
+        <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

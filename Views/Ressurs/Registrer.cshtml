@@ -1,0 +1,68 @@
+@model RessursViewModel
+@{
+    ViewData["Title"] = "Registrer ressurs";
+}
+
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort" style="max-width: 40rem;">
+        <h1>Registrer ressurs</h1>
+
+        <form asp-controller="Ressurs" asp-action="Registrer" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" class="form-select">
+                    <option value="">Velg ressurskategori (f.eks. Aggregat, Drivstoff, UPS)</option>
+                    <option value="Aggregat">Aggregat</option>
+                    <option value="Drivstoff">Drivstoff</option>
+                    <option value="Ups">UPS</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Kommunikasjonsutstyr">Kommunikasjonsutstyr</option>
+                    <option value="Annet">Annet</option>
+                </select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="BeskrivelseAvKapasitet" class="form-label"></label>
+                <textarea asp-for="BeskrivelseAvKapasitet" class="form-control" rows="3" placeholder="Beskriv ressursen, kapasitet (kW), drivstofftype og eventuell operatør som kan bistå..."></textarea>
+                <span asp-validation-for="BeskrivelseAvKapasitet" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="GeografiskBase" class="form-label"></label>
+                <input asp-for="GeografiskBase" class="form-control" placeholder="F.eks. Søm, Randesund, Songdalen" />
+                <span asp-validation-for="GeografiskBase" class="text-danger"></span>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-6">
+                    <label asp-for="TilgjengeligFra" class="form-label"></label>
+                    <input asp-for="TilgjengeligFra" class="form-control" placeholder="DD.MM.ÅÅÅÅ" />
+                </div>
+                <div class="col-6">
+                    <label asp-for="TilgjengeligTil" class="form-label"></label>
+                    <input asp-for="TilgjengeligTil" class="form-control" placeholder="DD.MM.ÅÅÅÅ" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Kontaktperson" class="form-label"></label>
+                <input asp-for="Kontaktperson" class="form-control" placeholder="Navn på eier / kontaktperson" />
+                <span asp-validation-for="Kontaktperson" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Telefon" class="form-label"></label>
+                <input asp-for="Telefon" class="form-control" placeholder="Telefonnummer for rask utrykning" />
+                <span asp-validation-for="Telefon" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a class="btn btn-bp-sekundær" asp-controller="Oversikt" asp-action="Index">Avbryt</a>
+                <button type="submit" class="btn btn-bp-primær">Registrer</button>
+            </div>
+        </form>
+    </div>
+</div>

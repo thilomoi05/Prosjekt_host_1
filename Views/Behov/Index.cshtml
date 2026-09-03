@@ -1,0 +1,58 @@
+@model IReadOnlyList<Behov>
+@{
+    ViewData["Title"] = "Behov";
+}
+
+<div class="bp-side-innhold">
+    <div class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <h2>Alle meldte behov</h2>
+            <a class="btn btn-bp-primær" asp-controller="Behov" asp-action="Registrer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align: -2px; margin-right: 0.35rem;">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Registrer nytt behov
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="bp-tabell">
+                <thead>
+                    <tr>
+                        <th>Type behov</th>
+                        <th>Område</th>
+                        <th>Prioritet</th>
+                        <th>Status</th>
+                        <th>Dato</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var behov in Model)
+                    {
+                        <tr>
+                            <td><strong>@behov.VisningsNavn</strong></td>
+                            <td>@behov.GeografiskOmrade</td>
+                            <td class="@(behov.Prioritet == Prioritet.Akutt ? "bp-prioritet-akutt" : "bp-prioritet-planlagt")">
+                                @(behov.Prioritet == Prioritet.Akutt ? "Akutt" : "Planlagt")
+                            </td>
+                            <td>
+                                @{
+                                    var (cssKlasse, tekst) = behov.Status switch
+                                    {
+                                        BehovStatus.Ny => ("bp-badge-ny", "Ny"),
+                                        BehovStatus.Venter => ("bp-badge-venter", "Venter"),
+                                        BehovStatus.Tildelt => ("bp-badge-tildelt", "Tildelt"),
+                                        _ => ("bp-badge-fullfort", "Fullført")
+                                    };
+                                }
+                                <span class="bp-badge @cssKlasse">@tekst</span>
+                            </td>
+                            <td>@behov.Dato.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

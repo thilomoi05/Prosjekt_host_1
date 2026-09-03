@@ -1,0 +1,32 @@
+@model LoggInnViewModel
+@{
+    ViewData["Title"] = "Logg inn";
+}
+
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort">
+        <h1>Logg inn</h1>
+
+        <form asp-controller="Konto" asp-action="LoggInn" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Brukernavn" class="form-label"></label>
+                <input asp-for="Brukernavn" class="form-control" placeholder="Skriv inn brukernavn" autocomplete="username" />
+                <span asp-validation-for="Brukernavn" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Passord" class="form-label"></label>
+                <input asp-for="Passord" class="form-control" placeholder="Skriv inn passord" autocomplete="current-password" />
+                <span asp-validation-for="Passord" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-bp-primær w-100">Logg inn</button>
+        </form>
+
+        <p class="bp-skjema-fot">
+            Har du ikke konto? <a asp-controller="Konto" asp-action="Registrer">Registrer deg</a>
+        </p>
+    </div>
+</div>
