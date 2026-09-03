@@ -1,0 +1,58 @@
+@model RegistrerBrukerViewModel
+@{
+    ViewData["Title"] = "Registrer bruker";
+}
+
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort">
+        <h1>Registrer bruker</h1>
+
+        <form asp-controller="Konto" asp-action="Registrer" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="FulltNavn" class="form-label"></label>
+                <input asp-for="FulltNavn" class="form-control" placeholder="Ola Nordmann" />
+                <span asp-validation-for="FulltNavn" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Epost" class="form-label"></label>
+                <input asp-for="Epost" class="form-control" placeholder="ola@uia.no" />
+                <span asp-validation-for="Epost" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Brukernavn" class="form-label"></label>
+                <input asp-for="Brukernavn" class="form-control" placeholder="olanordmann" autocomplete="username" />
+                <span asp-validation-for="Brukernavn" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Passord" class="form-label"></label>
+                <input asp-for="Passord" class="form-control" placeholder="Lag et sterkt passord" autocomplete="new-password" />
+                <span asp-validation-for="Passord" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="BekreftPassord" class="form-label"></label>
+                <input asp-for="BekreftPassord" class="form-control" placeholder="Gjenta passordet" autocomplete="new-password" />
+                <span asp-validation-for="BekreftPassord" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Rolle" class="form-label"></label>
+                <select asp-for="Rolle" class="form-select">
+                    <option value="OffentligAktor">Offentlig aktør</option>
+                    <option value="PrivatAktor">Privat aktør / bedrift</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-bp-primær w-100">Registrer</button>
+        </form>
+
+        <p class="bp-skjema-fot">
+            Har du allerede konto? <a asp-controller="Konto" asp-action="LoggInn">Logg inn</a>
+        </p>
+    </div>
+</div>

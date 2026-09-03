@@ -4,14 +4,13 @@ using Beredskapsportal.Models;
 
 namespace Beredskapsportal.Controllers;
 
+/// <summary>
+/// Styrer forsiden (landingssiden) som alle besøkende møter først,
+/// samt den generelle feilsiden.
+/// </summary>
 public class HomeController : Controller
 {
     public IActionResult Index()
-    {
-        return View();
-    }
-
-    public IActionResult Privacy()
     {
         return View();
     }

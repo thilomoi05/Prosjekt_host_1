@@ -1,10 +1,64 @@
-﻿@{
-    ViewData["Title"] = "Christian er gay";
+@{
+    ViewData["Title"] = "Hjem";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Christian taper alle pengene sine på norsk tipping.com</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="bp-hero">
+    <div class="bp-hero-innhold">
+        <h1>Cyberangrep på strømnettet i Kristiansand</h1>
+        <p>
+            BeredskapsPortalen koordinerer ressurser og respons etter at et alvorlig
+            cyberangrep har slått ut strømlinjene i Kristiansand-regionen. Tusenvis av
+            innbyggere er uten strøm, og kritisk infrastruktur er rammet.
+        </p>
+        <div class="bp-hero-knapper">
+            <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a>
+            <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer">Registrer bruker</a>
+        </div>
+    </div>
+</section>
 
-
+<section class="bp-seksjon">
+    <h2>Hvordan fungerer plattformen?</h2>
+    <div class="bp-kort-grid">
+        <div class="bp-kort">
+            <div class="bp-ikon-sirkel blaa">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+            </div>
+            <h3>Meld inn behov</h3>
+            <p>
+                Kommunen, sykehus og nødetater melder inn akutte behov for nødstrøm, drivstoff
+                til aggregater, oppvarming og kommunikasjonsutstyr i de rammede områdene.
+            </p>
+        </div>
+        <div class="bp-kort">
+            <div class="bp-ikon-sirkel gronn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="7" width="14" height="10" rx="1" />
+                    <path d="M15 10h3l4 4v3h-7z" />
+                    <circle cx="6" cy="19.5" r="1.5" />
+                    <circle cx="17.5" cy="19.5" r="1.5" />
+                </svg>
+            </div>
+            <h3>Tilby ressurser</h3>
+            <p>
+                Lokale bedrifter og entreprenører kan tilby strømaggregater, drivstofftransport,
+                nødbelysning og annet utstyr som trengs for å håndtere strømbruddet.
+            </p>
+        </div>
+        <div class="bp-kort">
+            <div class="bp-ikon-sirkel gul">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
+                </svg>
+            </div>
+            <h3>Kartbasert koordinering</h3>
+            <p>
+                Se i sanntid hvilke områder i Kristiansand som er rammet av strømbruddet,
+                hvor ressursene befinner seg, og hvor behovene er størst.
+            </p>
+        </div>
+    </div>
+</section>
