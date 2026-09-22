@@ -15,6 +15,20 @@ public class InMemoryBrukerRepository : IBrukerRepository
     private readonly object _lasObjekt = new();
     private int _nesteId = 1;
 
+    public InMemoryBrukerRepository()
+    {
+        var (hash, salt) = PassordHasher.HashPassord("TestPassord123!");
+        LeggTil(new Bruker
+        {
+            FulltNavn = "Test Testesen",
+            Epost = "test@example.com",
+            Brukernavn = "testbruker",
+            PassordHash = hash,
+            PassordSalt = salt,
+            Rolle = BrukerRolle.OffentligAktor
+        });
+    }
+
     public Bruker? FinnVedBrukernavn(string brukernavn)
     {
         lock (_lasObjekt)
