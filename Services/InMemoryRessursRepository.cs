@@ -3,7 +3,7 @@ using Beredskapsportal.Models;
 namespace Beredskapsportal.Services;
 
 /// <summary>
-/// Midlertidig, minnebasert lagring av ressurser tilbudt av private aktører/bedrifter.
+/// Midlertidig, minnebasert lagring av ressurser tilbudt av bedrifter og privatpersoner.
 /// Se InMemoryBrukerRepository for begrunnelsen bak den enkle minnebaserte løsningen.
 /// </summary>
 public class InMemoryRessursRepository : IRessursRepository
@@ -59,17 +59,21 @@ public class InMemoryRessursRepository : IRessursRepository
         {
             var type = typer[i % typer.Length];
             var omrade = omrader[i % omrader.Length];
+            var (breddegrad, lengdegrad) = EksempelPosisjoner.For(omrade, i);
 
             data.Add(new Ressurs
             {
                 Id = i,
                 Type = type,
                 BeskrivelseAvKapasitet = $"Tilbudt {type.ToString().ToLowerInvariant()} fra lokal aktør.",
-                GeografiskBase = omrade,
+                Adresse = $"Eksempelveien {i}, {omrade}",
+                Tilgangsbeskrivelse = "Ring kontaktpersonen før henting.",
                 TilgjengeligFra = new DateOnly(2026, 9, 1),
                 TilgjengeligTil = new DateOnly(2026, 9, 30),
                 Kontaktperson = "Registrert tilbyder",
-                Telefon = "40000000"
+                Telefon = "40000000",
+                Breddegrad = breddegrad,
+                Lengdegrad = lengdegrad
             });
         }
 

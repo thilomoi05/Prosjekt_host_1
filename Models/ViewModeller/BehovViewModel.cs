@@ -30,4 +30,14 @@ public class BehovViewModel
     [Phone(ErrorMessage = "Telefonnummeret ser ikke gyldig ut.")]
     [Display(Name = "Telefon")]
     public string Telefon { get; set; } = string.Empty;
+
+    // Fylles ut av det lille kartet i skjemaet (se wwwroot/js/posisjonsvelger.js).
+    // Feltene er skjulte i skjemaet, så brukeren ser dem aldri direkte.
+    // double? (med spørsmålstegn) betyr at verdien kan mangle. Da slår
+    // [Required] til og brukeren får beskjed om å klikke i kartet.
+    [Required(ErrorMessage = "Du må klikke i kartet for å markere plasseringen.")]
+    public double? Breddegrad { get; set; }
+
+    [Required(ErrorMessage = "Du må klikke i kartet for å markere plasseringen.")]
+    public double? Lengdegrad { get; set; }
 }

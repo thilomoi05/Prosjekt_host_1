@@ -427,3 +427,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Bilder som brukere laster opp (se RessursController). Skal ikke inn i git.
+Opplastinger/

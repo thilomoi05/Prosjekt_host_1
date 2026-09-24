@@ -1,13 +1,68 @@
 @{
     ViewData["Title"] = "Kart";
+
+    // Satt i KartController.Index(): true hvis brukeren har lov til å se ressurser.
+    var kanSeRessurser = (bool)(ViewData["KanSeRessurser"] ?? false);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
 }
 
 <div class="bp-side-innhold">
-    <div class="bp-tabell-kort text-center">
-        <h2 class="mb-3">Kartbasert koordinering</h2>
-        <p class="text-muted mb-0">
-            Det interaktive kartet som viser rammede områder, ressurser og behov i sanntid
-            er ikke bygget ennå. Dette kommer som en del av neste steg i prosjektet.
-        </p>
+    <div class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <h1 class="h4 mb-0">Kartbasert koordinering</h1>
+
+            @* Tegnforklaring: farge OG form viser hva et punkt er, så kartet
+               kan leses også av fargeblinde. *@
+            <ul class="bp-kart-tegnforklaring">
+                <li><span class="bp-kart-prikk akutt"></span> Akutt behov</li>
+                <li><span class="bp-kart-prikk planlagt"></span> Planlagt behov</li>
+                @if (kanSeRessurser)
+                {
+                    <li><span class="bp-kart-firkant"></span> Ressurs</li>
+                }
+            </ul>
+        </div>
+
+        @if (!kanSeRessurser)
+        {
+            <p class="text-muted">
+                Du ser behovene som er meldt inn. Hvor ressursene er, vises bare for
+                Heimevernet og andre autoriserte brukere.
+            </p>
+        }
+
+        @* Her tegner Leaflet kartet. data-kan-se-ressurser leses av kart.js. *@
+        <div id="kart" class="bp-kart" data-kan-se-ressurser="@(kanSeRessurser ? "true" : "false")"></div>
+    </div>
+
+    @* Samme punkter som på kartet, som en vanlig tabell. Gjør det lett å
+       sammenligne, og fungerer for skjermlesere som ikke kan lese kartet. *@
+    <div class="bp-tabell-kort mt-4">
+        <div class="bp-tabell-kort-hode">
+            <h2>Punkter på kartet</h2>
+        </div>
+        <table class="bp-tabell">
+            <thead>
+                <tr>
+                    <th>Hva</th>
+                    <th>Type</th>
+                    <th>Sted</th>
+                    <th>Beskrivelse</th>
+                </tr>
+            </thead>
+            @* Radene fylles inn av kart.js når dataene er hentet. *@
+            <tbody id="kart-liste">
+                <tr><td colspan="4" class="text-muted">Laster ...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/kart.js" asp-append-version="true"></script>
+}

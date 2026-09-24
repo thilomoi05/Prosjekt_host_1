@@ -18,6 +18,8 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Beredskapsportal.styles.css" asp-append-version="true" />
+    @* Lar enkeltsider legge til egne stilark, f.eks. kartsidene (Leaflet). *@
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header class="bp-header">
@@ -55,7 +57,6 @@
             {
                 <ul class="bp-nav-lenker">
                     <li><a class="bp-nav-link @(ErAktiv("Home") ? "aktiv" : "")" asp-controller="Home" asp-action="Index">Hjem</a></li>
-                    <li><a class="bp-nav-link" asp-controller="Kart" asp-action="Index">Kart</a></li>
                     @if (!ErAktiv("Home"))
                     {
                         <li><a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a></li>
@@ -70,7 +71,7 @@
     </main>
 
     <footer class="bp-footer">
-        <p>BeredskapsPortalen &mdash; Et studentprosjekt for ressurskoordinering i Kristiansand-regionen.</p>
+        <p>BeredskapsPortalen &mdash; Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
         <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
     </footer>
 

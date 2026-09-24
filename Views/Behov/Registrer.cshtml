@@ -37,6 +37,17 @@
             </div>
 
             <div class="mb-3">
+                <span class="form-label d-block">Plassering på kartet</span>
+                <p class="bp-skjema-hjelp">Klikk i kartet der behovet er. Du kan klikke på nytt for å flytte markøren.</p>
+                @* Det lille kartet. Styres av wwwroot/js/posisjonsvelger.js. *@
+                <div id="posisjonsvelger" class="bp-posisjonsvelger"></div>
+                @* Skjulte felt som posisjonsvelger.js fyller inn når brukeren klikker. *@
+                <input asp-for="Breddegrad" type="hidden" />
+                <input asp-for="Lengdegrad" type="hidden" />
+                <span asp-validation-for="Breddegrad" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
                 <label asp-for="Prioritet" class="form-label"></label>
                 <select asp-for="Prioritet" class="form-select">
                     <option value="Planlagt">Planlagt</option>
@@ -63,3 +74,13 @@
         </form>
     </div>
 </div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/posisjonsvelger.js" asp-append-version="true"></script>
+}
