@@ -7,7 +7,8 @@
     <div class="bp-skjema-kort" style="max-width: 40rem;">
         <h1>Registrer ressurs</h1>
 
-        <form asp-controller="Ressurs" asp-action="Registrer" method="post">
+        @* enctype="multipart/form-data" må være med for at skjemaet skal kunne sende filer (bildene). *@
+        <form asp-controller="Ressurs" asp-action="Registrer" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
             <div class="mb-3">
@@ -30,10 +31,62 @@
                 <span asp-validation-for="BeskrivelseAvKapasitet" class="text-danger"></span>
             </div>
 
+            @* ---------- Adresse og plassering ----------
+               1. Brukeren skriver adressen og trykker "Finn på kartet".
+               2. posisjonsvelger.js spør Kartverket om adressen og setter en markør.
+               3. Brukeren sjekker at markøren står riktig, flytter den ved å klikke
+                  i kartet om nødvendig, og krysser av for at plasseringen er riktig. *@
             <div class="mb-3">
-                <label asp-for="GeografiskBase" class="form-label"></label>
-                <input asp-for="GeografiskBase" class="form-control" placeholder="F.eks. Søm, Randesund, Songdalen" />
-                <span asp-validation-for="GeografiskBase" class="text-danger"></span>
+                <label asp-for="Adresse" class="form-label"></label>
+                <div class="input-group">
+                    <input asp-for="Adresse" class="form-control" placeholder="F.eks. Kirkegata 5, Kristiansand" autocomplete="street-address" />
+                    <button type="button" id="finn-adresse" class="btn btn-bp-sekundær">Finn på kartet</button>
+                </div>
+                <span asp-validation-for="Adresse" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <span class="form-label d-block">Plassering på kartet</span>
+                @* Tekst som posisjonsvelger.js oppdaterer, f.eks. "Fant: Kirkegata 5 ..." *@
+                <p id="adresse-melding" class="bp-skjema-hjelp">
+                    Skriv adressen over og trykk «Finn på kartet». Står markøren feil, klikker du
+                    der ressursen faktisk er. Plasseringen vises bare for Heimevernet og andre
+                    autoriserte brukere.
+                </p>
+                @* Det lille kartet. Styres av wwwroot/js/posisjonsvelger.js. *@
+                <div id="posisjonsvelger" class="bp-posisjonsvelger"></div>
+                @* Skjulte felt som posisjonsvelger.js fyller inn. *@
+                <input asp-for="Breddegrad" type="hidden" />
+                <input asp-for="Lengdegrad" type="hidden" />
+                <span asp-validation-for="Breddegrad" class="text-danger"></span>
+
+                <div class="form-check mt-2">
+                    <input asp-for="PlasseringBekreftet" class="form-check-input" />
+                    <label asp-for="PlasseringBekreftet" class="form-check-label"></label>
+                </div>
+                <span asp-validation-for="PlasseringBekreftet" class="text-danger"></span>
+            </div>
+
+            @* ---------- Hvordan få tak i ressursen ---------- *@
+            <div class="mb-3">
+                <label asp-for="Tilgangsbeskrivelse" class="form-label"></label>
+                <textarea asp-for="Tilgangsbeskrivelse" class="form-control" rows="3" placeholder="F.eks. Står i garasjen bak huset. Kodelås på døra, koden er 1234. Nøkkel hos naboen i nr. 7."></textarea>
+                <p class="bp-skjema-hjelp mt-1">Vises bare for Heimevernet og andre autoriserte brukere.</p>
+                <span asp-validation-for="Tilgangsbeskrivelse" class="text-danger"></span>
+            </div>
+
+            @* ---------- Bilder ----------
+               type="file" lar brukeren velge filer. "multiple" gjør at man kan velge flere,
+               og accept="image/*" gjør at filvelgeren bare viser bilder. *@
+            <div class="mb-3">
+                <label asp-for="Bilder" class="form-label"></label>
+                <input asp-for="Bilder" type="file" class="form-control" multiple accept="image/*" />
+                <p class="bp-skjema-hjelp mt-1">
+                    Minst ett bilde, maks 5. JPG, PNG eller WEBP, opptil 5 MB per bilde.
+                    Bildene brukes til å bekrefte at ressursen finnes. Får skjemaet en feil,
+                    må du velge bildene på nytt.
+                </p>
+                <span asp-validation-for="Bilder" class="text-danger"></span>
             </div>
 
             <div class="row mb-3">
@@ -66,3 +119,13 @@
         </form>
     </div>
 </div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/posisjonsvelger.js" asp-append-version="true"></script>
+}

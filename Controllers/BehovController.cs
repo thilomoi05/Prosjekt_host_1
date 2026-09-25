@@ -49,7 +49,11 @@ public class BehovController : Controller
             Status = BehovStatus.Ny,
             Kontaktperson = modell.Kontaktperson,
             Telefon = modell.Telefon,
-            Dato = DateOnly.FromDateTime(DateTime.Now)
+            Dato = DateOnly.FromDateTime(DateTime.Now),
+            // ".Value" henter tallet ut av double?. Det er trygt her, fordi
+            // ModelState.IsValid over allerede har sjekket at feltene er fylt ut.
+            Breddegrad = modell.Breddegrad!.Value,
+            Lengdegrad = modell.Lengdegrad!.Value
         };
 
         _behovRepository.LeggTil(nyttBehov);

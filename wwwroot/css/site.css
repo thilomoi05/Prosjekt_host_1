@@ -24,6 +24,7 @@
 
   --farge-akutt: #dc2626;
   --farge-planlagt: #d97706;
+  --farge-ressurs: #059669;
 
   --radius-kort: 0.75rem;
   --skygge-kort: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -424,6 +425,64 @@ a {
 .bp-badge-venter { background-color: var(--farge-badge-venter-bg); color: var(--farge-badge-venter-tekst); }
 .bp-badge-tildelt { background-color: var(--farge-badge-tildelt-bg); color: var(--farge-badge-tildelt-tekst); }
 .bp-badge-fullfort { background-color: var(--farge-badge-fullfort-bg); color: var(--farge-badge-fullfort-tekst); }
+
+/* -------------------------------------------------------------------------
+   Kart (Views/Kart/Index.cshtml og kartet i registreringsskjemaene)
+   ------------------------------------------------------------------------- */
+.bp-kart {
+  height: 520px;               /* Leaflet trenger en fast høyde for å tegne kartet */
+  border-radius: var(--radius-kort);
+  border: 1px solid var(--farge-kant);
+}
+
+.bp-posisjonsvelger {
+  height: 260px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--farge-kant);
+  cursor: crosshair;           /* viser at man kan klikke for å velge punkt */
+}
+
+.bp-skjema-hjelp {
+  font-size: 0.875rem;
+  color: var(--farge-tekst-svak);
+  margin-bottom: 0.5rem;
+}
+
+/* Symbolene på kartet. Behov er runde, ressurser er firkantede,
+   slik at man kan skille dem også uten å se fargene. */
+.bp-kart-prikk,
+.bp-kart-firkant {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
+  vertical-align: middle;
+}
+
+.bp-kart-prikk { border-radius: 50%; }
+.bp-kart-prikk.akutt { background-color: var(--farge-akutt); }
+.bp-kart-prikk.planlagt { background-color: var(--farge-planlagt); }
+.bp-kart-firkant { background-color: var(--farge-ressurs); }
+
+/* Små bilder av ressursen i boblen som åpnes når man klikker på et punkt */
+.bp-kart-miniatyr {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;           /* beskjærer bildet i stedet for å strekke det */
+  border-radius: 0.25rem;
+  margin: 0 0.25rem 0.25rem 0;
+}
+
+.bp-kart-tegnforklaring {
+  display: flex;
+  gap: 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+  color: var(--farge-tekst-svak);
+}
 
 /* -------------------------------------------------------------------------
    Footer

@@ -88,6 +88,12 @@ public class InMemoryBehovRepository : IBehovRepository
             new() { Id = 12, Type = BehovType.Drivstofftransport, Beskrivelse = "Bensin til utrykningskjøretøy.", GeografiskOmrade = "Vågsbygd", Prioritet = Prioritet.Planlagt, Status = BehovStatus.Venter, Kontaktperson = "Politiet", Telefon = "38070011", Dato = new DateOnly(2026, 8, 29) },
         };
 
+        // Gir hvert eksempelbehov en plassering på kartet ut fra området det gjelder.
+        foreach (var behov in data)
+        {
+            (behov.Breddegrad, behov.Lengdegrad) = EksempelPosisjoner.For(behov.GeografiskOmrade, behov.Id);
+        }
+
         return data;
     }
 }

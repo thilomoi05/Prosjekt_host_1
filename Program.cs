@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using Beredskapsportal.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +47,18 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Bruker punktum som desimaltegn i hver forespørsel (58.14, ikke 58,14).
+// Kartet i skjemaene sender koordinater med punktum. Uten dette ville en PC med
+// norske språkinnstillinger ikke klart å lese dem, mens Docker-containeren ville
+// klart det. Slik oppfører appen seg likt overalt.
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(CultureInfo.InvariantCulture),
+    SupportedCultures = new[] { CultureInfo.InvariantCulture },
+    SupportedUICultures = new[] { CultureInfo.InvariantCulture }
+});
+
 app.UseRouting();
 
 app.UseAuthentication();

@@ -1,8 +1,8 @@
 namespace Beredskapsportal.Models;
 
 /// <summary>
-/// Representerer et akutt eller planlagt behov meldt inn av en offentlig aktør
-/// (kommune, sykehus, nødetat) under strømbruddet i Kristiansand.
+/// Representerer et akutt eller planlagt behov meldt inn av Heimevernet, kommunen
+/// eller en annen autorisert aktør under en krise.
 /// </summary>
 public class Behov
 {
@@ -23,6 +23,13 @@ public class Behov
     public string Telefon { get; set; } = string.Empty;
 
     public DateOnly Dato { get; set; }
+
+    // Plasseringen på kartet, i vanlige GPS-koordinater (grader).
+    // Breddegrad = nord/sør (ca. 58 i Kristiansand), lengdegrad = øst/vest (ca. 8).
+    // Settes når brukeren klikker i kartet i registreringsskjemaet.
+    public double Breddegrad { get; set; }
+
+    public double Lengdegrad { get; set; }
 
     /// <summary>
     /// Teksten som skal vises for behovstypen i grensesnittet, f.eks. "Nødstrøm (aggregat)".
