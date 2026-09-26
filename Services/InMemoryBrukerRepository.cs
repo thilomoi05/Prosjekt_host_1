@@ -17,12 +17,12 @@ public class InMemoryBrukerRepository : IBrukerRepository
 
     public InMemoryBrukerRepository()
     {
-        var (hash, salt) = PassordHasher.HashPassord("TestPassord123!");
+        var (hash, salt) = PassordHasher.HashPassord("test");
         LeggTil(new Bruker
         {
             FulltNavn = "Test Testesen",
             Epost = "test@example.com",
-            Brukernavn = "testbruker",
+            Brukernavn = "test",
             PassordHash = hash,
             PassordSalt = salt,
             Rolle = BrukerRolle.OffentligAktor
