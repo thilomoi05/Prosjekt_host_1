@@ -60,23 +60,19 @@ Mer om kjøring, begrensninger og feilsøking: **[docs/drift.md](docs/drift.md)*
 
 ## Arkitektur
 
-Applikasjonen følger **MVC-mønsteret** (Model–View–Controller), med et eget **repository-lag** for datalagring.
+Applikasjonen følger **MVC-mønsteret** (Model–View–Controller), med et eget **repository-lag** for datalagring. Controllerne kjenner bare repository-grensesnittene, så dagens minnebaserte lagring kan byttes med en database uten å endre dem.
 
 ```mermaid
 flowchart LR
     B[Nettleser] -->|GET / POST| C[Controller]
-    C -->|leser/skriver| R[Repository<br/>IBehovRepository m.fl.]
+    C -->|leser/skriver| R[Repository]
     R --> D[(Minne)]
     C -->|ViewModel| V[View .cshtml]
     V -->|HTML| B
     K[kart.js] -->|GET JSON| C
 ```
 
-- **Models** (`Behov`, `Ressurs`, `Bruker`): domeneobjektene
-- **ViewModeller:** data fra og til skjemaene, med validering. Holdes adskilt fra domenemodellene, så brukerinput aldri binder direkte til felt som `PassordHash`.
-- **Controllers:** tar imot forespørsler, henter data via repositories og velger view
-- **Views:** Razor-sider (`.cshtml`) som bygger HTML-en
-- **Services:** repository-grensesnitt med InMemory-implementasjoner, registrert med dependency injection i `Program.cs`. Controllerne kjenner bare grensesnittene, så en ekte database kan kobles inn uten å endre dem.
+Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arkitektur.md](docs/arkitektur.md)**
 
 ### Prosjektstruktur
 
