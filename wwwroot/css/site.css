@@ -553,6 +553,38 @@ a {
   padding-left: 1rem;
 }
 
+/* Hvordan applikasjonen fungerer med piler og tall mellom */
+.bp-steg-flyt {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.bp-steg {
+  flex: 1;
+}
+
+.bp-steg-topp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.bp-steg-nummer {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--farge-tekst-lysere);
+}
+
+.bp-steg-pil {
+  display: flex;
+  align-items: center;
+  font-size: 1.75rem;
+  color: var(--farge-tekst-lysere);
+}
+
  /*For mobilskjermvisning */
 @media (max-width: 767px) {
   /* Toppmeny med logoen på egen linje, og menypunktene under */
@@ -578,5 +610,15 @@ a {
   .bp-tabell-kort {
     padding: 1rem;
     overflow-x: auto;
+  }
+
+  /* "Slik fungerer det": stegene under hverandre, pilene peker ned */
+  .bp-steg-flyt {
+    flex-direction: column;
+  }
+
+  .bp-steg-pil {
+    align-self: center;
+    transform: rotate(90deg);
   }
 }
