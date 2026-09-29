@@ -653,6 +653,46 @@ a {
   align-self: flex-start;
 }
 
+/* Tallstripe på forsiden som viser situasjonen oppdatert */
+.bp-tallstripe {
+  background-color: var(--farge-kort);
+  border-bottom: 1px solid var(--farge-kant);
+  padding: 1.75rem 1.5rem;
+}
+
+.bp-tallstripe-innhold {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  text-align: center;
+}
+
+.bp-tall {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem;
+}
+
+.bp-tall + .bp-tall {
+  border-left: 1px solid var(--farge-kant);
+}
+
+.bp-tall-verdi {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.bp-tall-verdi.akutt {
+  color: var(--farge-akutt);
+}
+
+.bp-tall-etikett {
+  font-size: 0.9rem;
+  color: var(--farge-tekst-svak);
+}
+
  /*For mobilskjermvisning */
 @media (max-width: 767px) {
   /* Toppmeny med logoen på egen linje, og menypunktene under */
@@ -688,5 +728,15 @@ a {
   .bp-steg-pil {
     align-self: center;
     transform: rotate(90deg);
+  }
+
+
+  /* Tall-stripe: litt mindre tall, så de får plass */
+  .bp-tall {
+    padding: 0 0.5rem;
+  }
+
+  .bp-tall-verdi {
+    font-size: 1.75rem;
   }
 }

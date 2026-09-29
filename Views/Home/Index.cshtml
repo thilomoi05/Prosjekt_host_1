@@ -1,3 +1,5 @@
+@model ForsideViewModel
+@Model.AntallAktiveBehov 
 @{
     ViewData["Title"] = "Hjem";
 
@@ -49,6 +51,23 @@
                 <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer">Registrer bruker</a>
             </div>
         }
+    </div>
+</section>
+
+<section class="bp-tallstripe">
+    <div class="bp-tallstripe-innhold">
+        <div class="bp-tall">
+            <span class="bp-tall-verdi">@Model.AntallAktiveBehov</span>
+            <span class="bp-tall-etikett">aktive behov</span>
+        </div>
+        <div class="bp-tall">
+            <span class="bp-tall-verdi akutt">@Model.AntallAkutteBehov</span>
+            <span class="bp-tall-etikett">akutte behov</span>
+        </div>
+        <div class="bp-tall">
+            <span class="bp-tall-verdi">@Model.AntallTilgjengeligeRessurser</span>
+            <span class="bp-tall-etikett">tilgjengelige ressurser</span>
+        </div>
     </div>
 </section>
 

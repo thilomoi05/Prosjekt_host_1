@@ -58,7 +58,15 @@ public class InMemoryBehovRepository : IBehovRepository
     {
         lock (_lasObjekt)
         {
-            return _behov.Count;
+            return _behov.Count(b => b.Status != BehovStatus.Fullfort);
+        }
+    }
+
+    public int TellAkutte()
+    {
+        lock (_lasObjekt)
+        {
+            return _behov.Count(b => b.Prioritet == Prioritet.Akutt && b.Status != BehovStatus.Fullfort);
         }
     }
 
