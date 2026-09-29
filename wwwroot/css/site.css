@@ -512,3 +512,31 @@ a {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+ /*For mobilskjermvisning */
+@media (max-width: 767px) {
+  /* Toppmeny med logoen på egen linje, og menypunktene under */
+  .bp-navbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .bp-nav-lenker {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* Mindre luft rundt innholdet, så det får mer plass på smal skjerm */
+  .bp-side-innhold {
+    padding: 1.25rem 0.75rem;
+  }
+
+  /* Tabeller: scroll sidelengs inne i boksen i stedet for å gjøre hele siden for bred */
+  .bp-tabell-kort {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+}
