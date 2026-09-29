@@ -1,20 +1,54 @@
 @{
     ViewData["Title"] = "Hjem";
+
+    // Er brukeren logget inn? Styrer hva toppseksjonen viser.
+    var erInnlogget = User.Identity?.IsAuthenticated ?? false;
+
+    // Fornavnet til brukeren, f.eks. "Test" fra "Test Testesen".
+    var fulltNavn = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? "";
+    var fornavn = fulltNavn.Split(' ')[0];
+
+    // Offentlige aktører melder behov, private aktører tilbyr ressurser.
+    var erOffentligAktor = User.IsInRole("OffentligAktor");
 }
 
 <section class="bp-hero">
     <div class="bp-hero-innhold">
-        <h1>BeredskapsPortalen</h1>
-        <p>
-            Ved en nasjonal krise samler BeredskapsPortalen oversikten over hvilke
-            ressurser som finnes, og hva som trengs. Bedrifter og privatpersoner melder
-            inn det de kan bidra med, og Heimevernet og andre autoriserte aktører ser
-            hvor ressursene er.
-        </p>
-        <div class="bp-hero-knapper">
-            <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a>
-            <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer">Registrer bruker</a>
-        </div>
+        @if (erInnlogget)
+        {
+            <h1>Velkommen tilbake, @fornavn!</h1>
+
+            @if (erOffentligAktor)
+            {
+                <p>Se hva som trengs og hvor ressursene er, eller meld inn et nytt behov.</p>
+                <div class="bp-hero-knapper">
+                    <a class="btn btn-bp-primær" asp-controller="Behov" asp-action="Registrer">Meld inn behov</a>
+                    <a class="btn btn-bp-sekundær" asp-controller="Kart" asp-action="Index">Se kartet</a>
+                </div>
+            }
+            else
+            {
+                <p>Takk for at du bidrar. Registrer ressursene du kan tilby, så kan de settes inn der de trengs mest.</p>
+                <div class="bp-hero-knapper">
+                    <a class="btn btn-bp-primær" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a>
+                    <a class="btn btn-bp-sekundær" asp-controller="Oversikt" asp-action="Index">Gå til oversikt</a>
+                </div>
+            }
+        }
+        else
+        {
+            <h1>BeredskapsPortalen</h1>
+            <p>
+                Ved en nasjonal krise samler BeredskapsPortalen oversikten over hvilke
+                ressurser som finnes, og hva som trengs. Bedrifter og privatpersoner melder
+                inn det de kan bidra med, og Heimevernet og andre autoriserte aktører ser
+                hvor ressursene er.
+            </p>
+            <div class="bp-hero-knapper">
+                <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a>
+                <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer">Registrer bruker</a>
+            </div>
+        }
     </div>
 </section>
 
