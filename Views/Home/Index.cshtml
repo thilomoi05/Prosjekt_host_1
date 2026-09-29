@@ -128,3 +128,54 @@
         </div>
     </div>
 </section>
+
+
+<section class="bp-malgrupper">
+    <div class="bp-malgrupper-innhold">
+        <h2>Hvem er portalen for?</h2>
+        <div class="bp-malgruppe-grid">
+            <div class="bp-malgruppe">
+                <div class="bp-ikon-sirkel blaa">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
+                    </svg>
+                </div>
+                <h3>Offentlige aktører</h3>
+                <p class="bp-malgruppe-hvem">Heimevernet, kommuner, sykehus og andre beredskapsaktører</p>
+                <ul class="bp-sjekkliste">
+                    <li>Meld inn behov med type, prioritet og posisjon</li>
+                    <li>Se alle behov og tilgjengelige ressurser på kartet</li>
+                    <li>Se bilder og kontaktinfo til ressursene</li>
+                    <li>Følg status fra nytt behov til fullført</li>
+                </ul>
+                @if (!erInnlogget)
+                {
+                    <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer" asp-route-rolle="OffentligAktor">Registrer deg som offentlig aktør</a>
+                }
+            </div>
+
+            <div class="bp-malgruppe">
+                <div class="bp-ikon-sirkel gronn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="7" width="14" height="10" rx="1" />
+                        <path d="M15 10h3l4 4v3h-7z" />
+                        <circle cx="6" cy="19.5" r="1.5" />
+                        <circle cx="17.5" cy="19.5" r="1.5" />
+                    </svg>
+                </div>
+                <h3>Bedrifter og privatpersoner</h3>
+                <p class="bp-malgruppe-hvem">Entreprenører, transportfirmaer, bønder og alle andre som har noe å bidra med</p>
+                <ul class="bp-sjekkliste">
+                    <li>Registrer utstyr, kjøretøy eller kompetanse du kan stille med</li>
+                    <li>Oppgi hvor ressursen er og når den er tilgjengelig</li>
+                    <li>Legg ved bilder, så det er lett å se hva du tilbyr</li>
+                    <li>Posisjonen vises bare for autoriserte aktører</li>
+                </ul>
+                @if (!erInnlogget)
+                {
+                    <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer" asp-route-rolle="PrivatAktor">Registrer deg og tilby ressurser</a>
+                }
+            </div>
+        </div>
+    </div>
+</section>

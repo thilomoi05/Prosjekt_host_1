@@ -585,6 +585,74 @@ a {
   color: var(--farge-tekst-lysere);
 }
 
+/* Hvem er portalen for? to kolonner osm viser offentlig og privat hensikt */
+.bp-malgrupper {
+  background-color: var(--farge-kort);
+  border-top: 1px solid var(--farge-kant);
+  padding: 4rem 1.5rem;
+}
+
+.bp-malgrupper-innhold {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.bp-malgrupper h2 {
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+}
+
+.bp-malgruppe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.bp-malgruppe {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--farge-bakgrunn);
+  border-radius: var(--radius-kort);
+  padding: 2rem;
+}
+
+.bp-malgruppe h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1rem 0 0.25rem;
+}
+
+.bp-malgruppe-hvem {
+  color: var(--farge-tekst-svak);
+  margin-bottom: 1.25rem;
+}
+
+.bp-sjekkliste {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.bp-sjekkliste li {
+  position: relative;
+  padding-left: 1.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.bp-sjekkliste li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--farge-primær);
+  font-weight: 700;
+}
+
+.bp-malgruppe .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
  /*For mobilskjermvisning */
 @media (max-width: 767px) {
   /* Toppmeny med logoen på egen linje, og menypunktene under */
