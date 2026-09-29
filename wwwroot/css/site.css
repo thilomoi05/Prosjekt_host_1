@@ -513,6 +513,46 @@ a {
   text-align: start;
 }
 
+/* For scenario avsnitt på forsiden */
+.bp-scenario {
+  background-color: var(--farge-kort);
+  border-bottom: 1px solid var(--farge-kant);
+  padding: 3.5rem 1.5rem;
+}
+
+.bp-scenario-innhold {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.bp-scenario-etikett {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--farge-akutt);
+  margin-bottom: 0.75rem;
+}
+
+.bp-scenario h2 {
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.bp-scenario p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--farge-tekst-svak);
+}
+
+.bp-scenario .bp-scenario-poeng {
+  color: var(--farge-tekst);
+  font-weight: 600;
+  border-left: 4px solid var(--farge-primær);
+  padding-left: 1rem;
+}
+
  /*For mobilskjermvisning */
 @media (max-width: 767px) {
   /* Toppmeny med logoen på egen linje, og menypunktene under */
