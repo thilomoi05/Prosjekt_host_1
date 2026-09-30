@@ -291,22 +291,7 @@ flowchart LR
 
 Controlleren tar imot, henter eller lagrer via et repository, og gir en ferdig modell til viewet. Viewet henter aldri data selv.
 
-## 10. Veien videre
 
-Dette er det vi vet må endres, i den rekkefølgen vi mener det bør tas.
-
-| Nr. | Endring | Hvorfor | Hvor i koden |
-|---|---|---|---|
-| 1 | MariaDB med EF Core | Alt forsvinner ved omstart i dag | Nye `EfCore*Repository`, tre linjer i `Program.cs` |
-| 2 | `docker-compose.yml` med app og database | I dag kjøres bare appen med `docker build` og `docker run` | Ny fil i rotmappa, se `docs/drift.md` |
-| 3 | Rollekrav på behovsregistrering | Alle innloggede kan melde behov nå, også `PrivatAktor` | `[Authorize(Roles = ...)]` på `BehovController` |
-| 4 | Endre status på et behov | `BehovStatus` finnes, men ingen kan flytte et behov fra Ny til Fullfort | `IBehovRepository` mangler `HentEn` og `Oppdater` |
-| 5 | Eier på behov og ressurs | Ingen kobling til `Bruker`, så «mine behov» og redigering er umulig | `Behov` og `Ressurs` trenger `BrukerId` |
-| 6 | Liste over ressurser | `Ressurs/Index` sender rett til skjemaet i dag | Ny `Index`-action og view |
-| 7 | Volum for bilder og nøkler | Bilder og innloggingscookier overlever ikke omstart av containeren | Volum i compose, `PersistKeysToFileSystem` |
-| 8 | Rett opp `TellAktive` | Teller alle behov, også fullførte | `InMemoryBehovRepository.TellAktive` |
-| 9 | Tofaktor og passordtilbakestilling | Tofaktor er et krav i caset | `KontoController`, ny TOTP-tjeneste |
-| 10 | Tester | Ingen tester i repoet | Nytt testprosjekt mot interfacene |
 
 To ting å være klar over utover dette:
 
