@@ -115,11 +115,11 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 |---|---|---|---|
 | – | Kjøres i Docker | `Dockerfile`, [docs/drift.md](docs/drift.md) | Ferdig |
 | 1 | Controller, view-modell og view | `Controllers/`, `Models/ViewModeller/`, `Views/` | Ferdig |
-| 2 | Responsive sider med dynamisk innhold fra webserver | Razor-views, `site.css`, kartdata som JSON | Under arbeid |
+| 2 | Responsive sider med dynamisk innhold fra webserver | Razor-views, `site.css`, kartdata som JSON | Ferdig |
 | 3 | Håndterer GET og POST | Se tabellen over endepunkter | Ferdig |
 | 4 | Skjema, og data vises på en annen side | Behov: `/Behov/Registrer` → `/Behov` og `/Oversikt` | Ferdig |
 | 5 | Kart, og data fra kartet vises på en annen side | Posisjonsvelger i skjemaene → punkter på `/Kart` | Ferdig |
-| 6 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), arkitektur og [testing](#testing) i denne README | Under arbeid |
+| 6 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), arkitektur og [testing](#testing) i denne README | Ferdig |
 | 7 | Dokumentasjon i koden | Norske kommentarer og XML-summaries i koden | Ferdig |
 | 8 | Bruk av KI | Se under | Ferdig |
 
