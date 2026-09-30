@@ -182,8 +182,7 @@ Vi har testet appen manuelt i nettleseren, med appen kjørende i Docker (se [Hur
 KI er brukt som støtte gjennom hele prosjektet. Alle endringer laget med KI har gått gjennom pull request og review fra gruppemedlemmer.
 
 ### Verktøy
-- **Claude (Anthropic):** koding, feilsøking, dokumentasjon og planlegging
-- [Fyll inn: andre verktøy dere har brukt]
+- **Claude (Anthropic):** koding, feilsøking, skissering, dokumentasjon og planlegging
 
 ### Bruksområder
 | Fase | Hvordan KI ble brukt |
