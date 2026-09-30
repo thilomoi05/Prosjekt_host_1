@@ -50,7 +50,7 @@ En testbruker opprettes automatisk når appen starter:
 
 | Brukernavn | Passord |
 |---|---|
-| `testbruker` | `TestPassord123!` |
+| `test` | `test` |
 
 ## Kjente begrensninger
 
