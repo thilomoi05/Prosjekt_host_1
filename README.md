@@ -175,11 +175,6 @@ Vi har testet appen manuelt i nettleseren, med appen kjørende i Docker (se [Hur
 
 - **Adresse fra kartet:** Når brukeren klikker i kartet, skal adressen hentes ut fra koordinatene og fylles inn i adressefeltet automatisk (omvendt adressesøk). I dag går det bare motsatt vei: fra adresse til punkt på kartet.
 
-### Ikke testet ennå
-
-- Sider uten innlogging sender brukeren til innlogging
-- Responsiv visning på mobil og desktop
-
 ---
 
 ## Bruk av KI
