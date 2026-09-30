@@ -30,7 +30,7 @@ docker run --rm -p 8080:8080 beredskapsportal
 
 | Brukernavn | Passord |
 |---|---|
-| `testbruker` | `TestPassord123!` |
+| `test` | `test` |
 
 Mer om kjøring, begrensninger og feilsøking: **[docs/drift.md](docs/drift.md)**
 
