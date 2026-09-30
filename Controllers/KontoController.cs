@@ -54,9 +54,11 @@ public class KontoController : Controller
     }
 
     [HttpGet]
-    public IActionResult Registrer()
+    public IActionResult Registrer(BrukerRolle rolle = BrukerRolle.OffentligAktor)
     {
-        return View(new RegistrerBrukerViewModel());
+        // Rollen kan komme fra lenken, f.eks. /Konto/Registrer?rolle=PrivatAktor,
+        // slik at riktig rolle er forhåndsvalgt i skjemaet.
+        return View(new RegistrerBrukerViewModel { Rolle = rolle });
     }
 
     [HttpPost]

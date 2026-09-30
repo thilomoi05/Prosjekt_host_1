@@ -1,65 +1,200 @@
+@model ForsideViewModel
+@Model.AntallAktiveBehov 
 @{
     ViewData["Title"] = "Hjem";
+
+    // Er brukeren logget inn? Styrer hva toppseksjonen viser.
+    var erInnlogget = User.Identity?.IsAuthenticated ?? false;
+
+    // Fornavnet til brukeren, f.eks. "Test" fra "Test Testesen".
+    var fulltNavn = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? "";
+    var fornavn = fulltNavn.Split(' ')[0];
+
+    // Offentlige aktører melder behov, private aktører tilbyr ressurser.
+    var erOffentligAktor = User.IsInRole("OffentligAktor");
 }
 
 <section class="bp-hero">
     <div class="bp-hero-innhold">
-        <h1>BeredskapsPortalen</h1>
-        <p>
-            Ved en nasjonal krise samler BeredskapsPortalen oversikten over hvilke
-            ressurser som finnes, og hva som trengs. Bedrifter og privatpersoner melder
-            inn det de kan bidra med, og Heimevernet og andre autoriserte aktører ser
-            hvor ressursene er.
-        </p>
-        <div class="bp-hero-knapper">
-            <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a>
-            <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer">Registrer bruker</a>
+        @if (erInnlogget)
+        {
+            <h1>Velkommen tilbake, @fornavn!</h1>
+
+            @if (erOffentligAktor)
+            {
+                <p>Se hva som trengs og hvor ressursene er, eller meld inn et nytt behov.</p>
+                <div class="bp-hero-knapper">
+                    <a class="btn btn-bp-primær" asp-controller="Behov" asp-action="Registrer">Meld inn behov</a>
+                    <a class="btn btn-bp-sekundær" asp-controller="Kart" asp-action="Index">Se kartet</a>
+                </div>
+            }
+            else
+            {
+                <p>Takk for at du bidrar. Registrer ressursene du kan tilby, så kan de settes inn der de trengs mest.</p>
+                <div class="bp-hero-knapper">
+                    <a class="btn btn-bp-primær" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a>
+                    <a class="btn btn-bp-sekundær" asp-controller="Oversikt" asp-action="Index">Gå til oversikt</a>
+                </div>
+            }
+        }
+        else
+        {
+            <h1>BeredskapsPortalen</h1>
+            <p>
+                Ved en nasjonal krise samler BeredskapsPortalen oversikten over hvilke
+                ressurser som finnes, og hva som trengs. Bedrifter og privatpersoner melder
+                inn det de kan bidra med, og Heimevernet og andre autoriserte aktører ser
+                hvor ressursene er.
+            </p>
+            <div class="bp-hero-knapper">
+                <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a>
+                <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer">Registrer bruker</a>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="bp-tallstripe">
+    <div class="bp-tallstripe-innhold">
+        <div class="bp-tall">
+            <span class="bp-tall-verdi">@Model.AntallAktiveBehov</span>
+            <span class="bp-tall-etikett">aktive behov</span>
+        </div>
+        <div class="bp-tall">
+            <span class="bp-tall-verdi akutt">@Model.AntallAkutteBehov</span>
+            <span class="bp-tall-etikett">akutte behov</span>
+        </div>
+        <div class="bp-tall">
+            <span class="bp-tall-verdi">@Model.AntallTilgjengeligeRessurser</span>
+            <span class="bp-tall-etikett">tilgjengelige ressurser</span>
         </div>
     </div>
 </section>
 
+<section class="bp-scenario">
+    <div class="bp-scenario-innhold">
+        <span class="bp-scenario-etikett">Tenk deg situasjonen</span>
+        <h2>Når strømmen går, teller hver time</h2>
+        <p>
+            En storm har slått ut strømmen i flere kommuner på Sørlandet. Sykehjemmet trenger
+            aggregat, og mobilnettet begynner å falle ut. Samtidig står en entreprenør med tre
+            ledige aggregater 20 kilometer unna. Men ingen vet om hverandre.
+        </p>
+        <p class="bp-scenario-poeng">
+            BeredskapsPortalen kobler dem sammen: behovet meldes inn, ressursen er allerede
+            registrert, og Heimevernet ser begge på kartet.
+        </p>
+    </div>
+</section>
+
 <section class="bp-seksjon">
-    <h2>Hvordan fungerer plattformen?</h2>
-    <div class="bp-kort-grid">
-        <div class="bp-kort">
-            <div class="bp-ikon-sirkel blaa">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9" />
-                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
+    <h2>Slik fungerer det</h2>
+    <div class="bp-steg-flyt">
+        <div class="bp-kort bp-steg">
+            <div class="bp-steg-topp">
+                <span class="bp-steg-nummer">1</span>
+                <div class="bp-ikon-sirkel blaa">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                </div>
             </div>
-            <h3>Meld inn behov</h3>
+            <h3>Behov meldes inn</h3>
             <p>
-                Heimevernet, kommunen og andre autoriserte aktører melder inn hva som trengs,
-                for eksempel nødstrøm, drivstoff, oppvarming eller kommunikasjonsutstyr.
+                Heimevernet, kommunen og andre autoriserte aktører melder inn hva som trengs
+                og hvor, for eksempel nødstrøm, drivstoff eller kommunikasjonsutstyr.
             </p>
         </div>
-        <div class="bp-kort">
-            <div class="bp-ikon-sirkel gronn">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="1" y="7" width="14" height="10" rx="1" />
-                    <path d="M15 10h3l4 4v3h-7z" />
-                    <circle cx="6" cy="19.5" r="1.5" />
-                    <circle cx="17.5" cy="19.5" r="1.5" />
-                </svg>
+
+        <div class="bp-steg-pil" aria-hidden="true">→</div>
+
+        <div class="bp-kort bp-steg">
+            <div class="bp-steg-topp">
+                <span class="bp-steg-nummer">2</span>
+                <div class="bp-ikon-sirkel gronn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="7" width="14" height="10" rx="1" />
+                        <path d="M15 10h3l4 4v3h-7z" />
+                        <circle cx="6" cy="19.5" r="1.5" />
+                        <circle cx="17.5" cy="19.5" r="1.5" />
+                    </svg>
+                </div>
             </div>
-            <h3>Tilby ressurser</h3>
+            <h3>Ressurser tilbys</h3>
             <p>
-                Bedrifter, entreprenører og privatpersoner melder inn ressurser de har
-                tilgjengelig, som aggregater, drivstoff, transport eller annet utstyr.
+                Bedrifter, entreprenører og privatpersoner registrerer hva de kan bidra med,
+                som aggregater, drivstoff eller transport.
             </p>
         </div>
-        <div class="bp-kort">
-            <div class="bp-ikon-sirkel gul">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
-                </svg>
+
+        <div class="bp-steg-pil" aria-hidden="true">→</div>
+
+        <div class="bp-kort bp-steg">
+            <div class="bp-steg-topp">
+                <span class="bp-steg-nummer">3</span>
+                <div class="bp-ikon-sirkel gul">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
+                    </svg>
+                </div>
             </div>
-            <h3>Kartbasert koordinering</h3>
+            <h3>Hjelpen koordineres</h3>
             <p>
-                Autoriserte brukere ser på kartet hvor ressursene er og hva som trengs,
-                slik at hjelpen kan sendes dit den gjør mest nytte.
+                Autoriserte brukere ser behov og ressurser samlet på kartet, og kan sende
+                hjelpen dit den gjør mest nytte.
             </p>
+        </div>
+    </div>
+</section>
+
+
+<section class="bp-malgrupper">
+    <div class="bp-malgrupper-innhold">
+        <h2>Hvem er portalen for?</h2>
+        <div class="bp-malgruppe-grid">
+            <div class="bp-malgruppe">
+                <div class="bp-ikon-sirkel blaa">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
+                    </svg>
+                </div>
+                <h3>Offentlige aktører</h3>
+                <p class="bp-malgruppe-hvem">Heimevernet, kommuner, sykehus og andre beredskapsaktører</p>
+                <ul class="bp-sjekkliste">
+                    <li>Meld inn behov med type, prioritet og posisjon</li>
+                    <li>Se alle behov og tilgjengelige ressurser på kartet</li>
+                    <li>Se bilder og kontaktinfo til ressursene</li>
+                    <li>Følg status fra nytt behov til fullført</li>
+                </ul>
+                @if (!erInnlogget)
+                {
+                    <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer" asp-route-rolle="OffentligAktor">Registrer deg som offentlig aktør</a>
+                }
+            </div>
+
+            <div class="bp-malgruppe">
+                <div class="bp-ikon-sirkel gronn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="7" width="14" height="10" rx="1" />
+                        <path d="M15 10h3l4 4v3h-7z" />
+                        <circle cx="6" cy="19.5" r="1.5" />
+                        <circle cx="17.5" cy="19.5" r="1.5" />
+                    </svg>
+                </div>
+                <h3>Bedrifter og privatpersoner</h3>
+                <p class="bp-malgruppe-hvem">Entreprenører, transportfirmaer, bønder og alle andre som har noe å bidra med</p>
+                <ul class="bp-sjekkliste">
+                    <li>Registrer utstyr, kjøretøy eller kompetanse du kan stille med</li>
+                    <li>Oppgi hvor ressursen er og når den er tilgjengelig</li>
+                    <li>Legg ved bilder, så det er lett å se hva du tilbyr</li>
+                    <li>Posisjonen vises bare for autoriserte aktører</li>
+                </ul>
+                @if (!erInnlogget)
+                {
+                    <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="Registrer" asp-route-rolle="PrivatAktor">Registrer deg og tilby ressurser</a>
+                }
+            </div>
         </div>
     </div>
 </section>

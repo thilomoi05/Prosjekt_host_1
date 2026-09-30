@@ -13,4 +13,6 @@ public interface IBehovRepository
     Behov LeggTil(Behov behov);
     int TellAktive();
     int TellUnderBehandling();
+    int TellAkutte();
+    
 }

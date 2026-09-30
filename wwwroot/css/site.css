@@ -513,6 +513,186 @@ a {
   text-align: start;
 }
 
+/* For scenario avsnitt på forsiden */
+.bp-scenario {
+  background-color: var(--farge-kort);
+  border-bottom: 1px solid var(--farge-kant);
+  padding: 3.5rem 1.5rem;
+}
+
+.bp-scenario-innhold {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.bp-scenario-etikett {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--farge-akutt);
+  margin-bottom: 0.75rem;
+}
+
+.bp-scenario h2 {
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+.bp-scenario p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--farge-tekst-svak);
+}
+
+.bp-scenario .bp-scenario-poeng {
+  color: var(--farge-tekst);
+  font-weight: 600;
+  border-left: 4px solid var(--farge-primær);
+  padding-left: 1rem;
+}
+
+/* Hvordan applikasjonen fungerer med piler og tall mellom */
+.bp-steg-flyt {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.bp-steg {
+  flex: 1;
+}
+
+.bp-steg-topp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.bp-steg-nummer {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--farge-tekst-lysere);
+}
+
+.bp-steg-pil {
+  display: flex;
+  align-items: center;
+  font-size: 1.75rem;
+  color: var(--farge-tekst-lysere);
+}
+
+/* Hvem er portalen for? to kolonner osm viser offentlig og privat hensikt */
+.bp-malgrupper {
+  background-color: var(--farge-kort);
+  border-top: 1px solid var(--farge-kant);
+  padding: 4rem 1.5rem;
+}
+
+.bp-malgrupper-innhold {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.bp-malgrupper h2 {
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 2.5rem;
+}
+
+.bp-malgruppe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.bp-malgruppe {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--farge-bakgrunn);
+  border-radius: var(--radius-kort);
+  padding: 2rem;
+}
+
+.bp-malgruppe h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 1rem 0 0.25rem;
+}
+
+.bp-malgruppe-hvem {
+  color: var(--farge-tekst-svak);
+  margin-bottom: 1.25rem;
+}
+
+.bp-sjekkliste {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.bp-sjekkliste li {
+  position: relative;
+  padding-left: 1.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.bp-sjekkliste li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--farge-primær);
+  font-weight: 700;
+}
+
+.bp-malgruppe .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+/* Tallstripe på forsiden som viser situasjonen oppdatert */
+.bp-tallstripe {
+  background-color: var(--farge-kort);
+  border-bottom: 1px solid var(--farge-kant);
+  padding: 1.75rem 1.5rem;
+}
+
+.bp-tallstripe-innhold {
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  text-align: center;
+}
+
+.bp-tall {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem;
+}
+
+.bp-tall + .bp-tall {
+  border-left: 1px solid var(--farge-kant);
+}
+
+.bp-tall-verdi {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.bp-tall-verdi.akutt {
+  color: var(--farge-akutt);
+}
+
+.bp-tall-etikett {
+  font-size: 0.9rem;
+  color: var(--farge-tekst-svak);
+}
+
  /*For mobilskjermvisning */
 @media (max-width: 767px) {
   /* Toppmeny med logoen på egen linje, og menypunktene under */
@@ -538,5 +718,25 @@ a {
   .bp-tabell-kort {
     padding: 1rem;
     overflow-x: auto;
+  }
+
+  /* "Slik fungerer det": stegene under hverandre, pilene peker ned */
+  .bp-steg-flyt {
+    flex-direction: column;
+  }
+
+  .bp-steg-pil {
+    align-self: center;
+    transform: rotate(90deg);
+  }
+
+
+  /* Tall-stripe: litt mindre tall, så de får plass */
+  .bp-tall {
+    padding: 0 0.5rem;
+  }
+
+  .bp-tall-verdi {
+    font-size: 1.75rem;
   }
 }
