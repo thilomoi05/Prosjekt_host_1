@@ -35,9 +35,13 @@ public class BehovViewModel
     // Feltene er skjulte i skjemaet, så brukeren ser dem aldri direkte.
     // double? (med spørsmålstegn) betyr at verdien kan mangle. Da slår
     // [Required] til og brukeren får beskjed om å klikke i kartet.
+    //
+    // Bare Breddegrad har [Required]. Kartet fyller alltid ut begge feltene
+    // samtidig, så det holder å sjekke det ene. Hadde begge hatt [Required],
+    // ville samme feilmelding blitt vist to ganger øverst i skjemaet.
+    // Controlleren sjekker i tillegg at Lengdegrad ikke mangler.
     [Required(ErrorMessage = "Du må klikke i kartet for å markere plasseringen.")]
     public double? Breddegrad { get; set; }
 
-    [Required(ErrorMessage = "Du må klikke i kartet for å markere plasseringen.")]
     public double? Lengdegrad { get; set; }
 }

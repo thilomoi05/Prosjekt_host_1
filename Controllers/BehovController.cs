@@ -35,6 +35,14 @@ public class BehovController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Registrer(BehovViewModel modell)
     {
+        // Sikkerhetsnett: kartet setter alltid begge koordinatene samtidig, men
+        // skulle Lengdegrad likevel mangle, gir vi samme feilmelding som for Breddegrad.
+        // (Gjelder bare når Breddegrad finnes, ellers ville meldingen kommet to ganger.)
+        if (modell.Breddegrad is not null && modell.Lengdegrad is null)
+        {
+            ModelState.AddModelError(nameof(modell.Breddegrad), "Du må klikke i kartet for å markere plasseringen.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(modell);
