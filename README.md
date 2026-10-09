@@ -165,6 +165,27 @@ Vi har testet appen manuelt i nettleseren, med appen kjørende i Docker (se [Hur
 |---|---|---|---|
 | Starte appen i Docker | Kjør kommandoene under [Hurtigstart](#hurtigstart) og åpne http://localhost:8080 | Appen starter, og forsiden vises | ✅ Appen starter, og alle testene over ble kjørt i Docker |
 
+### Automatiske tester (xUnit)
+
+I tillegg til de manuelle testene over har vi automatiske enhetstester i `Beredskapsportal.Tests/`. De kjører uten Docker og uten nettleser, og sjekker logikken i controllere, repositoryer og modeller direkte.
+
+Kjør dem fra rotmappen med:
+
+```bash
+dotnet test Beredskapsportal.Tests
+```
+
+| Testfil | Hva den sjekker |
+|---|---|
+| `BehovRepositoryTester.cs` | Tellingene på forsiden og i Oversikt, og at nyeste behov vises først |
+| `BrukerOgPassordTester.cs` | Passordhashing med salt, og oppslag på brukernavn uavhengig av store/små bokstaver |
+| `ModellTester.cs` | Passordreglene i registreringsskjemaet og visningsnavn for behovstyper |
+| `KontoControllerTester.cs` | Innlogging med riktig og feil passord, og opptatt brukernavn ved registrering |
+| `BehovControllerTester.cs`, `ControllerTester.cs` | At gyldige behov lagres og ugyldige ikke, og tallene på forsiden |
+| `RessursControllerTester.cs` | At ressurser må ha bilder av riktig filtype, og at `/Ressurs/Bilde` ikke kan hente filer utenfor bildemappen |
+
+`TestHjelpere.cs` inneholder små erstatninger for innlogging og filsystem, slik at controllerne kan testes uten at appen kjører.
+
 ### Funnet under testing
 
 | Feil | Hvor | Status |
