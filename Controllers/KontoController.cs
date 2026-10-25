@@ -40,8 +40,8 @@ public class KontoController : Controller
         }
 
         var bruker = _brukerRepository.FinnVedBrukernavn(modell.Brukernavn);
-        var passordStemmer = bruker is not null
-            && PassordHasher.VerifiserPassord(modell.Passord, bruker.PassordHash, bruker.PassordSalt);
+        // MIDLERTIDIG: sammenligner passordet i klartekst. Erstattes av ASP.NET Core Identity.
+        var passordStemmer = bruker is not null && bruker.Passord == modell.Passord;
 
         if (!passordStemmer || bruker is null)
         {
@@ -75,14 +75,12 @@ public class KontoController : Controller
             return View(modell);
         }
 
-        var (hash, salt) = PassordHasher.HashPassord(modell.Passord);
         var nyBruker = new Bruker
         {
             FulltNavn = modell.FulltNavn,
             Epost = modell.Epost,
             Brukernavn = modell.Brukernavn,
-            PassordHash = hash,
-            PassordSalt = salt,
+            Passord = modell.Passord,
             Rolle = modell.Rolle
         };
 

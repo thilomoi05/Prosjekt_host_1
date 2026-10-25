@@ -2,8 +2,7 @@ namespace Beredskapsportal.Models;
 
 /// <summary>
 /// En registrert bruker av BeredskapsPortalen.
-/// Passordet lagres aldri i klartekst - kun det PBKDF2-hashede resultatet
-/// (se Services/PassordHasher.cs) sammen med saltet som ble brukt.
+/// Passord lagres midlertidig i klartekst til vi får implementert ASP.NET Core Identity, som har trygg passord-hashing innebygd.
 /// </summary>
 public class Bruker
 {
@@ -15,9 +14,9 @@ public class Bruker
 
     public string Brukernavn { get; set; } = string.Empty;
 
-    public string PassordHash { get; set; } = string.Empty;
-
-    public string PassordSalt { get; set; } = string.Empty;
+    // MIDLERTIDIG: passordet lagres i klartekst fram til innloggingen flyttes til
+    // ASP.NET Core Identity, som har trygg passord-hashing innebygd.
+    public string Passord { get; set; } = string.Empty;
 
     public BrukerRolle Rolle { get; set; }
 }
