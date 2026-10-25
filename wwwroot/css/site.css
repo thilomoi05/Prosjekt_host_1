@@ -135,6 +135,44 @@ a {
   color: var(--farge-primær);
 }
 
+/* Nedtrekksmenyen under brukernavnet øverst til høyre */
+.bp-brukermeny {
+    min-width: 15rem;
+    padding: 0.5rem 0;
+    border: 1px solid var(--farge-kant);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.bp-brukermeny-hode {
+    padding: 0.5rem 1rem;
+}
+
+.bp-brukermeny-navn {
+    font-weight: 700;
+}
+
+.bp-brukermeny-rolle {
+    font-size: 0.85rem;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-brukermeny .dropdown-item {
+    padding: 0.5rem 1rem;
+}
+
+.bp-brukermeny .bp-brukermeny-loggut {
+    color: var(--farge-akutt);
+}
+
+.bp-kommer {
+    font-size: 0.7rem;
+    margin-left: 0.35rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background-color: var(--farge-bakgrunn);
+}
+
 /* -------------------------------------------------------------------------
    Knapper
    ------------------------------------------------------------------------- */
