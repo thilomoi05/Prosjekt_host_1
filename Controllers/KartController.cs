@@ -57,6 +57,7 @@ public class KartController : Controller
         var punkter = _behovRepository.HentAlle().Select(behov => new
         {
             id = behov.Id,
+            typeKode = behov.Type.ToString(),         // f.eks. "Nodstrom", velger ikon i kartikoner.js
             type = behov.VisningsNavn,
             beskrivelse = behov.Beskrivelse,
             omrade = behov.GeografiskOmrade,
@@ -82,6 +83,7 @@ public class KartController : Controller
         var punkter = _ressursRepository.HentAlle().Select(ressurs => new
         {
             id = ressurs.Id,
+            typeKode = ressurs.Type.ToString(),       // f.eks. "Aggregat", velger ikon i kartikoner.js
             type = ressurs.Type.ToString(),
             beskrivelse = ressurs.BeskrivelseAvKapasitet,
             adresse = ressurs.Adresse,

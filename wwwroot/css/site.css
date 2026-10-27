@@ -499,9 +499,30 @@ a {
 }
 
 .bp-kart-prikk { border-radius: 50%; }
-.bp-kart-prikk.akutt { background-color: var(--farge-akutt); }
-.bp-kart-prikk.planlagt { background-color: var(--farge-planlagt); }
-.bp-kart-firkant { background-color: var(--farge-ressurs); }
+.bp-kart-prikk.akutt { background-color: var(--kart-akutt); }
+.bp-kart-prikk.planlagt { background-color: var(--kart-planlagt); }
+.bp-kart-firkant { background-color: var(--kart-ressurs); border-radius: 3px; }
+
+/* Kartikoner (wwwroot/js/kartikoner.js)
+   Fargene er valgt så de ikke ligner fargene i Kartverket-kartet
+   (grønn skog, blått vann, røde veier). SVG-ene bruker currentColor,
+   så det er "color" under som bestemmer fargen på ikonet. */
+:root {
+  --kart-akutt: #e11d48;          /* magenta/rød-rosa */
+  --kart-planlagt: #7c3aed;       /* lilla */
+  --kart-ressurs: #1e3a8a;        /* mørk marineblå */
+}
+
+.bp-ikon-akutt { color: var(--kart-akutt); }
+.bp-ikon-planlagt { color: var(--kart-planlagt); }
+.bp-ikon-ressurs { color: var(--kart-ressurs); }
+
+.bp-kartikon {
+  display: inline-block;
+  line-height: 0;                 /* fjerner luft under SVG-en */
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));   /* skygge som løfter ikonet fra kartet */
+}
 
 /* Små bilder av ressursen i boblen som åpnes når man klikker på et punkt */
 .bp-kart-miniatyr {
@@ -520,6 +541,145 @@ a {
   padding: 0;
   font-size: 0.9rem;
   color: var(--farge-tekst-svak);
+}
+
+/* Boble på kartet: vises når man klikker på et punkt (lagBoble i kart.js) */
+
+/* Leaflets egen boble: rundere hjørner og mer luft */
+.bp-boble-popup .leaflet-popup-content-wrapper {
+  border-radius: var(--radius-kort);
+  padding: 0.25rem;
+}
+
+.bp-boble-popup .leaflet-popup-content {
+  margin: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Toppen: ikon til venstre, tekst til høyre */
+.bp-boble-topp {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--farge-kant);   /* tynn strek mellom toppen og radene */
+}
+
+/* Lys firkant bak ikonet. color-mix blander punktfargen (currentColor) med hvitt. */
+.bp-boble-ikon {
+  flex-shrink: 0;
+  padding: 0.4rem;
+  line-height: 0;
+  border-radius: 0.6rem;
+  background-color: color-mix(in srgb, currentColor 15%, white);
+}
+
+/* Fargelappen: "Akutt behov", "Planlagt behov" eller "Ressurs" */
+.bp-boble-merkelapp {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: color-mix(in srgb, currentColor 12%, white);
+}
+
+.bp-boble-tittel {
+  margin-top: 0.3rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--farge-tekst);
+}
+
+.bp-boble-undertittel {
+  color: var(--farge-tekst-svak);
+}
+
+/* Radene: etikett i en smal kolonne til venstre, verdi til høyre */
+.bp-boble-rader {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.4rem 0.75rem;
+  margin: 0;
+}
+
+.bp-boble-rader dt {
+  font-weight: 400;
+  color: var(--farge-tekst-svak);
+}
+
+.bp-boble-rader dd {
+  margin: 0;
+  color: var(--farge-tekst);
+}
+
+/* Kartsiden i fullskjerm (Views/Kart/Index.cshtml) */
+.bp-kart-fullskjerm {
+  position: relative;             /* knapp og tegnforklaring plasseres i forhold til denne */
+  height: calc(100vh - 66px);     /* hele skjermhøyden minus menyen øverst */
+}
+
+.bp-kart-fullskjerm .bp-kart {
+  height: 100%;                   /* kartet fyller hele området */
+  border: none;
+  border-radius: 0;
+}
+
+/* Felles stil for ting som ligger oppå kartet */
+.bp-kart-flytende {
+  position: absolute;
+  z-index: 1000;                  /* over kartet */
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background-color: var(--farge-kort);
+  border-radius: 999px;           /* avrundet "pille" */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.bp-kart-tegnforklaring.bp-kart-flytende {
+  top: 1rem;
+  right: 1rem;
+}
+
+.bp-kart-info.bp-kart-flytende {
+  top: 1rem;
+  left: 4rem;                     /* til høyre for zoomknappene */
+  max-width: 360px;
+  font-size: 0.9rem;
+  border-radius: var(--radius-kort);
+}
+
+/* Knappen "Vis liste", midt på nederst */
+.bp-kart-listeknapp {
+  position: absolute;
+  z-index: 1000;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);    /* flytter knappen tilbake halve bredden, så den står midt på */
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Knappen "Skjul liste", midt på i toppen av listepanelet */
+.bp-kart-liste-panel .offcanvas-header {
+  position: relative;             /* knappen plasseres i forhold til denne */
+}
+
+.bp-kart-skjulknapp {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);    /* midt på, samme triks som "Vis liste" */
+  border-radius: 999px;
+  padding: 0.4rem 1.5rem;
+}
+
+/* Panelet med listen: halve skjermhøyden og runde hjørner øverst */
+.bp-kart-liste-panel {
+  --bs-offcanvas-height: 50vh;
+  border-radius: 1rem 1rem 0 0;
 }
 
 /* -------------------------------------------------------------------------

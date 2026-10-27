@@ -59,14 +59,15 @@ public class InMemoryRessursRepository : IRessursRepository
         {
             var type = typer[i % typer.Length];
             var omrade = omrader[i % omrader.Length];
-            var (breddegrad, lengdegrad) = EksempelPosisjoner.For(omrade, i);
+            // En ekte adresse i området, med riktig plassering på kartet.
+            var (adresse, breddegrad, lengdegrad) = EksempelPosisjoner.For(omrade);
 
             data.Add(new Ressurs
             {
                 Id = i,
                 Type = type,
                 BeskrivelseAvKapasitet = $"Tilbudt {type.ToString().ToLowerInvariant()} fra lokal aktør.",
-                Adresse = $"Eksempelveien {i}, {omrade}",
+                Adresse = $"{adresse}, Kristiansand",
                 Tilgangsbeskrivelse = "Ring kontaktpersonen før henting.",
                 TilgjengeligFra = new DateOnly(2026, 9, 1),
                 TilgjengeligTil = new DateOnly(2026, 9, 30),

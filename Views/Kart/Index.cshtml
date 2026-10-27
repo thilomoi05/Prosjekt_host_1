@@ -9,41 +9,54 @@
     <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
 }
 
-<div class="bp-side-innhold">
-    <div class="bp-tabell-kort">
-        <div class="bp-tabell-kort-hode">
-            <h1 class="h4 mb-0">Kartbasert koordinering</h1>
+@* Kartsiden bruker hele skjermen under menyen, fordi kartet er hovedfunksjonen.
+   Listen over punktene ligger i et panel som åpnes med knappen nederst. *@
+<div class="bp-kart-fullskjerm">
+    @* Her tegner Leaflet kartet. data-kan-se-ressurser leses av kart.js. *@
+    <div id="kart" class="bp-kart" data-kan-se-ressurser="@(kanSeRessurser ? "true" : "false")"></div>
 
-            @* Tegnforklaring: farge OG form viser hva et punkt er, så kartet
-               kan leses også av fargeblinde. *@
-            <ul class="bp-kart-tegnforklaring">
-                <li><span class="bp-kart-prikk akutt"></span> Akutt behov</li>
-                <li><span class="bp-kart-prikk planlagt"></span> Planlagt behov</li>
-                @if (kanSeRessurser)
-                {
-                    <li><span class="bp-kart-firkant"></span> Ressurs</li>
-                }
-            </ul>
-        </div>
-
-        @if (!kanSeRessurser)
+    @* Tegnforklaring oppå kartet, øverst til høyre. Farge OG form viser hva
+       et punkt er, så kartet kan leses også av fargeblinde. *@
+    <ul class="bp-kart-tegnforklaring bp-kart-flytende">
+        <li><span class="bp-kart-prikk akutt"></span> Akutt behov</li>
+        <li><span class="bp-kart-prikk planlagt"></span> Planlagt behov</li>
+        @if (kanSeRessurser)
         {
-            <p class="text-muted">
-                Du ser behovene som er meldt inn. Hvor ressursene er, vises bare for
-                Heimevernet og andre autoriserte brukere.
-            </p>
+            <li><span class="bp-kart-firkant"></span> Ressurs</li>
         }
+    </ul>
 
-        @* Her tegner Leaflet kartet. data-kan-se-ressurser leses av kart.js. *@
-        <div id="kart" class="bp-kart" data-kan-se-ressurser="@(kanSeRessurser ? "true" : "false")"></div>
+    @if (!kanSeRessurser)
+    {
+        <p class="bp-kart-info bp-kart-flytende">
+            Hvor ressursene er, vises bare for Heimevernet og andre autoriserte brukere.
+        </p>
+    }
+
+    @* Knappen åpner listen nederst. Bootstrap ("offcanvas") åpner og lukker
+       panelet, så vi trenger ingen egen JavaScript til det. *@
+    <button type="button" class="btn btn-bp-primær bp-kart-listeknapp"
+            data-bs-toggle="offcanvas" data-bs-target="#kart-liste-panel" aria-controls="kart-liste-panel">
+        Vis liste
+    </button>
+</div>
+
+@* Panelet som glir opp fra bunnen. data-bs-backdrop="false" gjør at kartet
+   fortsatt kan brukes mens listen er åpen. Tabellen er de samme punktene som
+   på kartet, og fungerer også for skjermlesere som ikke kan lese kartet. *@
+<div class="offcanvas offcanvas-bottom bp-kart-liste-panel" id="kart-liste-panel"
+     data-bs-backdrop="false" data-bs-scroll="true" tabindex="-1" aria-labelledby="kart-liste-tittel">
+    <div class="offcanvas-header">
+        <h2 class="h5 mb-0" id="kart-liste-tittel">
+            Punkter på kartet <span id="kart-antall" class="badge rounded-pill bg-light text-dark"></span>
+        </h2>
+        @* Samme blå knapp som "Vis liste", midt på, så det er tydelig hvordan listen lukkes.
+           data-bs-dismiss="offcanvas" gjør at Bootstrap lukker panelet. *@
+        <button type="button" class="btn btn-bp-primær bp-kart-skjulknapp" data-bs-dismiss="offcanvas">
+            Skjul liste
+        </button>
     </div>
-
-    @* Samme punkter som på kartet, som en vanlig tabell. Gjør det lett å
-       sammenligne, og fungerer for skjermlesere som ikke kan lese kartet. *@
-    <div class="bp-tabell-kort mt-4">
-        <div class="bp-tabell-kort-hode">
-            <h2>Punkter på kartet</h2>
-        </div>
+    <div class="offcanvas-body">
         <table class="bp-tabell">
             <thead>
                 <tr>
@@ -51,11 +64,13 @@
                     <th>Type</th>
                     <th>Sted</th>
                     <th>Beskrivelse</th>
+                    @* Kolonne for "Se detaljer"-knappen. Teksten er skjult, men leses av skjermlesere. *@
+                    <th><span class="visually-hidden">Detaljer</span></th>
                 </tr>
             </thead>
             @* Radene fylles inn av kart.js når dataene er hentet. *@
             <tbody id="kart-liste">
-                <tr><td colspan="4" class="text-muted">Laster ...</td></tr>
+                <tr><td colspan="5" class="text-muted">Laster ...</td></tr>
             </tbody>
         </table>
     </div>
@@ -64,5 +79,6 @@
 @section Scripts {
     <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
     <script src="~/js/kart.js" asp-append-version="true"></script>
 }
