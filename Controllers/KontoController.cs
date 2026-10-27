@@ -5,6 +5,7 @@ using Beredskapsportal.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Beredskapsportal.Controllers;
 
@@ -99,6 +100,34 @@ public class KontoController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Index", "Home");
     }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> Profil()
+    {
+        // Brukernavnet ble lagt i Name-claimet da brukeren logget inn
+        var brukernavn = User.Identity?.Name;
+        var bruker = brukernavn is null ? null : _brukerRepository.FinnVedBrukernavn(brukernavn);
+
+        // Cookien kan leve lenger enn brukeren: InMemory-lagringen tømmes
+        // når appen restartes, men nettleseren har fortsatt innloggings-cookien.
+        if (bruker is null)
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction(nameof(LoggInn));
+        }
+
+        var modell = new ProfilViewModel
+        {
+            FulltNavn = bruker.FulltNavn,
+            Epost = bruker.Epost,
+            Brukernavn = bruker.Brukernavn,
+            RolleTekst = bruker.Rolle == BrukerRolle.OffentligAktor ? "Offentlig aktør" : "Privat aktør"
+        };
+
+        return View(modell);
+    }
+
 
     /// <summary>
     /// Oppretter en signert innloggingscookie for den gitte brukeren.
