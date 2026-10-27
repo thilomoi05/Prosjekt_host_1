@@ -5,7 +5,7 @@ namespace Beredskapsportal.Models.ViewModeller;
 /// <summary>
 /// Data som sendes inn fra innloggingsskjemaet.
 /// Et eget "ViewModel" holder skjemafeltene atskilt fra selve domenemodellen (Bruker),
-/// slik at vi ikke risikerer å binde felter (som PassordHash) direkte fra brukerinput.
+/// slik at vi ikke risikerer å binde felter (som Rolle) direkte fra brukerinput.
 /// </summary>
 public class LoggInnViewModel
 {

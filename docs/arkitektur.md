@@ -35,7 +35,7 @@ flowchart TB
 
     subgraph app["ASP.NET Core 10, én container"]
         ctrl["Controllers"]
-        svc["Services: repositories og PassordHasher"]
+        svc["Services: repositories"]
         minne[("Data i minnet: tre lister i Singleton-repositories")]
         disk[("Opplastinger/bilder på disk")]
     end
@@ -78,12 +78,12 @@ Domenemodellene er det systemet faktisk handler om.
 |---|---|---|
 | `Behov` | Type, beskrivelse, område, prioritet, status, kontakt, dato, breddegrad, lengdegrad | `VisningsNavn` gir teksten som vises, samlet ett sted |
 | `Ressurs` | Type, kapasitet, adresse, tilgangsbeskrivelse, bilder, tilgjengelig fra og til, kontakt, koordinater | `Bilder` er filnavn, ikke selve filene |
-| `Bruker` | Navn, e-post, brukernavn, `PassordHash`, `PassordSalt`, rolle | Passord lagres aldri i klartekst |
+| `Bruker` | Navn, e-post, brukernavn, passord, rolle | Passordet lagres midlertidig i klartekst (se avsnitt 6) |
 | `Enums` | `Prioritet`, `BehovStatus`, `BehovType`, `RessursType`, `BrukerRolle` | Status: Ny, Venter, Tildelt, Fullfort |
 
 ### ViewModeller
 
-Skjemaene binder mot egne modeller i `Models/ViewModeller`, ikke mot domenemodellene. Grunnen er sikkerhet og validering: en bruker skal ikke kunne sende inn `PassordHash` eller `Status` ved å legge til et felt i skjemaet.
+Skjemaene binder mot egne modeller i `Models/ViewModeller`, ikke mot domenemodellene. Grunnen er sikkerhet og validering: en bruker skal ikke kunne sende inn `Id` eller `Status` ved å legge til et felt i skjemaet.
 
 Valideringen ligger som attributter på feltene, for eksempel:
 
@@ -173,24 +173,24 @@ To detaljer om dagens lagring:
 
 - `AddSingleton` er brukt fordi listene lever i minnet. Med `AddScoped` ville hver forespørsel fått sin egen tomme liste.
 - Repositoriene bruker `lock` rundt listene, siden flere forespørsler kan komme samtidig.
-- Eksempeldata: 12 behov og 28 ressurser, pluss testbrukeren `testbruker`. `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
+- Eksempeldata: 12 behov og 28 ressurser, pluss testbrukeren `test`. `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
 
 ## 6. Innlogging og tilgang
 
-Innloggingen er cookie-basert og satt opp i `Program.cs`. Passord håndteres av `PassordHasher`, som bruker PBKDF2 med SHA256, 100 000 iterasjoner, 16 byte tilfeldig salt per bruker og 32 byte hash. Sammenligningen bruker `FixedTimeEquals`, som tar like lang tid uansett hvor mye av hashen som stemmer.
+Innloggingen er cookie-basert og satt opp i `Program.cs`.
+
+**Midlertidig løsning:** passord lagres og sammenlignes i klartekst. Gruppa hadde først laget sin egen passord-hashing (`PassordHasher` med PBKDF2), men den er fjernet. Å lage sikkerhetskode selv gir stor risiko for feil, så innloggingen skal i stedet flyttes til **ASP.NET Core Identity**, som har trygg passord-hashing, låsing etter mange feil forsøk og bytte av passord innebygd. Det gjøres sammen med overgangen til MariaDB.
 
 ```mermaid
 sequenceDiagram
     participant N as Nettleser
     participant K as KontoController
     participant R as IBrukerRepository
-    participant H as PassordHasher
 
     N->>K: POST /Konto/LoggInn med brukernavn og passord
     K->>R: FinnVedBrukernavn(brukernavn)
-    R-->>K: Bruker med hash og salt
-    K->>H: VerifiserPassord(passord, hash, salt)
-    H-->>K: true eller false
+    R-->>K: Bruker
+    K->>K: Sammenligner passordet
     K-->>N: Feil brukernavn eller passord, skjemaet på nytt
     K-->>N: Signert cookie med navn og rolle, redirect til /Oversikt
 ```

@@ -50,7 +50,7 @@ Mer om kjøring, begrensninger og feilsøking: **[docs/drift.md](docs/drift.md)*
 | Område | Teknologi |
 |---|---|
 | Rammeverk | ASP.NET Core MVC, .NET 10 |
-| Innlogging | Cookie-autentisering, PBKDF2-hashede passord |
+| Innlogging | Cookie-autentisering. Passord lagres midlertidig i klartekst, og skal byttes til ASP.NET Core Identity |
 | Kart | [Leaflet](https://leafletjs.com/) med kartfliser fra Kartverket |
 | Adressesøk | Geonorge sitt adresse-API (`ws.geonorge.no/adresser/v1`) |
 | Datalagring | Minnebasert (InMemory-repositories). Byttes med database senere. |
@@ -80,7 +80,7 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 ├── Controllers/        Home, Konto, Oversikt, Behov, Ressurs, Kart
 ├── Models/             Behov, Ressurs, Bruker, Enums
 │   └── ViewModeller/   Skjemamodeller med validering
-├── Services/           Repository-grensesnitt, InMemory-implementasjoner, PassordHasher
+├── Services/           Repository-grensesnitt, InMemory-implementasjoner
 ├── Views/              Én mappe per controller + Shared/_Layout
 ├── wwwroot/            CSS, JavaScript (kart.js, posisjonsvelger.js, kartverket.js)
 ├── docs/               Dokumentasjon
@@ -234,6 +234,7 @@ KI er brukt som støtte gjennom hele prosjektet. Alle endringer laget med KI har
 
 ## Kjente begrensninger
 
+- Passord lagres midlertidig i klartekst. Den egenlagde passord-hashingen er fjernet, og innloggingen skal flyttes til ASP.NET Core Identity, som har trygg hashing innebygd.
 - Data lagres bare i minnet og forsvinner når appen stopper. Planen er å koble på MariaDB.
 - Appen kjører bare over http i Docker.
 - Se [docs/drift.md](docs/drift.md) for detaljer.
