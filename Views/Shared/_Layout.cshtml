@@ -92,10 +92,14 @@
         @RenderBody()
     </main>
 
-    <footer class="bp-footer">
-        <p>BeredskapsPortalen &mdash; Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
-        <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
-    </footer>
+    @* Kartsiden bruker hele skjermen, så der viser vi ikke footeren. *@
+    @if (!ErAktiv("Kart"))
+    {
+        <footer class="bp-footer">
+            <p>BeredskapsPortalen &mdash; Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
+            <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
+        </footer>
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

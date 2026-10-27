@@ -99,7 +99,8 @@ public class InMemoryBehovRepository : IBehovRepository
         // Gir hvert eksempelbehov en plassering på kartet ut fra området det gjelder.
         foreach (var behov in data)
         {
-            (behov.Breddegrad, behov.Lengdegrad) = EksempelPosisjoner.For(behov.GeografiskOmrade, behov.Id);
+            // Behov har ingen adresse, bare et område, så adresseteksten (_) brukes ikke her.
+            (_, behov.Breddegrad, behov.Lengdegrad) = EksempelPosisjoner.For(behov.GeografiskOmrade);
         }
 
         return data;
