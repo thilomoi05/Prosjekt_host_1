@@ -5,6 +5,10 @@
     var gjeldendeController = ViewContext.RouteData.Values["controller"]?.ToString();
     var gjeldendeAction = ViewContext.RouteData.Values["action"]?.ToString();
     var erInnlogget = User.Identity?.IsAuthenticated ?? false;
+    
+    // Navn og rolle til innlogget bruker, vises i nedtrekksmenyen øverst til høyre.
+    var brukerNavn = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+    var rolleTekst = User.IsInRole("OffentligAktor") ? "Offentlig aktør" : "Privat aktør";
 
     bool ErAktiv(string controller) => string.Equals(gjeldendeController, controller, StringComparison.OrdinalIgnoreCase);
 }
@@ -40,16 +44,34 @@
                     <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
                     <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
                     <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
-                    <li>
-                        <form asp-controller="Konto" asp-action="LoggUt" method="post" class="d-inline">
-                            <button type="submit" class="bp-bruker-info" title="Logg ut">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                    <circle cx="12" cy="7" r="4" />
-                                </svg>
-                                @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
-                            </button>
-                        </form>
+                    <li class="dropdown">
+                        <button type="button" class="bp-bruker-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            @brukerNavn
+                        </button>
+
+                        <ul class="dropdown-menu dropdown-menu-end bp-brukermeny">
+                            <li class="bp-brukermeny-hode">
+                                <div class="bp-brukermeny-navn">@brukerNavn</div>
+                                <div class="bp-brukermeny-rolle">@rolleTekst</div>
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+
+                            <li><a class="dropdown-item" asp-controller="Konto" asp-action="Profil">👤 Min profil</a></li>
+                            <li><span class="dropdown-item disabled">📋 Mine innmeldinger <span class="bp-kommer">Kommer</span></span></li>
+                            <li><span class="dropdown-item disabled">🌐 Språk: Norsk <span class="bp-kommer">Kommer</span></span></li>
+                            <li><span class="dropdown-item disabled">⚙️ Innstillinger <span class="bp-kommer">Kommer</span></span></li>
+
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <form asp-controller="Konto" asp-action="LoggUt" method="post">
+                                    <button type="submit" class="dropdown-item bp-brukermeny-loggut">↪ Logg ut</button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             }

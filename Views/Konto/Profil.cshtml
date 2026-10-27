@@ -1,0 +1,24 @@
+@model ProfilViewModel
+@{
+    ViewData["Title"] = "Min profil";
+}
+
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort">
+        <h1>Min profil</h1>
+        <p class="bp-skjema-hjelp">@Model.RolleTekst</p>
+
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Navn</dt>
+            <dd class="col-sm-8">@Model.FulltNavn</dd>
+
+            <dt class="col-sm-4">E-post</dt>
+            <dd class="col-sm-8">@Model.Epost</dd>
+
+            <dt class="col-sm-4">Brukernavn</dt>
+            <dd class="col-sm-8">@Model.Brukernavn</dd>
+        </dl>
+    </div>
+</div>
+
+
