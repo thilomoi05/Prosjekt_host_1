@@ -1,18 +1,29 @@
 /* =========================================================================
-   BeredskapsPortalen - design system
-   Alle farger/avstander samlet som CSS-variabler øverst, slik at hele
-   fargeprofilen kan justeres ett sted når vi finpusser designet videre.
+   BeredskapsPortalen - design system (utkast: inspirert av forsvaret.no)
+   Stramt og rolig: hvitt og varm lysegrå, nesten svart tekst, rette hjørner
+   og ingen skygger. Alle farger/avstander er samlet som CSS-variabler her,
+   slik at hele fargeprofilen kan justeres ett sted.
    ========================================================================= */
 :root {
-  --farge-primær: #3b5fe2;
-  --farge-primær-mork: #2f4ecc;
-  --farge-bakgrunn: #f3f4f6;
+  /* Grunnfarger */
+  --farge-primær: #1d1d1b;          /* nesten svart: knapper, tekst, linjer */
+  --farge-primær-mork: #45443f;     /* hover på mørke knapper */
+  --farge-bakgrunn: #ffffff;        /* sidebakgrunn */
+  --farge-flate: #f0efed;           /* varm lysegrå: kort og blokker */
+  --farge-flate-mork: #e4e2de;      /* litt mørkere grå: tabellhoder o.l. */
   --farge-kort: #ffffff;
-  --farge-kant: #e5e7eb;
-  --farge-tekst: #1e293b;
-  --farge-tekst-svak: #4b5563;
-  --farge-tekst-lysere: #6b7280;
+  --farge-kant: #d6d4cf;
+  --farge-tekst: #1d1d1b;
+  --farge-tekst-svak: #4a4945;
+  --farge-tekst-lysere: #6e6c67;
+  --farge-mork: #1f2531;            /* mørk marine: bildeflater og footer */
+  --farge-logo: #3f4a32;            /* dempet oliven til skjoldet */
 
+  /* Menyen */
+  --farge-meny-hoved: #c6c6c4;
+  --farge-meny-midt: #f8f8f7;
+
+  /* Status (uendret fra før, så badgene betyr det samme) */
   --farge-badge-ny-bg: #fee2e2;
   --farge-badge-ny-tekst: #b91c1c;
   --farge-badge-venter-bg: #fef3c7;
@@ -22,36 +33,49 @@
   --farge-badge-fullfort-bg: #dcfce7;
   --farge-badge-fullfort-tekst: #166534;
 
-  --farge-akutt: #dc2626;
-  --farge-planlagt: #d97706;
-  --farge-ressurs: #059669;
+  --farge-akutt: #c8281e;
+  --farge-planlagt: #b45f06;
+  --farge-ressurs: #2f6b4f;
 
-  --radius-kort: 0.75rem;
-  --skygge-kort: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --radius-kort: 0;                 /* Forsvaret bruker rette hjørner */
+  --skygge-kort: none;
+  --header-hoyde: 96px;             /* brukes av kartsiden for å fylle resten av skjermen */
+  --side-bredde: 1320px;
 }
 
 html {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 @media (min-width: 768px) {
   html {
-    font-size: 16px;
+    font-size: 17px;
   }
 }
 
 body {
   background-color: var(--farge-bakgrunn);
   color: var(--farge-tekst);
-  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Outfit", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
   margin: 0;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
+/* Når den store menyen er åpen, skal ikke siden bak scrolle */
+body.bp-meny-apen {
+  overflow: hidden;
+}
+
 main {
   flex: 1;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 500;
+  letter-spacing: -0.005em;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus,
@@ -61,116 +85,369 @@ main {
 
 a {
   color: var(--farge-primær);
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--farge-primær);
+  outline-offset: 3px;
 }
 
 /* -------------------------------------------------------------------------
-   Toppmeny
+   Toppen: Meny | logo | Min side + Søk
    ------------------------------------------------------------------------- */
 .bp-header {
-  background-color: var(--farge-kort);
-  border-bottom: 1px solid var(--farge-kant);
+  background-color: var(--farge-bakgrunn);
 }
 
-.bp-navbar {
+.bp-header-innhold {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;   /* logoen står alltid midt på */
+  align-items: center;
+  min-height: var(--header-hoyde);
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0.5rem clamp(1rem, 5vw, 5rem);
+}
+
+.bp-header-hoyre {
+  justify-self: end;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  gap: 1.75rem;
+}
+
+.bp-header-knapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  background: none;
+  border: none;
+  color: var(--farge-tekst);
+  font: inherit;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  justify-self: start;
+}
+
+.bp-header-knapp:hover {
+  color: var(--farge-tekst);
+  text-decoration: underline;
 }
 
 .bp-logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--farge-tekst);
+  gap: 0.2rem;
+  color: var(--farge-logo);
   text-decoration: none;
 }
 
-.bp-logo svg {
-  color: var(--farge-primær);
-  flex-shrink: 0;
+.bp-logo-tekst {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--farge-tekst);
 }
 
-.bp-nav-lenker {
+/* -------------------------------------------------------------------------
+   Den store menyen (tre kolonner over hele skjermen)
+   ------------------------------------------------------------------------- */
+.bp-meny {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;                    /* over alt, også kartet */
+  display: grid;
+  grid-template-columns: 35fr 27fr 38fr;
+  background-color: var(--farge-bakgrunn);
+  overflow-y: auto;
+  animation: bp-meny-inn 0.18s ease-out;
+}
+
+.bp-meny[hidden] {
+  display: none;
+}
+
+@keyframes bp-meny-inn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.bp-meny-kolonne {
+  min-height: 100vh;
+}
+
+/* Kolonne 1: grå, med de viktigste lenkene */
+.bp-meny-hoved {
   display: flex;
-  align-items: center;
-  gap: 1.75rem;
+  flex-direction: column;
+  background-color: var(--farge-meny-hoved);
+  padding: 2.4rem 2rem 2.5rem clamp(1.5rem, 11vw, 15rem);
+}
+
+.bp-meny-lukk {
+  margin-left: -1rem;
+  margin-bottom: 3.5rem;
+}
+
+.bp-meny-sprak {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.95rem;
+  margin-bottom: 2.25rem;
+}
+
+.bp-meny-sprak .aktiv {
+  color: var(--farge-tekst);
+}
+
+.bp-meny-sprak-kommer {
+  color: var(--farge-tekst-svak);
+  text-decoration: underline;
+  cursor: not-allowed;
+}
+
+.bp-meny-bruker {
+  font-size: 0.9rem;
+  color: var(--farge-tekst-svak);
+  margin-bottom: 0.75rem;
+}
+
+.bp-meny-bruker span {
+  color: var(--farge-tekst-svak);
+}
+
+.bp-meny-store-lenker,
+.bp-meny-sma-lenker {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.bp-nav-lenker a.bp-nav-link {
-  color: var(--farge-tekst-svak);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.bp-nav-lenker a.bp-nav-link.aktiv {
-  color: var(--farge-primær);
-  font-weight: 600;
-}
-
-.bp-nav-lenker a.bp-nav-link:hover {
-  color: var(--farge-primær);
-}
-
-.bp-bruker-info {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+.bp-meny-store-lenker a {
+  display: inline-block;
+  font-size: clamp(1.6rem, 2.1vw, 2.05rem);
+  line-height: 1.55;
   color: var(--farge-tekst);
-  font-weight: 600;
+  text-decoration: none;
+}
+
+.bp-meny-store-lenker a:hover,
+.bp-meny-store-lenker a.aktiv {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+.bp-meny-sma-lenker {
+  margin-top: 3.25rem;
+}
+
+.bp-meny-sma-lenker a,
+.bp-meny-loggut {
+  display: inline-block;
+  font-size: 0.8rem;
+  line-height: 2;
+  color: var(--farge-tekst);
+  text-decoration: none;
+}
+
+.bp-meny-sma-lenker a:hover,
+.bp-meny-loggut:hover {
+  text-decoration: underline;
+}
+
+.bp-meny-loggut {
   background: none;
   border: none;
   padding: 0;
+  font-family: inherit;
   cursor: pointer;
 }
 
-.bp-bruker-info:hover {
-  color: var(--farge-primær);
+.bp-meny-fot {
+  margin-top: auto;
+  padding-top: 3rem;
+  font-size: 0.75rem;
+  color: var(--farge-tekst-svak);
+  max-width: 22rem;
 }
 
-/* Nedtrekksmenyen under brukernavnet øverst til høyre */
-.bp-brukermeny {
-    min-width: 15rem;
-    padding: 0.5rem 0;
-    border: 1px solid var(--farge-kant);
-    border-radius: 0.75rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+/* Kolonne 2: lys, logo og trekkspill */
+.bp-meny-midt {
+  background-color: var(--farge-meny-midt);
+  padding: 2.25rem 2rem 2.5rem 4.5rem;
 }
 
-.bp-brukermeny-hode {
-    padding: 0.5rem 1rem;
+.bp-meny-logo {
+  margin: 0 0 6rem;
+  /* Kolonnen har mer luft til venstre enn til høyre, så vi forskyver logoen
+     tilbake for at den skal stå midt i kolonnen og ikke midt i innholdet */
+  transform: translateX(calc(-1 * (4.5rem - 2rem) / 2));
 }
 
-.bp-brukermeny-navn {
-    font-weight: 700;
+.bp-meny-trekkspill details {
+  margin-bottom: 0.6rem;
 }
 
-.bp-brukermeny-rolle {
-    font-size: 0.85rem;
-    color: var(--farge-tekst-svak);
+.bp-meny-trekkspill summary {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  list-style: none;                 /* fjerner standard-trekanten */
+  font-size: 1.05rem;
+  padding: 0.35rem 0;
+  cursor: pointer;
 }
 
-.bp-brukermeny .dropdown-item {
-    padding: 0.5rem 1rem;
+.bp-meny-trekkspill summary::-webkit-details-marker {
+  display: none;
 }
 
-.bp-brukermeny .bp-brukermeny-loggut {
-    color: var(--farge-akutt);
+/* Pil (chevron) laget av to kanter på en rotert firkant */
+.bp-meny-trekkspill summary::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: -0.25rem 0.1rem 0 0.15rem;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.bp-meny-trekkspill details[open] summary::before {
+  transform: rotate(225deg);
+  margin-top: 0.25rem;
+}
+
+.bp-meny-trekkspill summary:hover {
+  text-decoration: underline;
+}
+
+.bp-meny-trekkspill ul {
+  list-style: none;
+  margin: 0.25rem 0 0.75rem;
+  padding: 0 0 0 1.75rem;
+}
+
+.bp-meny-trekkspill li a,
+.bp-meny-kommer {
+  display: inline-block;
+  font-size: 0.92rem;
+  line-height: 2;
+  color: var(--farge-tekst);
+  text-decoration: none;
+}
+
+.bp-meny-trekkspill li a:hover {
+  text-decoration: underline;
+}
+
+.bp-meny-kommer {
+  color: var(--farge-tekst-lysere);
+}
+
+/* Kolonne 3: hvit, søk */
+.bp-meny-sok {
+  padding: 10rem 2rem 2.5rem 3.5rem;
+}
+
+.bp-sok {
+  max-width: 24rem;
+}
+
+.bp-sok-etikett {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.bp-sok-felt-rad {
+  display: flex;
+  align-items: center;
+  border-bottom: 1.5px solid var(--farge-tekst);
+}
+
+.bp-sok-felt {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 1.25rem;
+  padding: 0.3rem 0.4rem;
+  color: var(--farge-tekst);
+}
+
+.bp-sok-felt::placeholder {
+  color: var(--farge-tekst);
+}
+
+.bp-sok-felt:focus {
+  outline: none;
+}
+
+/* Skjuler nettleserens egen blå "x" i søkefeltet */
+.bp-sok-felt::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.bp-sok-felt-rad:focus-within {
+  border-bottom-width: 2.5px;
+}
+
+.bp-sok-knapp {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  color: var(--farge-tekst);
+  cursor: pointer;
+}
+
+.bp-sok-hint {
+  margin-top: 0.75rem;
+  font-size: 0.65rem;
+}
+
+.bp-sok-treff {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+}
+
+.bp-sok-treff a {
+  display: block;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--farge-kant);
+  color: var(--farge-tekst);
+  text-decoration: none;
+}
+
+.bp-sok-treff a::after {
+  content: " →";
+}
+
+.bp-sok-treff a:hover {
+  text-decoration: underline;
+}
+
+.bp-sok-ingen {
+  font-size: 0.9rem;
+  color: var(--farge-tekst-svak);
 }
 
 .bp-kommer {
-    font-size: 0.7rem;
-    margin-left: 0.35rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 999px;
-    background-color: var(--farge-bakgrunn);
+  font-size: 0.65rem;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.45rem;
+  background-color: var(--farge-flate-mork);
+  color: var(--farge-tekst-svak);
+  vertical-align: 0.1em;
 }
 
 /* -------------------------------------------------------------------------
@@ -178,11 +455,11 @@ a {
    ------------------------------------------------------------------------- */
 .btn-bp-primær {
   background-color: var(--farge-primær);
-  border-color: var(--farge-primær);
+  border: 1px solid var(--farge-primær);
   color: #fff;
-  font-weight: 600;
-  padding: 0.55rem 1.25rem;
-  border-radius: 0.5rem;
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 0;
 }
 
 .btn-bp-primær:hover,
@@ -194,76 +471,274 @@ a {
 
 .btn-bp-sekundær {
   background-color: #fff;
-  border: 1px solid var(--farge-kant);
+  border: 1px solid var(--farge-primær);
   color: var(--farge-tekst);
-  font-weight: 600;
-  padding: 0.55rem 1.25rem;
-  border-radius: 0.5rem;
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 0;
 }
 
 .btn-bp-sekundær:hover {
-  background-color: var(--farge-bakgrunn);
+  background-color: var(--farge-flate);
   color: var(--farge-tekst);
 }
 
 /* -------------------------------------------------------------------------
-   Hero-seksjon på forsiden
+   Forsiden: flis-rutenett øverst (som bildene på forsvaret.no)
+   Flisene har ikke fotografier (opphavsrett), men mørke flater med mønster.
+   Vil dere bruke egne bilder: legg dem i wwwroot/images og sett
+   background-image på .bp-flis-a / -b / -c.
    ------------------------------------------------------------------------- */
-.bp-hero {
-  position: relative;
-  overflow: hidden;
-  background: radial-gradient(ellipse at 20% 30%, rgba(59, 95, 226, 0.25), transparent 55%),
-              radial-gradient(ellipse at 80% 70%, rgba(217, 119, 6, 0.15), transparent 50%),
-              linear-gradient(180deg, #0b1220 0%, #111827 60%, #0b1220 100%);
-  color: #fff;
-  padding: 5rem 1.5rem;
-  text-align: center;
+.bp-topp {
+  background: linear-gradient(180deg, #ffffff 0%, #eeedeb 100%);
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 3.5rem;
 }
 
-/* Enkle "bylys" laget med gjentakende radiale prikker, for å antyde en by om natten
-   uten å måtte laste inn et eksternt (og opphavsrettsbeskyttet) fotografi. */
-.bp-hero::before {
-  content: "";
+.bp-flis-grid {
+  display: grid;
+  grid-template-columns: 1.78fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1650px;
+  margin: 0 auto;
+  height: clamp(26rem, 38vw, 37rem);
+}
+
+.bp-flis {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  color: #fff;
+  text-decoration: none;
+  background-color: var(--farge-mork);
+}
+
+.bp-flis-stor {
+  grid-row: 1 / 3;
+}
+
+/* Bildet/mønsteret ligger i et eget lag, så det kan zoome litt ved hover */
+.bp-flis-bilde {
   position: absolute;
   inset: 0;
-  opacity: 0.5;
-  background-image:
-    radial-gradient(1px 1px at 10% 80%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 20% 60%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 30% 85%, #f8fafc, transparent),
-    radial-gradient(1px 1px at 45% 70%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 60% 90%, #f8fafc, transparent),
-    radial-gradient(1px 1px at 70% 65%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 85% 80%, #f8fafc, transparent),
-    radial-gradient(1px 1px at 95% 60%, #fbbf24, transparent);
-  background-repeat: repeat-x;
+  transition: transform 0.6s ease;
+}
+
+.bp-flis:hover .bp-flis-bilde {
+  transform: scale(1.03);
+}
+
+/* Stor flis: by om natten (samme "bylys"-idé som før) */
+.bp-flis-a .bp-flis-bilde {
+  background:
+    radial-gradient(1.5px 1.5px at 12% 82%, #f6c453, transparent),
+    radial-gradient(1.5px 1.5px at 18% 74%, #fff4d6, transparent),
+    radial-gradient(1.5px 1.5px at 27% 86%, #f6c453, transparent),
+    radial-gradient(1.5px 1.5px at 36% 78%, #fff4d6, transparent),
+    radial-gradient(1.5px 1.5px at 44% 88%, #f6c453, transparent),
+    radial-gradient(1.5px 1.5px at 58% 80%, #fff4d6, transparent),
+    radial-gradient(1.5px 1.5px at 66% 90%, #f6c453, transparent),
+    radial-gradient(1.5px 1.5px at 79% 76%, #fff4d6, transparent),
+    radial-gradient(1.5px 1.5px at 88% 85%, #f6c453, transparent),
+    radial-gradient(ellipse at 70% 15%, rgba(140, 160, 190, 0.35), transparent 55%),
+    linear-gradient(180deg, #3a4354 0%, #222937 55%, #141922 100%);
+}
+
+/* Oppe til høyre: oliven med høydekurver, som et kart */
+.bp-flis-b .bp-flis-bilde {
+  background:
+    repeating-radial-gradient(circle at 28% 38%, transparent 0 18px, rgba(255, 255, 255, 0.08) 18px 19px),
+    repeating-radial-gradient(circle at 82% 90%, transparent 0 22px, rgba(255, 255, 255, 0.06) 22px 23px),
+    linear-gradient(135deg, #5f6a4b 0%, #39412d 100%);
+}
+
+/* Nede til høyre: skifergrå med rutenett */
+.bp-flis-c .bp-flis-bilde {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(255, 255, 255, 0.07) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, rgba(255, 255, 255, 0.07) 31px 32px),
+    linear-gradient(135deg, #4b5566 0%, #2a303b 100%);
+}
+
+/* Stort, tynt ikon som "motiv" i flisen */
+.bp-flis-motiv {
+  position: absolute;
+  top: 50%;
+  left: 38%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.16);
   pointer-events: none;
 }
 
-.bp-hero-innhold {
+.bp-flis-liten .bp-flis-motiv {
+  left: 30%;
+}
+
+/* Den mørke tekstboksen nede i hjørnet */
+.bp-flis-tekst {
   position: relative;
-  max-width: 760px;
-  margin: 0 auto;
+  background-color: rgba(18, 18, 18, 0.72);
+  padding: 0.75rem 1rem 0.8rem;
+  max-width: 85%;
 }
 
-.bp-hero h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 1.5rem;
+.bp-flis-etikett {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
 }
 
-.bp-hero p {
-  font-size: 1.1rem;
-  color: #cbd5e1;
-  margin-bottom: 2rem;
+.bp-flis-tittel {
+  display: block;
+  font-size: clamp(1.15rem, 1.6vw, 1.6rem);
+  font-weight: 500;
+  line-height: 1.25;
 }
 
-.bp-hero-knapper {
+.bp-flis:hover .bp-flis-tittel {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+/* Hurtigknappene under flisene */
+.bp-hurtig-knapper {
   display: flex;
-  gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 3rem auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bp-hurtig-knapp {
+  display: inline-block;
+  padding: 0.8rem 1.4rem;
+  background-color: #fff;
+  border: 1px solid var(--farge-kant);
+  color: var(--farge-tekst);
+  font-size: 1.2rem;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.bp-hurtig-knapp:hover {
+  border-color: var(--farge-primær);
+  color: var(--farge-tekst);
+}
+
+/* -------------------------------------------------------------------------
+   Forsiden: blokker med "bilde" og grå flate som overlapper (som
+   "Nytt arkivsystem" / "Hør den nyeste episoden" på forsvaret.no)
+   ------------------------------------------------------------------------- */
+.bp-blokker {
+  padding: 4.5rem 1.5rem 2rem;
+}
+
+.bp-blokker > h2 {
+  text-align: center;
+  font-size: clamp(1.9rem, 2.6vw, 2.5rem);
+  margin-bottom: 3.5rem;
+}
+
+.bp-blokk {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 3rem auto 3rem;
+  max-width: var(--side-bredde);
+  margin: 0 auto 5rem;
+}
+
+/* Den grå flaten bak. Er et eget element så tekst og bilde kan plasseres fritt. */
+.bp-blokk-flate {
+  grid-row: 1 / 4;
+  background-color: var(--farge-flate);
+}
+
+.bp-blokk-bilde {
+  grid-row: 2 / 3;
+  position: relative;
+  z-index: 1;
+  min-height: 21rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background-color: var(--farge-mork);
+  color: #d8dcc4;
+  text-align: center;
+  padding: 2rem;
+}
+
+.bp-blokk-bilde-tekst {
+  font-size: clamp(1.6rem, 2.4vw, 2.3rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #e6e8ee;
+}
+
+.bp-blokk-tekst {
+  grid-row: 2 / 3;
+  align-self: center;
+  position: relative;
+  z-index: 1;
+  padding: 2rem 0;
+}
+
+/* Variant 1: bilde til venstre, flate til høyre */
+.bp-blokk-venstre .bp-blokk-bilde { grid-column: 1 / 7; }
+.bp-blokk-venstre .bp-blokk-flate { grid-column: 5 / 13; }
+.bp-blokk-venstre .bp-blokk-tekst { grid-column: 8 / 12; }
+
+/* Variant 2: flate til venstre, bilde til høyre (litt lavere) */
+.bp-blokk-hoyre .bp-blokk-flate { grid-column: 1 / 9; }
+.bp-blokk-hoyre .bp-blokk-tekst { grid-column: 2 / 7; }
+.bp-blokk-hoyre .bp-blokk-bilde { grid-column: 7 / 13; }
+
+.bp-blokk-tekst h3 {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 400;
+  line-height: 1.35;
+  margin-bottom: 1.25rem;
+}
+
+.bp-blokk-tekst p {
+  color: var(--farge-tekst);
+  font-weight: 300;
+  line-height: 1.75;
+}
+
+.bp-blokk-tekst .bp-blokk-hvem {
+  color: var(--farge-tekst-svak);
+  font-weight: 400;
+}
+
+.bp-pil-lenke {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  color: var(--farge-tekst);
+  text-decoration: none;
+  font-weight: 400;
+}
+
+.bp-pil-lenke svg {
+  transition: transform 0.15s ease;
+}
+
+.bp-pil-lenke:hover svg {
+  transform: translateX(4px);
+}
+
+.bp-pil-lenke:hover span {
+  text-decoration: underline;
 }
 
 /* -------------------------------------------------------------------------
@@ -271,14 +746,14 @@ a {
    ------------------------------------------------------------------------- */
 .bp-seksjon {
   padding: 4rem 1.5rem;
-  max-width: 1200px;
+  max-width: var(--side-bredde);
   margin: 0 auto;
 }
 
 .bp-seksjon h2 {
   text-align: center;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
+  font-size: clamp(1.9rem, 2.6vw, 2.5rem);
+  margin-bottom: 3rem;
 }
 
 .bp-kort-grid {
@@ -288,36 +763,64 @@ a {
 }
 
 .bp-kort {
-  background-color: var(--farge-kort);
-  border: 1px solid var(--farge-kant);
+  background-color: var(--farge-flate);
   border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
-  padding: 1.75rem;
+  padding: 2rem;
 }
 
 .bp-ikon-sirkel {
   width: 3rem;
   height: 3rem;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
+  background-color: var(--farge-mork);
+  color: #fff;
 }
 
-.bp-ikon-sirkel.blaa { background-color: #dbeafe; color: #2563eb; }
-.bp-ikon-sirkel.gronn { background-color: #d1fae5; color: #059669; }
-.bp-ikon-sirkel.gul { background-color: #fef3c7; color: #d97706; }
-
 .bp-kort h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 0.6rem;
 }
 
 .bp-kort p {
   color: var(--farge-tekst-svak);
+  font-weight: 300;
+  line-height: 1.65;
   margin: 0;
+}
+
+/* "Slik fungerer det": tre steg med tall og piler mellom */
+.bp-steg-flyt {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.bp-steg {
+  flex: 1;
+}
+
+.bp-steg-topp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.bp-steg-nummer {
+  font-size: 2.75rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--farge-tekst);
+}
+
+.bp-steg-pil {
+  display: flex;
+  align-items: center;
+  color: var(--farge-tekst-lysere);
 }
 
 /* -------------------------------------------------------------------------
@@ -326,64 +829,70 @@ a {
 .bp-skjema-side {
   display: flex;
   justify-content: center;
-  padding: 3rem 1.5rem;
+  padding: 3rem 1.5rem 4rem;
 }
 
 .bp-skjema-kort {
-  background-color: var(--farge-kort);
-  border: 1px solid var(--farge-kant);
+  background-color: var(--farge-flate);
   border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
-  padding: 2.5rem;
+  padding: 2.75rem;
   width: 100%;
-  max-width: 34rem;
+  max-width: 36rem;
 }
 
 .bp-skjema-kort h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.9rem;
+  font-weight: 400;
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem;
 }
 
 .bp-skjema-kort .form-label {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--farge-tekst);
+}
+
+/* Skjemafelt: rette hjørner og tydelig kant */
+.form-control,
+.form-select {
+  border-radius: 0;
+  border-color: #b9b6b0;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--farge-primær);
 }
 
 .bp-skjema-fot {
   text-align: center;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   color: var(--farge-tekst-svak);
 }
 
 .bp-skjema-fot a {
-  font-weight: 600;
-  text-decoration: none;
+  font-weight: 500;
 }
 
 /* -------------------------------------------------------------------------
    Dashbord ("Oversikt")
    ------------------------------------------------------------------------- */
 .bp-side-innhold {
-  max-width: 1200px;
+  max-width: var(--side-bredde);
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 4rem;
 }
 
 .bp-stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
 .bp-stat-kort {
-  background-color: var(--farge-kort);
-  border: 1px solid var(--farge-kant);
-  border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
-  padding: 1.5rem;
+  background-color: var(--farge-flate);
+  padding: 1.75rem;
 }
 
 .bp-stat-kort .bp-stat-etikett {
@@ -392,8 +901,9 @@ a {
 }
 
 .bp-stat-kort .bp-stat-tall {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 2.6rem;
+  font-weight: 300;
+  line-height: 1.1;
 }
 
 .bp-stat-kort .bp-stat-tall.varsel {
@@ -401,10 +911,8 @@ a {
 }
 
 .bp-tabell-kort {
-  background-color: var(--farge-kort);
+  background-color: var(--farge-bakgrunn);
   border: 1px solid var(--farge-kant);
-  border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
   padding: 1.75rem;
 }
 
@@ -418,8 +926,8 @@ a {
 }
 
 .bp-tabell-kort-hode h2 {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 400;
   margin: 0;
 }
 
@@ -431,9 +939,9 @@ a {
 .bp-tabell th {
   text-align: left;
   font-size: 0.85rem;
-  text-transform: none;
+  font-weight: 500;
   color: var(--farge-tekst-svak);
-  background-color: #f9fafb;
+  background-color: var(--farge-flate);
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--farge-kant);
 }
@@ -448,15 +956,15 @@ a {
   border-bottom: none;
 }
 
-.bp-prioritet-akutt { color: var(--farge-akutt); font-weight: 700; }
-.bp-prioritet-planlagt { color: var(--farge-planlagt); font-weight: 700; }
+.bp-prioritet-akutt { color: var(--farge-akutt); font-weight: 600; }
+.bp-prioritet-planlagt { color: var(--farge-planlagt); font-weight: 600; }
 
 .bp-badge {
   display: inline-block;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .bp-badge-ny { background-color: var(--farge-badge-ny-bg); color: var(--farge-badge-ny-tekst); }
@@ -618,7 +1126,7 @@ a {
 /* Kartsiden i fullskjerm (Views/Kart/Index.cshtml) */
 .bp-kart-fullskjerm {
   position: relative;             /* knapp og tegnforklaring plasseres i forhold til denne */
-  height: calc(100vh - 66px);     /* hele skjermhøyden minus menyen øverst */
+  height: calc(100vh - var(--header-hoyde));   /* hele skjermhøyden minus toppen */
 }
 
 .bp-kart-fullskjerm .bp-kart {
@@ -634,7 +1142,7 @@ a {
   margin: 0;
   padding: 0.5rem 1rem;
   background-color: var(--farge-kort);
-  border-radius: 999px;           /* avrundet "pille" */
+  border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -658,7 +1166,7 @@ a {
   bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);    /* flytter knappen tilbake halve bredden, så den står midt på */
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.6rem 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -672,34 +1180,50 @@ a {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);    /* midt på, samme triks som "Vis liste" */
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.4rem 1.5rem;
 }
 
-/* Panelet med listen: halve skjermhøyden og runde hjørner øverst */
+/* Panelet med listen: halve skjermhøyden */
 .bp-kart-liste-panel {
   --bs-offcanvas-height: 50vh;
-  border-radius: 1rem 1rem 0 0;
+  border-radius: 0;
 }
 
 /* -------------------------------------------------------------------------
    Footer
    ------------------------------------------------------------------------- */
 .bp-footer {
-  background-color: var(--farge-kort);
-  border-top: 1px solid var(--farge-kant);
-  text-align: center;
-  padding: 2rem 1.5rem;
-  color: var(--farge-tekst-svak);
+  background-color: var(--farge-mork);
+  color: #c9ccd3;
+  padding: 3rem 1.5rem;
+}
+
+.bp-footer-innhold {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  max-width: var(--side-bredde);
+  margin: 0 auto;
 }
 
 .bp-footer p {
   margin: 0.25rem 0;
+  font-weight: 300;
+}
+
+.bp-footer .bp-footer-navn {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0.02em;
 }
 
 .bp-footer .bp-footer-liten {
-  font-size: 0.85rem;
-  color: var(--farge-tekst-lysere);
+  font-size: 0.8rem;
+  color: #9aa0ab;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -711,211 +1235,160 @@ a {
   text-align: start;
 }
 
-/* For scenario avsnitt på forsiden */
-.bp-scenario {
-  background-color: var(--farge-kort);
-  border-bottom: 1px solid var(--farge-kant);
-  padding: 3.5rem 1.5rem;
-}
-
-.bp-scenario-innhold {
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.bp-scenario-etikett {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--farge-akutt);
-  margin-bottom: 0.75rem;
-}
-
-.bp-scenario h2 {
-  font-weight: 700;
-  margin-bottom: 1.25rem;
-}
-
-.bp-scenario p {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: var(--farge-tekst-svak);
-}
-
-.bp-scenario .bp-scenario-poeng {
-  color: var(--farge-tekst);
-  font-weight: 600;
-  border-left: 4px solid var(--farge-primær);
-  padding-left: 1rem;
-}
-
-/* Hvordan applikasjonen fungerer med piler og tall mellom */
-.bp-steg-flyt {
-  display: flex;
-  align-items: stretch;
-  gap: 1rem;
-}
-
-.bp-steg {
-  flex: 1;
-}
-
-.bp-steg-topp {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.bp-steg-nummer {
-  font-size: 2.5rem;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--farge-tekst-lysere);
-}
-
-.bp-steg-pil {
-  display: flex;
-  align-items: center;
-  font-size: 1.75rem;
-  color: var(--farge-tekst-lysere);
-}
-
-/* Hvem er portalen for? to kolonner osm viser offentlig og privat hensikt */
-.bp-malgrupper {
-  background-color: var(--farge-kort);
-  border-top: 1px solid var(--farge-kant);
-  padding: 4rem 1.5rem;
-}
-
-.bp-malgrupper-innhold {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.bp-malgrupper h2 {
-  text-align: center;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
-}
-
-.bp-malgruppe-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-}
-
-.bp-malgruppe {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--farge-bakgrunn);
-  border-radius: var(--radius-kort);
-  padding: 2rem;
-}
-
-.bp-malgruppe h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 1rem 0 0.25rem;
-}
-
-.bp-malgruppe-hvem {
-  color: var(--farge-tekst-svak);
-  margin-bottom: 1.25rem;
-}
-
-.bp-sjekkliste {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1.5rem;
-}
-
-.bp-sjekkliste li {
-  position: relative;
-  padding-left: 1.75rem;
-  margin-bottom: 0.6rem;
-}
-
-.bp-sjekkliste li::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: var(--farge-primær);
-  font-weight: 700;
-}
-
-.bp-malgruppe .btn {
-  margin-top: auto;
-  align-self: flex-start;
-}
-
-/* Tallstripe på forsiden som viser situasjonen oppdatert */
-.bp-tallstripe {
-  background-color: var(--farge-kort);
-  border-bottom: 1px solid var(--farge-kant);
-  padding: 1.75rem 1.5rem;
-}
-
-.bp-tallstripe-innhold {
-  max-width: 900px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  text-align: center;
-}
-
-.bp-tall {
-  display: flex;
-  flex-direction: column;
-  padding: 0 1rem;
-}
-
-.bp-tall + .bp-tall {
-  border-left: 1px solid var(--farge-kant);
-}
-
-.bp-tall-verdi {
-  font-size: 2.25rem;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.bp-tall-verdi.akutt {
-  color: var(--farge-akutt);
-}
-
-.bp-tall-etikett {
-  font-size: 0.9rem;
-  color: var(--farge-tekst-svak);
-}
-
- /*For mobilskjermvisning */
-@media (max-width: 767px) {
-  /* Toppmeny med logoen på egen linje, og menypunktene under */
-  .bp-navbar {
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+/* -------------------------------------------------------------------------
+   Nettbrett: menyen får to kolonner (søket flyttes under hovedlenkene)
+   ------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .bp-meny {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;     /* søket tar bare plassen det trenger */
   }
 
-  .bp-nav-lenker {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+  .bp-meny-hoved {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    padding-left: 2.5rem;
+  }
+
+  .bp-meny-kolonne {
+    min-height: auto;
+  }
+
+  .bp-meny-midt {
+    grid-column: 2;
+    grid-row: 2;
+    padding-left: 2.5rem;
+  }
+
+  .bp-meny-logo {
+    display: none;
+  }
+
+  .bp-meny-sok {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 6rem 2rem 1rem 2.5rem;
+    background-color: var(--farge-meny-midt);
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Mobil
+   ------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  :root {
+    --header-hoyde: 72px;
+  }
+
+  /* Bare ikonene for "Min side" og "Søk" i toppen, så logoen får plass */
+  .bp-header-knapp-tekst {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .bp-header-hoyre {
+    gap: 1.1rem;
+  }
+
+  .bp-logo-tekst {
+    display: none;
+  }
+
+  /* Menyen: én kolonne. Hovedlenker, så søk, så trekkspillene. */
+  .bp-meny {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bp-meny-hoved {
+    padding: 1.5rem 1.5rem 2rem;
+  }
+
+  .bp-meny-lukk {
+    margin-left: 0;
+    margin-bottom: 1.75rem;
+  }
+
+  .bp-meny-sok {
+    padding: 2rem 1.5rem 1rem;
+    background-color: var(--farge-bakgrunn);
+  }
+
+  .bp-meny-midt {
+    order: 1;            /* trekkspillene under søket */
+    flex: 1;
+    padding: 1.5rem;
+  }
+
+  .bp-meny-sma-lenker {
+    margin-top: 1.75rem;
+  }
+
+  .bp-meny-fot {
+    padding-top: 1.5rem;
+  }
+
+  /* Flisene under hverandre */
+  .bp-flis-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 18rem 11rem 11rem;
+    gap: 1rem;
+    height: auto;
+  }
+
+  .bp-flis-stor {
+    grid-row: auto;
+  }
+
+  .bp-hurtig-knapper {
+    margin-top: 2rem;
+    gap: 0.6rem;
+  }
+
+  .bp-hurtig-knapp {
+    font-size: 1rem;
+    padding: 0.65rem 1rem;
+  }
+
+  /* Blokkene: bilde øverst, tekst under, uten overlapp */
+  .bp-blokker {
+    padding: 3rem 1rem 1rem;
+  }
+
+  .bp-blokk {
+    display: block;
+    background-color: var(--farge-flate);
+    margin-bottom: 2.5rem;
+  }
+
+  .bp-blokk-flate {
+    display: none;
+  }
+
+  .bp-blokk-bilde {
+    min-height: 12rem;
+  }
+
+  .bp-blokk-tekst {
+    padding: 1.75rem 1.25rem 2rem;
   }
 
   /* Mindre luft rundt innholdet, så det får mer plass på smal skjerm */
   .bp-side-innhold {
-    padding: 1.25rem 0.75rem;
+    padding: 1.25rem 0.75rem 3rem;
   }
 
   /* Tabeller: scroll sidelengs inne i boksen i stedet for å gjøre hele siden for bred */
   .bp-tabell-kort {
     padding: 1rem;
     overflow-x: auto;
+  }
+
+  .bp-skjema-kort {
+    padding: 1.75rem 1.25rem;
   }
 
   /* "Slik fungerer det": stegene under hverandre, pilene peker ned */
@@ -928,13 +1401,8 @@ a {
     transform: rotate(90deg);
   }
 
-
-  /* Tall-stripe: litt mindre tall, så de får plass */
-  .bp-tall {
-    padding: 0 0.5rem;
-  }
-
-  .bp-tall-verdi {
-    font-size: 1.75rem;
+  .bp-footer-innhold {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

@@ -1,12 +1,12 @@
 @{
     // Henter ut hvilken Controller/Action som vises akkurat nå, slik at vi kan
-    // style riktig lenke som "aktiv" i navigasjonen og vise ulik meny avhengig
+    // style riktig lenke som "aktiv" i menyen og vise ulik meny avhengig
     // av om noen er logget inn eller ikke.
     var gjeldendeController = ViewContext.RouteData.Values["controller"]?.ToString();
     var gjeldendeAction = ViewContext.RouteData.Values["action"]?.ToString();
     var erInnlogget = User.Identity?.IsAuthenticated ?? false;
-    
-    // Navn og rolle til innlogget bruker, vises i nedtrekksmenyen øverst til høyre.
+
+    // Navn og rolle til innlogget bruker, vises i menyen.
     var brukerNavn = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
     var rolleTekst = User.IsInRole("OffentligAktor") ? "Offentlig aktør" : "Privat aktør";
 
@@ -19,6 +19,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BeredskapsPortalen</title>
     <script type="importmap"></script>
+    @* Skrifttype: Outfit (Google Fonts) ligner den geometriske skriften Forsvaret bruker.
+       Uten nett faller nettleseren tilbake til systemskriften (se site.css). *@
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@@300;400;500;600&display=swap" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Beredskapsportal.styles.css" asp-append-version="true" />
@@ -26,67 +31,207 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
+    @* =====================================================================
+       Toppen: "Meny" til venstre, logo i midten, "Min side" og "Søk" til høyre.
+       Alle sidelenkene ligger i den store menyen under (#bp-meny), slik som
+       på forsvaret.no. Knappene her åpner bare menyen.
+       ===================================================================== *@
     <header class="bp-header">
-        <nav class="bp-navbar">
-            <a class="bp-logo" asp-controller="Home" asp-action="Index">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="bp-header-innhold">
+            <button type="button" class="bp-header-knapp" data-bp-meny-apne aria-controls="bp-meny" aria-expanded="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <line x1="4" y1="8" x2="20" y2="8" />
+                    <line x1="4" y1="16" x2="20" y2="16" />
+                </svg>
+                Meny
+            </button>
+
+            <a class="bp-logo" asp-controller="Home" asp-action="Index" aria-label="BeredskapsPortalen, til forsiden">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
                     <line x1="12" y1="8" x2="12" y2="13" />
                     <circle cx="12" cy="16.2" r="0.6" fill="currentColor" />
                 </svg>
-                BeredskapsPortalen
+                <span class="bp-logo-tekst">BeredskapsPortalen</span>
             </a>
+
+            <div class="bp-header-hoyre">
+                @if (erInnlogget)
+                {
+                    <a class="bp-header-knapp" asp-controller="Konto" asp-action="Profil">
+                        <span class="bp-header-knapp-tekst">Min side</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="7" r="4" />
+                            <path d="M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2" />
+                        </svg>
+                    </a>
+                }
+                else
+                {
+                    <a class="bp-header-knapp" asp-controller="Konto" asp-action="LoggInn">
+                        <span class="bp-header-knapp-tekst">Logg inn</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="7" r="4" />
+                            <path d="M5 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2" />
+                        </svg>
+                    </a>
+                }
+                <button type="button" class="bp-header-knapp" data-bp-meny-apne data-bp-meny-sok aria-controls="bp-meny" aria-expanded="false">
+                    <span class="bp-header-knapp-tekst">Søk</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="6.5" />
+                        <line x1="16" y1="16" x2="20.5" y2="20.5" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    @* =====================================================================
+       Den store menyen. Dekker hele skjermen og har tre kolonner:
+         1) grå:  hovedlenkene (store), småLenker og "Lukk"
+         2) lys:  logo + trekkspill-grupper (<details>, trenger ikke JavaScript)
+         3) hvit: søkefelt som filtrerer lenkene i menyen
+       "hidden" gjør at den er skjult til site.js åpner den.
+       ===================================================================== *@
+    <div id="bp-meny" class="bp-meny" role="dialog" aria-modal="true" aria-label="Meny" hidden>
+        <div class="bp-meny-kolonne bp-meny-hoved">
+            <button type="button" class="bp-header-knapp bp-meny-lukk" data-bp-meny-lukk>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <line x1="5" y1="5" x2="19" y2="19" />
+                    <line x1="19" y1="5" x2="5" y2="19" />
+                </svg>
+                Lukk
+            </button>
+
+            <div class="bp-meny-sprak">
+                <span class="aktiv">Norsk</span>
+                <span class="bp-meny-sprak-kommer" title="Kommer senere">English</span>
+            </div>
 
             @if (erInnlogget)
             {
-                <ul class="bp-nav-lenker">
-                    <li><a class="bp-nav-link @(ErAktiv("Oversikt") ? "aktiv" : "")" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
-                    <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
-                    <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
-                    <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
-                    <li class="dropdown">
-                        <button type="button" class="bp-bruker-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
-                            </svg>
-                            @brukerNavn
-                        </button>
+                <p class="bp-meny-bruker">@brukerNavn <span>· @rolleTekst</span></p>
+            }
 
-                        <ul class="dropdown-menu dropdown-menu-end bp-brukermeny">
-                            <li class="bp-brukermeny-hode">
-                                <div class="bp-brukermeny-navn">@brukerNavn</div>
-                                <div class="bp-brukermeny-rolle">@rolleTekst</div>
-                            </li>
-                            <li><hr class="dropdown-divider" /></li>
+            <ul class="bp-meny-store-lenker">
+                @if (erInnlogget)
+                {
+                    <li><a class="@(ErAktiv("Oversikt") ? "aktiv" : "")" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
+                    <li><a class="@(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
+                    <li><a class="@(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
+                    <li><a class="@(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
+                    <li><a class="@(ErAktiv("Konto") ? "aktiv" : "")" asp-controller="Konto" asp-action="Profil">Min profil</a></li>
+                }
+                else
+                {
+                    <li><a class="@(ErAktiv("Home") ? "aktiv" : "")" asp-controller="Home" asp-action="Index">Forside</a></li>
+                    <li><a asp-controller="Konto" asp-action="LoggInn">Logg inn</a></li>
+                    <li><a asp-controller="Konto" asp-action="Registrer">Registrer bruker</a></li>
+                }
+            </ul>
 
-                            <li><a class="dropdown-item" asp-controller="Konto" asp-action="Profil">👤 Min profil</a></li>
-                            <li><span class="dropdown-item disabled">📋 Mine innmeldinger <span class="bp-kommer">Kommer</span></span></li>
-                            <li><span class="dropdown-item disabled">🌐 Språk: Norsk <span class="bp-kommer">Kommer</span></span></li>
-                            <li><span class="dropdown-item disabled">⚙️ Innstillinger <span class="bp-kommer">Kommer</span></span></li>
-
-                            <li><hr class="dropdown-divider" /></li>
-                            <li>
-                                <form asp-controller="Konto" asp-action="LoggUt" method="post">
-                                    <button type="submit" class="dropdown-item bp-brukermeny-loggut">↪ Logg ut</button>
-                                </form>
-                            </li>
-                        </ul>
+            <ul class="bp-meny-sma-lenker">
+                <li><a asp-controller="Home" asp-action="Index" asp-fragment="situasjonen">Om portalen</a></li>
+                <li><a asp-controller="Home" asp-action="Index" asp-fragment="slik-fungerer-det">Slik fungerer det</a></li>
+                <li><a asp-controller="Home" asp-action="Index" asp-fragment="hvem">Hvem er portalen for?</a></li>
+                @if (erInnlogget)
+                {
+                    <li>
+                        <form asp-controller="Konto" asp-action="LoggUt" method="post">
+                            <button type="submit" class="bp-meny-loggut">Logg ut</button>
+                        </form>
                     </li>
-                </ul>
-            }
-            else
-            {
-                <ul class="bp-nav-lenker">
-                    <li><a class="bp-nav-link @(ErAktiv("Home") ? "aktiv" : "")" asp-controller="Home" asp-action="Index">Hjem</a></li>
-                    @if (!ErAktiv("Home"))
-                    {
-                        <li><a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a></li>
-                    }
-                </ul>
-            }
-        </nav>
-    </header>
+                }
+            </ul>
+
+            <p class="bp-meny-fot">Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
+        </div>
+
+        <div class="bp-meny-kolonne bp-meny-midt">
+            <a class="bp-logo bp-meny-logo" asp-controller="Home" asp-action="Index" aria-label="BeredskapsPortalen, til forsiden">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
+                    <line x1="12" y1="8" x2="12" y2="13" />
+                    <circle cx="12" cy="16.2" r="0.6" fill="currentColor" />
+                </svg>
+            </a>
+
+            @* <details> er et innebygd HTML-trekkspill: klikk på <summary> for å åpne/lukke. *@
+            <div class="bp-meny-trekkspill">
+                @if (erInnlogget)
+                {
+                    <details>
+                        <summary>Behov</summary>
+                        <ul>
+                            <li><a asp-controller="Behov" asp-action="Index">Se alle behov</a></li>
+                            <li><a asp-controller="Behov" asp-action="Registrer">Meld inn nytt behov</a></li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Ressurser</summary>
+                        <ul>
+                            <li><a asp-controller="Ressurs" asp-action="Index">Se ressurser</a></li>
+                            <li><a asp-controller="Ressurs" asp-action="Registrer">Tilby en ressurs</a></li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Kart og oversikt</summary>
+                        <ul>
+                            <li><a asp-controller="Kart" asp-action="Index">Åpne kartet</a></li>
+                            <li><a asp-controller="Oversikt" asp-action="Index">Oversikt over situasjonen</a></li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Min konto</summary>
+                        <ul>
+                            <li><a asp-controller="Konto" asp-action="Profil">Min profil</a></li>
+                            <li><span class="bp-meny-kommer">Mine innmeldinger <span class="bp-kommer">Kommer</span></span></li>
+                            <li><span class="bp-meny-kommer">Innstillinger <span class="bp-kommer">Kommer</span></span></li>
+                        </ul>
+                    </details>
+                }
+                else
+                {
+                    <details>
+                        <summary>Kom i gang</summary>
+                        <ul>
+                            <li><a asp-controller="Konto" asp-action="LoggInn">Logg inn</a></li>
+                            <li><a asp-controller="Konto" asp-action="Registrer" asp-route-rolle="OffentligAktor">Registrer deg som offentlig aktør</a></li>
+                            <li><a asp-controller="Konto" asp-action="Registrer" asp-route-rolle="PrivatAktor">Registrer deg og tilby ressurser</a></li>
+                        </ul>
+                    </details>
+                    <details>
+                        <summary>Om portalen</summary>
+                        <ul>
+                            <li><a asp-controller="Home" asp-action="Index" asp-fragment="situasjonen">Hvorfor BeredskapsPortalen?</a></li>
+                            <li><a asp-controller="Home" asp-action="Index" asp-fragment="slik-fungerer-det">Slik fungerer det</a></li>
+                            <li><a asp-controller="Home" asp-action="Index" asp-fragment="hvem">Hvem er portalen for?</a></li>
+                        </ul>
+                    </details>
+                }
+            </div>
+        </div>
+
+        <div class="bp-meny-kolonne bp-meny-sok">
+            @* Søket filtrerer lenkene som allerede ligger i menyen (site.js).
+               Det finnes ikke et eget søk i databasen ennå. *@
+            <form class="bp-sok" role="search" data-bp-sok-skjema>
+                <label for="bp-sok-felt" class="bp-sok-etikett">Hei, hva ser du etter?</label>
+                <div class="bp-sok-felt-rad">
+                    <input id="bp-sok-felt" type="search" class="bp-sok-felt" placeholder="Søk" autocomplete="off" />
+                    <button type="submit" class="bp-sok-knapp" aria-label="Søk">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="6.5" />
+                            <line x1="16" y1="16" x2="20.5" y2="20.5" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="bp-sok-hint">F.eks. behov, ressurser, kart eller profil.</p>
+                <ul class="bp-sok-treff" data-bp-sok-treff aria-live="polite"></ul>
+            </form>
+        </div>
+    </div>
 
     <main role="main">
         @RenderBody()
@@ -96,8 +241,13 @@
     @if (!ErAktiv("Kart"))
     {
         <footer class="bp-footer">
-            <p>BeredskapsPortalen &mdash; Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
-            <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
+            <div class="bp-footer-innhold">
+                <div>
+                    <p class="bp-footer-navn">BeredskapsPortalen</p>
+                    <p>Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
+                </div>
+                <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
+            </div>
         </footer>
     }
 
