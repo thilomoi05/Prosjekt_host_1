@@ -33,17 +33,16 @@
                         <tr>
                             <td><strong>@behov.VisningsNavn</strong></td>
                             <td>@behov.GeografiskOmrade</td>
-                            <td class="@(behov.Prioritet == Prioritet.Akutt ? "bp-prioritet-akutt" : "bp-prioritet-planlagt")">
-                                @(behov.Prioritet == Prioritet.Akutt ? "Akutt" : "Planlagt")
+                            @* Tekst og farge for prioriteten kommer fra PrioritetVisning (Models/PrioritetVisning.cs). *@
+                            <td class="bp-prioritet-@PrioritetVisning.CssNavn(behov.Prioritet)">
+                                @PrioritetVisning.Tekst(behov.Prioritet)
                             </td>
                             <td>
                                 @{
                                     var (cssKlasse, tekst) = behov.Status switch
                                     {
-                                        BehovStatus.Ny => ("bp-badge-ny", "Ny"),
-                                        BehovStatus.Venter => ("bp-badge-venter", "Venter"),
                                         BehovStatus.Tildelt => ("bp-badge-tildelt", "Tildelt"),
-                                        _ => ("bp-badge-fullfort", "Fullført")
+                                        _ => ("bp-badge-venter", "Venter")
                                     };
                                 }
                                 <span class="bp-badge @cssKlasse">@tekst</span>

@@ -84,6 +84,9 @@ public class RessursController : Controller
             TilgjengeligTil = modell.TilgjengeligTil,
             Kontaktperson = modell.Kontaktperson,
             Telefon = modell.Telefon,
+            // Brukernavnet til den innloggede brukeren (fra innloggingscookien).
+            // "?." og "??" gjør at det blir tom tekst hvis ingen er logget inn (f.eks. i tester).
+            RegistrertAv = User?.Identity?.Name ?? string.Empty,
             // Trygt å bruke ".Value": ModelState.IsValid har sjekket at feltene finnes.
             Breddegrad = modell.Breddegrad!.Value,
             Lengdegrad = modell.Lengdegrad!.Value

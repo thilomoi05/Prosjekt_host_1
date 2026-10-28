@@ -1,7 +1,7 @@
 namespace Beredskapsportal.Models;
 
 /// <summary>
-/// Representerer et akutt eller planlagt behov meldt inn av Heimevernet, kommunen
+/// Representerer et behov (med høy, moderat eller lav prioritet) meldt inn av Heimevernet, kommunen
 /// eller en annen autorisert aktør under en krise.
 /// </summary>
 public class Behov
@@ -16,7 +16,7 @@ public class Behov
 
     public Prioritet Prioritet { get; set; }
 
-    public BehovStatus Status { get; set; } = BehovStatus.Ny;
+    public BehovStatus Status { get; set; } = BehovStatus.Venter;
 
     public string Kontaktperson { get; set; } = string.Empty;
 

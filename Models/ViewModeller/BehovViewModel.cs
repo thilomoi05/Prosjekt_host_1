@@ -20,7 +20,7 @@ public class BehovViewModel
     public string GeografiskOmrade { get; set; } = string.Empty;
 
     [Display(Name = "Prioritet")]
-    public Prioritet Prioritet { get; set; } = Prioritet.Planlagt;
+    public Prioritet Prioritet { get; set; } = Prioritet.Moderat;
 
     [Required(ErrorMessage = "Du må oppgi en kontaktperson.")]
     [Display(Name = "Kontaktperson")]

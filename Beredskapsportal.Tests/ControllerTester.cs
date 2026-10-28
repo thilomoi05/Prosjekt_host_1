@@ -26,7 +26,7 @@ public class ControllerTester
         var side = Assert.IsType<ViewResult>(resultat);
         var modell = Assert.IsType<ForsideViewModel>(side.Model);
         Assert.Equal(behovRepository.TellAktive(), modell.AntallAktiveBehov);
-        Assert.Equal(behovRepository.TellAkutte(), modell.AntallAkutteBehov);
+        Assert.Equal(behovRepository.TellVentende(Prioritet.Hoy), modell.AntallHoyPrioritet);
         Assert.Equal(ressursRepository.TellTilgjengelige(), modell.AntallTilgjengeligeRessurser);
     }
 
