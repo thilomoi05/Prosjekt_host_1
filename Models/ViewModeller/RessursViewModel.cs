@@ -29,12 +29,6 @@ public class RessursViewModel
     [Display(Name = "Bilder av ressursen")]
     public List<IFormFile> Bilder { get; set; } = new();
 
-    // Avkrysningsboksen "Plasseringen på kartet er riktig".
-    // [Range] med true/true betyr at boksen MÅ være krysset av.
-    [Range(typeof(bool), "true", "true", ErrorMessage = "Du må bekrefte at plasseringen på kartet er riktig.")]
-    [Display(Name = "Plasseringen på kartet er riktig")]
-    public bool PlasseringBekreftet { get; set; }
-
     [Display(Name = "Tilgjengelig fra")]
     [DataType(DataType.Date)]
     public DateOnly? TilgjengeligFra { get; set; }
