@@ -23,24 +23,51 @@
             <img class="bp-flis-bilde" src="~/images/forside-by-natt.jpg" alt="" />
             <span class="bp-flis-tekst">
                 <span class="bp-flis-etikett">@(erInnlogget ? $"Velkommen tilbake, {fornavn}:" : "BeredskapsPortalen:")</span>
-                <span class="bp-flis-tittel">Når strømmen går, teller hver time</span>
+                <span class="bp-flis-tittel">Når systemene svikter, teller hver time</span>
             </span>
         </a>
 
-        <a class="bp-flis bp-flis-liten bp-flis-b" asp-controller="Behov" asp-action="Index">
+        @* Kartflisen: teksten og lenken avhenger av hvem som ser forsiden.
+           - Ikke logget inn: sier kort hva prosjektet gjør (hopper til "Slik fungerer det").
+           - Offentlig aktør: går til kartet.
+           - Privat aktør: går til oversikten med egne ressurser (de ser ikke behov eller kart).
+           Ingen tall på forsiden: flisene sier hva man finner, ikke hvor mange. *@
+        @{
+            string kartEtikett, kartTittel, kartLenke;
+            if (!erInnlogget)
+            {
+                kartEtikett = "Om portalen:";
+                kartTittel = "Vi kobler behov med ressurser";
+                kartLenke = "#slik-fungerer-det";
+            }
+            else if (erOffentligAktor)
+            {
+                kartEtikett = "Situasjonen nå:";
+                kartTittel = "Se kartet";
+                kartLenke = Url.Action("Index", "Kart")!;
+            }
+            else
+            {
+                kartEtikett = "Dine bidrag:";
+                kartTittel = "Se ressursene dine";
+                kartLenke = Url.Action("Index", "Oversikt")!;
+            }
+        }
+        <a class="bp-flis bp-flis-liten bp-flis-b" href="@kartLenke">
             <img class="bp-flis-bilde" src="~/images/forside-kart.jpg" alt="" />
             <span class="bp-flis-kreditt">Kart: © Kartverket</span>
             <span class="bp-flis-tekst">
-                <span class="bp-flis-etikett">@Model.AntallHoyPrioritet høy prioritet av @Model.AntallAktiveBehov aktive:</span>
-                <span class="bp-flis-tittel">Se meldte behov</span>
+                <span class="bp-flis-etikett">@kartEtikett</span>
+                <span class="bp-flis-tittel">@kartTittel</span>
             </span>
         </a>
 
-        <a class="bp-flis bp-flis-liten bp-flis-c" asp-controller="Ressurs" asp-action="Index">
+        @* Går til siden "Hva trengs": hvilket utstyr som trengs, og hvor (ikke hvem som trenger det). *@
+        <a class="bp-flis bp-flis-liten bp-flis-c" asp-controller="HvaTrengs" asp-action="Index">
             <img class="bp-flis-bilde" src="~/images/forside-stromlinjer.jpg" alt="" />
             <span class="bp-flis-tekst">
-                <span class="bp-flis-etikett">@Model.AntallTilgjengeligeRessurser tilgjengelige nå:</span>
-                <span class="bp-flis-tittel">Ressurser i beredskap</span>
+                <span class="bp-flis-etikett">Kan du bidra?</span>
+                <span class="bp-flis-tittel">Se hva som trengs</span>
             </span>
         </a>
     </div>
@@ -78,17 +105,22 @@
     <div class="bp-blokk bp-blokk-venstre">
         <div class="bp-blokk-flate" aria-hidden="true"></div>
         <div class="bp-blokk-bilde" aria-hidden="true">
-            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round">
-                <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
+            @* Varseltrekant *@
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <span class="bp-blokk-bilde-tekst">Tenk deg<br />situasjonen</span>
         </div>
         <div class="bp-blokk-tekst">
-            <h3>Når strømmen går, teller hver time</h3>
+            <h3>Et nasjonalt cyberangrep lammer samfunnet</h3>
             <p>
-                En storm har slått ut strømmen i flere kommuner på Sørlandet. Sykehjemmet trenger
-                aggregat, og mobilnettet begynner å falle ut. Samtidig står en entreprenør med tre
-                ledige aggregater 20 kilometer unna. Men ingen vet om hverandre.
+                Flere offentlige systemer er utilgjengelige etter et koordinert cyberangrep.
+                Kommuner mister tilgang til kritiske tjenester, sykehus får redusert drift, og
+                kommunikasjonen mellom aktørene fungerer ikke som normalt. Sykehjemmet trenger
+                reservestrøm og samband, mens en entreprenør 20 kilometer unna har ledige
+                aggregater. Men ingen vet om hverandre.
             </p>
             <p>
                 BeredskapsPortalen kobler dem sammen: behovet meldes inn, ressursen er allerede

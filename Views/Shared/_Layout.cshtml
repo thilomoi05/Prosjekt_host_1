@@ -101,7 +101,11 @@
                             <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
                             <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
                         }
-                        <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
+                        @* Private aktører ser "Tilby ressurs", siden det er det de gjør på siden.
+                           Offentlige aktører ser "Ressurser". Lenken går til samme side for begge. *@
+                        <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">@(User.IsInRole("OffentligAktor") ? "Ressurser" : "Tilby ressurs")</a></li>
+                        @* Hva trengs: utstyr som trengs og hvor (uten hvem). Vises for alle innloggede. *@
+                        <li><a class="bp-nav-link @(ErAktiv("HvaTrengs") ? "aktiv" : "")" asp-controller="HvaTrengs" asp-action="Index">Hva trengs</a></li>
                     </ul>
                 }
                 else

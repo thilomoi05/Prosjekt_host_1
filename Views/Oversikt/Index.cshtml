@@ -53,7 +53,8 @@
                 </span>
             </a>
 
-            <a class="bp-nokkeltall-kort" asp-controller="Kart" asp-action="Index">
+            @* Åpner kartsiden med listen over tilgjengelige ressurser i full skjerm (se kart.js). *@
+            <a class="bp-nokkeltall-kort" asp-controller="Kart" asp-action="Index" asp-route-liste="ressurser">
                 <span class="bp-ikon-firkant bp-farge-ressurs" aria-hidden="true">
                     @* Eske = ressurs *@
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -68,7 +69,8 @@
                 </span>
             </a>
 
-            <a class="bp-nokkeltall-kort" asp-controller="Behov" asp-action="Index">
+            @* Hopper ned til listen "Tildelte ressurser" lenger ned på samme side. *@
+            <a class="bp-nokkeltall-kort" href="#tildelte">
                 <span class="bp-ikon-firkant bp-farge-ressurs" aria-hidden="true">
                     @* Hake = tildelt *@
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -148,11 +150,8 @@
                                     <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behov.Id">@behov.VisningsNavn</a>
                                 <span>@behov.GeografiskOmrade</span>
                             </span>
-                            @* Høy og moderat prioritet får et merke. Lav står uten, så det ikke blir for mange farger. *@
-                            @if (behov.Prioritet != Prioritet.Lav)
-                            {
-                                <span class="bp-badge bp-badge-@prioritetCss">@PrioritetVisning.Tekst(behov.Prioritet)</span>
-                            }
+                            @* Prioriteten vises alltid, også lav, så man ser det med en gang. *@
+                            <span class="bp-badge bp-badge-@prioritetCss">@PrioritetVisning.Tekst(behov.Prioritet)</span>
                             <span class="bp-oversikt-dato">@behov.Dato.ToString("dd.MM")</span>
                         </li>
                     }
@@ -161,8 +160,9 @@
         </div>
 
 
-        @* Tildelte ressurser: hvert behov som har fått ressurser, og hvilke ressurser det er. *@
-        <section class="bp-oversikt-panel bp-oversikt-blokk">
+        @* Tildelte ressurser: hvert behov som har fått ressurser, og hvilke ressurser det er.
+           id="tildelte" gjør at kortet "Tildelte behov" øverst kan hoppe hit. *@
+        <section class="bp-oversikt-panel bp-oversikt-blokk" id="tildelte">
             <div class="bp-oversikt-panel-hode">
                 <div>
                     <h2>Tildelte ressurser</h2>

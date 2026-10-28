@@ -32,11 +32,14 @@ public class KartController : Controller
 
     private readonly IBehovRepository _behovRepository;
     private readonly IRessursRepository _ressursRepository;
+    private readonly ITildelingRepository _tildelingRepository;
 
-    public KartController(IBehovRepository behovRepository, IRessursRepository ressursRepository)
+    public KartController(IBehovRepository behovRepository, IRessursRepository ressursRepository,
+        ITildelingRepository tildelingRepository)
     {
         _behovRepository = behovRepository;
         _ressursRepository = ressursRepository;
+        _tildelingRepository = tildelingRepository;
     }
 
     public IActionResult Index()
@@ -83,11 +86,15 @@ public class KartController : Controller
     [Authorize(Roles = RolleSomSerRessurser)]
     public IActionResult Ressurser()
     {
+        // Id-ene til ressurser som allerede er tildelt et behov.
+        var tildelteIder = _tildelingRepository.HentAlle().Select(t => t.RessursId).ToHashSet();
+
         var punkter = _ressursRepository.HentAlle().Select(ressurs => new
         {
             id = ressurs.Id,
             typeKode = ressurs.Type.ToString(),       // f.eks. "Aggregat", velger ikon i kartikoner.js
-            type = ressurs.Type.ToString(),
+            // "Ups" vises som "UPS (batteri)", så det er lettere å forstå. Resten vises som enum-navnet.
+            type = ressurs.Type == RessursType.Ups ? "UPS (batteri)" : ressurs.Type.ToString(),
             beskrivelse = ressurs.BeskrivelseAvKapasitet,
             adresse = ressurs.Adresse,
             tilgang = ressurs.Tilgangsbeskrivelse,
@@ -97,7 +104,8 @@ public class KartController : Controller
             kontaktperson = ressurs.Kontaktperson,
             telefon = ressurs.Telefon,
             breddegrad = ressurs.Breddegrad,
-            lengdegrad = ressurs.Lengdegrad
+            lengdegrad = ressurs.Lengdegrad,
+            tildelt = tildelteIder.Contains(ressurs.Id)   // true hvis ressursen er satt inn på et behov
         });
 
         return Json(punkter);

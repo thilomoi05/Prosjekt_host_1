@@ -26,11 +26,12 @@ docker build -t beredskapsportal .
 docker run --rm -p 8080:8080 beredskapsportal
 ```
 
-Åpne **http://localhost:8080** og logg inn med testbrukeren:
+Åpne **http://localhost:8080** og logg inn med en av testbrukerne:
 
-| Brukernavn | Passord |
-|---|---|
-| `test` | `test` |
+| Brukernavn | Passord | Rolle | Hva du ser |
+|---|---|---|---|
+| `test` | `test` | Offentlig aktør (f.eks. Heimevernet) | Oversikt, kart, behov, ressurser og hva som trengs |
+| `privat` | `privat` | Privat aktør (bedrift eller privatperson) | Egne ressurser, tilby ressurs og hva som trengs |
 
 Mer om kjøring, begrensninger og feilsøking: **[docs/drift.md](docs/drift.md)**
 

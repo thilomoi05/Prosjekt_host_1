@@ -15,24 +15,39 @@
     @* Her tegner Leaflet kartet. data-kan-se-ressurser leses av kart.js. *@
     <div id="kart" class="bp-kart" data-kan-se-ressurser="@(kanSeRessurser ? "true" : "false")"></div>
 
-    @* Tegnforklaring oppå kartet, øverst til høyre. Farge OG form viser hva
-       et punkt er, så kartet kan leses også av fargeblinde. *@
-    <ul class="bp-kart-tegnforklaring bp-kart-flytende">
-        <li><span class="bp-kart-prikk hoy"></span> Høy</li>
-        <li><span class="bp-kart-prikk moderat"></span> Moderat</li>
-        <li><span class="bp-kart-prikk lav"></span> Lav prioritet</li>
-        @if (kanSeRessurser)
-        {
-            <li><span class="bp-kart-firkant"></span> Ressurs</li>
-        }
-    </ul>
+    @* Filterpanelet til venstre. Fungerer også som tegnforklaring: hver type har
+       samme ikon som på kartet. Innholdet (typer og antall) lages av kart.js ut fra
+       punktene som er hentet, så nye typer kommer med av seg selv. *@
+    @* Knappen øverst til venstre åpner filteret. Samme stil som "Vis liste".
+       Teksten "(14 av 40)" legges til av kart.js når noe er filtrert bort. *@
+    <button type="button" class="btn btn-bp-primær bp-filter-knapp" id="filter-apne"
+            aria-controls="kart-filter" aria-expanded="false">
+        @* Ikon: tre glidebrytere *@
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6" /><circle cx="9" cy="6" r="2.2" fill="currentColor" />
+            <line x1="3" y1="12" x2="21" y2="12" /><circle cx="15" cy="12" r="2.2" fill="currentColor" />
+            <line x1="3" y1="18" x2="21" y2="18" /><circle cx="8" cy="18" r="2.2" fill="currentColor" />
+        </svg>
+        Filter <span id="filter-knapp-status"></span>
+    </button>
 
-    @if (!kanSeRessurser)
-    {
-        <p class="bp-kart-info bp-kart-flytende">
-            Hvor ressursene er, vises bare for Heimevernet og andre autoriserte brukere.
-        </p>
-    }
+    @* Panelet er skjult når kartet åpnes (klassen "skjult"), og kommer frem når man trykker "Filter". *@
+    <aside class="bp-filter skjult" id="kart-filter" aria-label="Filter for kartet">
+        <div class="bp-filter-hode">
+            <strong>Filter</strong>
+            <button type="button" class="bp-filter-nullstill" id="filter-nullstill">Nullstill</button>
+            <span class="bp-filter-treff">Treff (<span id="filter-treff">0</span>)</span>
+            <button type="button" class="bp-filter-lukk" id="filter-lukk" aria-label="Lukk filteret">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" />
+                </svg>
+            </button>
+        </div>
+        <div class="bp-filter-innhold" id="filter-innhold">
+            <p class="bp-filter-laster">Laster ...</p>
+        </div>
+
+    </aside>
 
     @* Knappen åpner listen nederst. Bootstrap ("offcanvas") åpner og lukker
        panelet, så vi trenger ingen egen JavaScript til det. *@
@@ -42,19 +57,20 @@
     </button>
 </div>
 
-@* Panelet som glir opp fra bunnen. data-bs-backdrop="false" gjør at kartet
-   fortsatt kan brukes mens listen er åpen. Tabellen er de samme punktene som
+@* Panelet som glir opp fra bunnen og dekker hele skjermen under menyen. Tabellen er de samme punktene som
    på kartet, og fungerer også for skjermlesere som ikke kan lese kartet. *@
 <div class="offcanvas offcanvas-bottom bp-kart-liste-panel" id="kart-liste-panel"
      data-bs-backdrop="false" data-bs-scroll="true" tabindex="-1" aria-labelledby="kart-liste-tittel">
     <div class="offcanvas-header">
         <h2 class="h5 mb-0" id="kart-liste-tittel">
-            Punkter på kartet <span id="kart-antall" class="badge rounded-pill bg-light text-dark"></span>
+            @* Teksten byttes til "Tilgjengelige ressurser" av kart.js når adressen er /Kart?liste=ressurser. *@
+            <span id="kart-liste-tittel-tekst">Punkter på kartet</span>
+            <span id="kart-antall" class="badge rounded-pill bg-light text-dark"></span>
         </h2>
-        @* Samme blå knapp som "Vis liste", midt på, så det er tydelig hvordan listen lukkes.
+        @* Listen dekker hele skjermen. Knappen øverst i midten tar kartet frem igjen.
            data-bs-dismiss="offcanvas" gjør at Bootstrap lukker panelet. *@
         <button type="button" class="btn btn-bp-primær bp-kart-skjulknapp" data-bs-dismiss="offcanvas">
-            Skjul liste
+            Vis kart
         </button>
     </div>
     <div class="offcanvas-body">
