@@ -1,12 +1,41 @@
 @model IReadOnlyList<Behov>
 @{
     ViewData["Title"] = "Behov";
+
+    // Valgene i filtermenyene lages ut fra behovene som finnes, så nye typer og
+    // områder kommer med av seg selv.
+    var typer = Model
+        .GroupBy(b => b.Type)
+        .Select(g => (Verdi: g.Key.ToString(), Tekst: g.First().VisningsNavn))
+        .OrderBy(t => t.Tekst)
+        .ToList();
+
+    var omrader = Model
+        .Select(b => b.GeografiskOmrade)
+        .Distinct()
+        .OrderBy(o => o)
+        .Select(o => (Verdi: o, Tekst: o))
+        .ToList();
+
+    // Prioritet og status har faste valg, i den rekkefølgen som gir mening.
+    var prioriteter = new[] { Prioritet.Hoy, Prioritet.Moderat, Prioritet.Lav }
+        .Select(p => (Verdi: PrioritetVisning.CssNavn(p), Tekst: PrioritetVisning.Tekst(p)))
+        .ToList();
+
+    var statuser = new List<(string Verdi, string Tekst)> { ("Venter", "Venter"), ("Tildelt", "Tildelt") };
 }
 
 <div class="bp-side-innhold">
     <div class="bp-tabell-kort">
         <div class="bp-tabell-kort-hode">
-            <h2>Alle meldte behov</h2>
+            <div>
+                <h2>Alle meldte behov</h2>
+                @* Teksten og "Nullstill filter" oppdateres av behovsliste.js. *@
+                <p class="bp-filter-status">
+                    <span id="behov-antall">Viser @Model.Count behov</span>
+                    <button type="button" class="bp-filter-nullstill" id="behov-nullstill" hidden>Nullstill filter</button>
+                </p>
+            </div>
             <a class="btn btn-bp-primær" asp-controller="Behov" asp-action="Registrer">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align: -2px; margin-right: 0.35rem;">
                     <line x1="12" y1="5" x2="12" y2="19" />
@@ -16,22 +45,43 @@
             </a>
         </div>
 
-        <div class="table-responsive">
-            <table class="bp-tabell">
+        <div class="table-responsive bp-tabell-med-filter">
+            <table class="bp-tabell" id="behov-tabell">
                 <thead>
                     <tr>
-                        <th>Type behov</th>
-                        <th>Område</th>
-                        <th>Prioritet</th>
-                        <th>Status</th>
-                        <th>Dato</th>
+                        <th><partial name="_Filtermeny" model='("Type behov", "type", typer)' /></th>
+                        <th><partial name="_Filtermeny" model='("Område", "omrade", omrader)' /></th>
+                        <th><partial name="_Filtermeny" model='("Prioritet", "prioritet", prioriteter)' /></th>
+                        <th><partial name="_Filtermeny" model='("Status", "status", statuser)' /></th>
+                        <th>
+                            @* Dato: sortering i stedet for filter *@
+                            <div class="dropdown">
+                                <button type="button" class="bp-kolonne-knapp" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Dato <span class="bp-kolonne-teller" id="dato-retning">(nyeste først)</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+                                </button>
+                                <div class="dropdown-menu bp-kolonne-meny" id="dato-meny">
+                                    <label class="bp-filter-valg"><input type="radio" name="dato-sortering" value="nyest" checked> Nyeste først</label>
+                                    <label class="bp-filter-valg"><input type="radio" name="dato-sortering" value="eldst"> Eldste først</label>
+                                </div>
+                            </div>
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var behov in Model)
                     {
-                        <tr>
-                            <td><strong>@behov.VisningsNavn</strong></td>
+                        @* data-* er verdiene filteret og sorteringen bruker (behovsliste.js). *@
+                        <tr data-type="@behov.Type"
+                            data-omrade="@behov.GeografiskOmrade"
+                            data-prioritet="@PrioritetVisning.CssNavn(behov.Prioritet)"
+                            data-status="@behov.Status"
+                            data-dato="@behov.Dato.ToString("yyyy-MM-dd")">
+                            <td>
+                                @* Samme ikon som på kartet, i fargen til prioriteten. Fylles inn av behovsliste.js. *@
+                                <span class="bp-kartikon bp-ikon-@PrioritetVisning.CssNavn(behov.Prioritet)" data-ikon-type="@behov.Type"></span>
+                                <strong>@behov.VisningsNavn</strong>
+                            </td>
                             <td>@behov.GeografiskOmrade</td>
                             @* Tekst og farge for prioriteten kommer fra PrioritetVisning (Models/PrioritetVisning.cs). *@
                             <td class="bp-prioritet-@PrioritetVisning.CssNavn(behov.Prioritet)">
@@ -50,8 +100,18 @@
                             <td>@behov.Dato.ToString("yyyy-MM-dd")</td>
                         </tr>
                     }
+                    @* Vises av behovsliste.js når ingen behov passer filteret. *@
+                    <tr id="behov-tom" hidden>
+                        <td colspan="5" class="bp-oversikt-tom">Ingen behov passer filteret. Trykk «Nullstill filter» for å se alle.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @* kartikoner.js har funksjonen lagIkonSvg, som lager de samme ikonene som på kartet. *@
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/behovsliste.js" asp-append-version="true"></script>
+}

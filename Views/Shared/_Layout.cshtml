@@ -101,9 +101,8 @@
                             <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
                             <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
                         }
-                        @* Private aktører ser "Tilby ressurs", siden det er det de gjør på siden.
-                           Offentlige aktører ser "Ressurser". Lenken går til samme side for begge. *@
-                        <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">@(User.IsInRole("OffentligAktor") ? "Ressurser" : "Tilby ressurs")</a></li>
+                        @* Heter "Tilby ressurs" for alle, siden det er det man gjør på siden. *@
+                        <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Tilby ressurs</a></li>
                         @* Hva trengs: utstyr som trengs og hvor (uten hvem). Vises for alle innloggede. *@
                         <li><a class="bp-nav-link @(ErAktiv("HvaTrengs") ? "aktiv" : "")" asp-controller="HvaTrengs" asp-action="Index">Hva trengs</a></li>
                     </ul>
@@ -127,6 +126,12 @@
     </header>
 
     <main role="main">
+        @* Bekreftelse etter at noe er lagret, f.eks. "Takk! Ressursen er registrert."
+           Settes med TempData["Melding"] i en controller, og vises bare én gang. *@
+        @if (TempData["Melding"] is string melding)
+        {
+            <div class="bp-melding" role="status">@melding</div>
+        }
         @RenderBody()
     </main>
 
@@ -139,7 +144,7 @@
                     <p class="bp-footer-navn">BeredskapsPortalen</p>
                     <p>Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
                 </div>
-                <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
+                <p class="bp-footer-liten">&copy; 2026 Gruppe 19. Levert som del av beredskap og krisehåndtering.</p>
             </div>
         </footer>
     }

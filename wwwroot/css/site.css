@@ -1895,3 +1895,408 @@ a.bp-nokkeltall-kort:hover {
         width: 85vw;                       /* nesten hele bredden på mobil */
     }
 }
+
+/* -------------------------------------------------------------------------
+   Tilby ressurs: skjema i tre steg (Views/Ressurs/Registrer.cshtml + ressursskjema.js)
+   ------------------------------------------------------------------------- */
+.bp-steg-skjema {
+    width: 100%;
+    max-width: 44rem;
+    background-color: var(--farge-flate);
+    padding: 2.5rem;
+}
+
+.bp-steg-skjema h1 {
+    font-size: 2rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+}
+
+.bp-steg-skjema-ingress {
+    color: var(--farge-tekst-svak);
+    margin-bottom: 2rem;
+}
+
+/* Fremdriftslinjen: tre steg med nummer, en strek mellom */
+.bp-fremdrift {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    list-style: none;
+    margin: 0 0 2rem;
+    padding: 0;
+    counter-reset: none;
+}
+
+.bp-fremdrift li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--farge-tekst-lysere);
+    text-align: center;
+}
+
+/* Streken fra hvert steg til neste (ikke etter det siste) */
+.bp-fremdrift li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 1rem;                             /* midt på nummersirkelen */
+    left: calc(50% + 1.25rem);
+    right: calc(-50% + 1.25rem);
+    border-top: 2px solid var(--farge-kant);
+}
+
+.bp-fremdrift-nummer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 2px solid var(--farge-kant);
+    background-color: var(--farge-bakgrunn);
+    font-weight: 600;
+}
+
+/* Steget man er på: mørk sirkel og mørk tekst */
+.bp-fremdrift li.aktiv {
+    color: var(--farge-tekst);
+    font-weight: 600;
+}
+
+.bp-fremdrift li.aktiv .bp-fremdrift-nummer {
+    background-color: var(--farge-primær);
+    border-color: var(--farge-primær);
+    color: #ffffff;
+}
+
+/* Ferdige steg: hake i stedet for tall, og mørk strek videre */
+.bp-fremdrift li.ferdig {
+    color: var(--farge-tekst);
+}
+
+.bp-fremdrift li.ferdig .bp-fremdrift-nummer {
+    border-color: var(--farge-primær);
+    color: transparent;                    /* skjuler tallet */
+    background: var(--farge-primær) center / 0.9rem no-repeat
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17 19 7'/%3E%3C/svg%3E");
+}
+
+.bp-fremdrift li.ferdig:not(:last-child)::after {
+    border-top-color: var(--farge-primær);
+}
+
+/* Hvert steg */
+.bp-steg-innhold h2 {
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin-bottom: 1.25rem;
+}
+
+.bp-steg-innhold fieldset {
+    border: none;
+    padding: 0;
+}
+
+/* Typeknappene: radioknapper som ser ut som store knapper med ikon */
+.bp-type-valg {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.bp-type-knapp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.5rem;
+    background-color: var(--farge-bakgrunn);
+    border: 2px solid var(--farge-kant);
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+}
+
+.bp-type-knapp:hover {
+    border-color: var(--farge-tekst-lysere);
+}
+
+/* Selve radioknappen er skjult, men fortsatt med for tastatur og skjermleser */
+.bp-type-knapp input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Valgt type: mørk ramme. :has() betyr "knappen som inneholder en avkrysset radioknapp" */
+.bp-type-knapp:has(input:checked) {
+    border-color: var(--farge-primær);
+    box-shadow: inset 0 0 0 1px var(--farge-primær);
+}
+
+.bp-type-knapp:has(input:focus-visible) {
+    outline: 3px solid var(--farge-primær);
+    outline-offset: 2px;
+}
+
+.bp-type-knapp .bp-kartikon {
+    filter: none;
+}
+
+/* Bildefeltet: hele feltet er filvelgeren, så man kan klikke eller dra bilder inn */
+.bp-bildefelt {
+    position: relative;
+    padding: 1.5rem;
+    background-color: var(--farge-bakgrunn);
+    border: 2px dashed var(--farge-kant);
+    text-align: center;
+}
+
+.bp-bildefelt:hover,
+.bp-bildefelt:focus-within {
+    border-color: var(--farge-tekst-lysere);
+}
+
+/* Filvelgeren ligger usynlig over hele feltet, så klikk og "slipp bilder her" treffer den */
+.bp-bildefelt input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.bp-bildefelt-tekst strong {
+    text-decoration: underline;
+}
+
+.bp-bildefelt-tekst span {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-bilde-forhandsvisning {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.bp-bilde-forhandsvisning img {
+    width: 5rem;
+    height: 5rem;
+    object-fit: cover;                     /* beskjærer i stedet for å strekke */
+    border: 1px solid var(--farge-kant);
+}
+
+/* Adressefelt og knapp på samme linje */
+.bp-adressesok {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.bp-adressesok .form-control {
+    flex: 1;
+}
+
+.bp-adressesok .btn {
+    white-space: nowrap;
+}
+
+.bp-posisjonsvelger-stor {
+    height: 320px;
+}
+
+.bp-avkryssing {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.bp-avkryssing input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--farge-primær);
+}
+
+/* Oppsummeringen i steg 3 */
+.bp-oppsummering {
+    background-color: var(--farge-bakgrunn);
+    border: 1px solid var(--farge-kant);
+    padding: 1.25rem 1.5rem;
+}
+
+.bp-oppsummering h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.bp-oppsummering dl {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.5rem 1rem;
+    margin: 0;
+}
+
+.bp-oppsummering dt {
+    font-weight: 400;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-oppsummering dd {
+    margin: 0;
+}
+
+.bp-oppsummering-endre {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--farge-tekst-svak);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Knappene nederst: Forrige/Avbryt til venstre, Neste/Registrer til høyre */
+.bp-steg-knapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--farge-kant);
+}
+
+.bp-steg-knapper #steg-neste,
+.bp-steg-knapper #steg-registrer {
+    margin-left: auto;                     /* skyves helt til høyre */
+}
+
+.bp-steg-avbryt {
+    color: var(--farge-tekst-svak);
+}
+
+/* Bekreftelsen øverst på siden etter at noe er lagret (TempData["Melding"]) */
+.bp-melding {
+    max-width: var(--side-bredde);
+    margin: 1.5rem auto 0;
+    padding: 0.9rem 1.25rem;
+    background-color: #e8f3ec;
+    border: 1px solid #b7d8c3;
+    color: #1f5135;
+    font-weight: 500;
+}
+
+@media (max-width: 767px) {
+    .bp-steg-skjema {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .bp-type-valg {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .bp-adressesok {
+        flex-direction: column;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Behovssiden: filter i kolonneoverskriftene (Views/Behov/_Filtermeny.cshtml + behovsliste.js)
+   ------------------------------------------------------------------------- */
+/* "Viser 8 av 12 behov" og "Nullstill filter" under overskriften */
+.bp-filter-status {
+    display: flex;
+    gap: 0.9rem;
+    margin: 0.3rem 0 0;
+    font-size: 0.9rem;
+    color: var(--farge-tekst-svak);
+}
+
+/* Menyene må få stikke ut av tabellen (ellers kuttes de av rammen som ruller sidelengs) */
+.bp-tabell-med-filter {
+    overflow: visible;
+}
+
+/* Kolonneoverskriften er en knapp med pil */
+.bp-kolonne-knapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.bp-kolonne-knapp:hover {
+    color: var(--farge-tekst);
+}
+
+/* Filter i bruk: mørk tekst og strek under, så man ser hvor det er filtrert */
+.bp-kolonne-knapp.aktiv {
+    color: var(--farge-tekst);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.bp-kolonne-teller {
+    font-weight: 400;
+}
+
+/* Selve menyen: hvit, rette hjørner, tynn kant, som resten av siden */
+.bp-kolonne-meny {
+    min-width: 14rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--farge-kant);
+    border-radius: 0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.bp-kolonne-meny .bp-filter-valg {
+    white-space: nowrap;
+}
+
+/* "Alle" og "Ingen" nederst i menyen */
+.bp-kolonne-meny-fot {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--farge-kant);
+}
+
+.bp-kolonne-meny-fot button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--farge-tekst-svak);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Ikonene på behovssiden: litt luft mellom ikonet og navnet */
+#behov-tabell td .bp-kartikon {
+  margin-right: 0.5rem;
+}
+
+/* Ikonene i Type-menyen er nøytrale (mørke), siden menyen ikke handler om prioritet */
+.bp-ikon-noytral {
+  color: var(--farge-primær);
+  filter: none;
+}

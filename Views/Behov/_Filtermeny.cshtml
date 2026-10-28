@@ -1,0 +1,37 @@
+@model (string Tittel, string Filter, List<(string Verdi, string Tekst)> Valg)
+@* =========================================================================
+   Én filtermeny i en kolonneoverskrift på behovssiden: en knapp med pil,
+   og en meny med avkrysningsbokser (alle er krysset av fra start).
+   Bootstrap sin dropdown åpner og lukker menyen. data-bs-auto-close="outside"
+   gjør at menyen ikke lukker seg når man krysser av, bare når man klikker utenfor.
+   behovsliste.js leser data-filter og avkrysningene, og filtrerer radene.
+   Brukes slik: <partial name="_Filtermeny" model='("Område", "omrade", omrader)' />
+   ========================================================================= *@
+<div class="dropdown">
+    <button type="button" class="bp-kolonne-knapp" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+            aria-expanded="false" data-knapp-for="@Model.Filter">
+        @Model.Tittel <span class="bp-kolonne-teller"></span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9" />
+        </svg>
+    </button>
+
+    <div class="dropdown-menu bp-kolonne-meny" data-filter="@Model.Filter">
+        @foreach (var (verdi, tekst) in Model.Valg)
+        {
+            <label class="bp-filter-valg">
+                <input type="checkbox" value="@verdi" checked />
+                @* I Type-menyen får hvert valg et lite ikon, så det er lett å kjenne igjen typen. *@
+                @if (Model.Filter == "type")
+                {
+                    <span class="bp-kartikon bp-ikon-noytral" data-ikon-type="@verdi" data-ikon-storrelse="22"></span>
+                }
+                <span class="bp-filter-navn">@tekst</span>
+            </label>
+        }
+        <div class="bp-kolonne-meny-fot">
+            <button type="button" data-velg="alle">Alle</button>
+            <button type="button" data-velg="ingen">Ingen</button>
+        </div>
+    </div>
+</div>

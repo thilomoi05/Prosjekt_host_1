@@ -36,7 +36,6 @@ public class RessursControllerTester : IDisposable
         Adresse = "Kirkegata 5, 4610 Kristiansand",
         Tilgangsbeskrivelse = "Står i garasjen",
         Bilder = bilder.ToList(),
-        PlasseringBekreftet = true,
         Kontaktperson = "Ola Nordmann",
         Telefon = "40000000",
         Breddegrad = 58.146,
