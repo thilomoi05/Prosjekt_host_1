@@ -19,10 +19,6 @@
   --farge-mork: #1f2531;            /* mørk marine: bildeflater og footer */
   --farge-logo: #3f4a32;            /* dempet oliven til skjoldet */
 
-  /* Menyen */
-  --farge-meny-hoved: #c6c6c4;
-  --farge-meny-midt: #f8f8f7;
-
   /* Status (uendret fra før, så badgene betyr det samme) */
   --farge-badge-ny-bg: #fee2e2;
   --farge-badge-ny-tekst: #b91c1c;
@@ -64,11 +60,6 @@ body {
   flex-direction: column;
 }
 
-/* Når den store menyen er åpen, skal ikke siden bak scrolle */
-body.bp-meny-apen {
-  overflow: hidden;
-}
-
 main {
   flex: 1;
 }
@@ -94,10 +85,13 @@ a {
 }
 
 /* -------------------------------------------------------------------------
-   Toppen: Meny | logo | Min side + Søk
+   Toppen: Meny | logo | Oversikt, Kart, Behov, Ressurser
    ------------------------------------------------------------------------- */
 .bp-header {
+  position: relative;
+  z-index: 1100;                    /* over kartet, så nedtrekksmenyen ikke havner bak det */
   background-color: var(--farge-bakgrunn);
+  border-bottom: 1px solid var(--farge-flate-mork);
 }
 
 .bp-header-innhold {
@@ -107,14 +101,7 @@ a {
   min-height: var(--header-hoyde);
   max-width: 1600px;
   margin: 0 auto;
-  padding: 0.5rem clamp(1rem, 5vw, 5rem);
-}
-
-.bp-header-hoyre {
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  gap: 1.75rem;
+  padding: 0 clamp(1rem, 5vw, 5rem);
 }
 
 .bp-header-knapp {
@@ -129,12 +116,19 @@ a {
   font-size: 1rem;
   text-decoration: none;
   cursor: pointer;
-  justify-self: start;
 }
 
-.bp-header-knapp:hover {
-  color: var(--farge-tekst);
+.bp-header-knapp:hover,
+.bp-header-knapp[aria-expanded="true"] {
   text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.bp-meny-omrade {
+  justify-self: start;
+  align-self: stretch;              /* like høy som toppen, så menyen kan legges rett under den */
+  display: flex;
+  align-items: center;
 }
 
 .bp-logo {
@@ -154,291 +148,148 @@ a {
   color: var(--farge-tekst);
 }
 
-/* -------------------------------------------------------------------------
-   Den store menyen (tre kolonner over hele skjermen)
-   ------------------------------------------------------------------------- */
-.bp-meny {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;                    /* over alt, også kartet */
-  display: grid;
-  grid-template-columns: 35fr 27fr 38fr;
-  background-color: var(--farge-bakgrunn);
-  overflow-y: auto;
-  animation: bp-meny-inn 0.18s ease-out;
+/* Sidelenkene til høyre */
+.bp-nav {
+  justify-self: end;
 }
 
-.bp-meny[hidden] {
-  display: none;
-}
-
-@keyframes bp-meny-inn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.bp-meny-kolonne {
-  min-height: 100vh;
-}
-
-/* Kolonne 1: grå, med de viktigste lenkene */
-.bp-meny-hoved {
+.bp-nav-lenker {
   display: flex;
-  flex-direction: column;
-  background-color: var(--farge-meny-hoved);
-  padding: 2.4rem 2rem 2.5rem clamp(1.5rem, 11vw, 15rem);
-}
-
-.bp-meny-lukk {
-  margin-left: -1rem;
-  margin-bottom: 3.5rem;
-}
-
-.bp-meny-sprak {
-  display: flex;
-  gap: 0.9rem;
-  font-size: 0.95rem;
-  margin-bottom: 2.25rem;
-}
-
-.bp-meny-sprak .aktiv {
-  color: var(--farge-tekst);
-}
-
-.bp-meny-sprak-kommer {
-  color: var(--farge-tekst-svak);
-  text-decoration: underline;
-  cursor: not-allowed;
-}
-
-.bp-meny-bruker {
-  font-size: 0.9rem;
-  color: var(--farge-tekst-svak);
-  margin-bottom: 0.75rem;
-}
-
-.bp-meny-bruker span {
-  color: var(--farge-tekst-svak);
-}
-
-.bp-meny-store-lenker,
-.bp-meny-sma-lenker {
+  align-items: center;
+  gap: 2rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.bp-meny-store-lenker a {
-  display: inline-block;
-  font-size: clamp(1.6rem, 2.1vw, 2.05rem);
-  line-height: 1.55;
+.bp-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
   color: var(--farge-tekst);
   text-decoration: none;
+  border-bottom: 1.5px solid transparent;   /* strek under aktiv side, uten at teksten hopper */
 }
 
-.bp-meny-store-lenker a:hover,
-.bp-meny-store-lenker a.aktiv {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-}
-
-.bp-meny-sma-lenker {
-  margin-top: 3.25rem;
-}
-
-.bp-meny-sma-lenker a,
-.bp-meny-loggut {
-  display: inline-block;
-  font-size: 0.8rem;
-  line-height: 2;
+.bp-nav-link:hover {
   color: var(--farge-tekst);
-  text-decoration: none;
+  border-bottom-color: var(--farge-tekst-lysere);
 }
 
-.bp-meny-sma-lenker a:hover,
-.bp-meny-loggut:hover {
-  text-decoration: underline;
+.bp-nav-link.aktiv {
+  border-bottom-color: var(--farge-tekst);
 }
 
-.bp-meny-loggut {
+/* -------------------------------------------------------------------------
+   Nedtrekksmenyen under "Meny" (Bootstrap dropdown, se _Layout.cshtml)
+   Halvgjennomsiktig med uskarp bakgrunn, og glir inn når den åpnes.
+   ------------------------------------------------------------------------- */
+.bp-meny {
+  min-width: 17rem;
+  padding: 0.75rem 0;
+  border: none;
+  border-radius: 0;
+  background-color: rgba(236, 235, 232, 0.8);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
+  color: var(--farge-tekst);
+  font-size: 1rem;
+}
+
+/* Plassering: rett under toppen, kant i kant med "Meny".
+   data-bs-popper settes av Bootstrap når menyen er åpen. */
+.bp-meny[data-bs-popper] {
+  top: calc(100% + 1px);            /* rett under streken nederst i toppen */
+  left: -1.5rem;
+  margin-top: 0;
+}
+
+.bp-meny.show {
+  animation: bp-meny-inn 0.2s ease-out;
+}
+
+@keyframes bp-meny-inn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bp-meny-hode {
+  padding: 0.35rem 1.5rem 0.9rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.bp-meny-navn {
+  font-weight: 500;
+}
+
+.bp-meny-rolle {
+  font-size: 0.85rem;
+  color: var(--farge-tekst-svak);
+}
+
+.bp-meny-lenke {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 1.5rem;
   background: none;
   border: none;
-  padding: 0;
-  font-family: inherit;
-  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: var(--farge-tekst);
+  text-decoration: none;
 }
 
-.bp-meny-fot {
-  margin-top: auto;
-  padding-top: 3rem;
+a.bp-meny-lenke:hover,
+button.bp-meny-lenke:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: var(--farge-tekst);
+  text-decoration: underline;
+}
+
+.bp-meny-lenke.aktiv {
+  text-decoration: underline;
+}
+
+.bp-meny .deaktivert {
+  color: var(--farge-tekst-lysere);
+  cursor: default;
+}
+
+.bp-meny-sprak {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 1.5rem 0.7rem;
+}
+
+.bp-meny-sprak-etikett {
   font-size: 0.75rem;
   color: var(--farge-tekst-svak);
-  max-width: 22rem;
 }
 
-/* Kolonne 2: lys, logo og trekkspill */
-.bp-meny-midt {
-  background-color: var(--farge-meny-midt);
-  padding: 2.25rem 2rem 2.5rem 4.5rem;
-}
-
-.bp-meny-logo {
-  margin: 0 0 6rem;
-  /* Kolonnen har mer luft til venstre enn til høyre, så vi forskyver logoen
-     tilbake for at den skal stå midt i kolonnen og ikke midt i innholdet */
-  transform: translateX(calc(-1 * (4.5rem - 2rem) / 2));
-}
-
-.bp-meny-trekkspill details {
-  margin-bottom: 0.6rem;
-}
-
-.bp-meny-trekkspill summary {
+.bp-meny-sprak-valg {
   display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  list-style: none;                 /* fjerner standard-trekanten */
-  font-size: 1.05rem;
-  padding: 0.35rem 0;
-  cursor: pointer;
+  gap: 1rem;
 }
 
-.bp-meny-trekkspill summary::-webkit-details-marker {
-  display: none;
-}
-
-/* Pil (chevron) laget av to kanter på en rotert firkant */
-.bp-meny-trekkspill summary::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  margin: -0.25rem 0.1rem 0 0.15rem;
-  border-right: 1.6px solid currentColor;
-  border-bottom: 1.6px solid currentColor;
-  transform: rotate(45deg);
-  transition: transform 0.15s ease;
-}
-
-.bp-meny-trekkspill details[open] summary::before {
-  transform: rotate(225deg);
-  margin-top: 0.25rem;
-}
-
-.bp-meny-trekkspill summary:hover {
+.bp-meny-sprak-valg .aktiv {
+  font-weight: 500;
   text-decoration: underline;
+  text-underline-offset: 0.25em;
 }
 
-.bp-meny-trekkspill ul {
-  list-style: none;
-  margin: 0.25rem 0 0.75rem;
-  padding: 0 0 0 1.75rem;
+.bp-meny form {
+  margin: 0;
 }
 
-.bp-meny-trekkspill li a,
-.bp-meny-kommer {
-  display: inline-block;
-  font-size: 0.92rem;
-  line-height: 2;
-  color: var(--farge-tekst);
-  text-decoration: none;
-}
-
-.bp-meny-trekkspill li a:hover {
-  text-decoration: underline;
-}
-
-.bp-meny-kommer {
-  color: var(--farge-tekst-lysere);
-}
-
-/* Kolonne 3: hvit, søk */
-.bp-meny-sok {
-  padding: 10rem 2rem 2.5rem 3.5rem;
-}
-
-.bp-sok {
-  max-width: 24rem;
-}
-
-.bp-sok-etikett {
-  display: block;
-  font-size: 0.8rem;
-  margin-bottom: 0.4rem;
-}
-
-.bp-sok-felt-rad {
-  display: flex;
-  align-items: center;
-  border-bottom: 1.5px solid var(--farge-tekst);
-}
-
-.bp-sok-felt {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  font: inherit;
-  font-size: 1.25rem;
-  padding: 0.3rem 0.4rem;
-  color: var(--farge-tekst);
-}
-
-.bp-sok-felt::placeholder {
-  color: var(--farge-tekst);
-}
-
-.bp-sok-felt:focus {
-  outline: none;
-}
-
-/* Skjuler nettleserens egen blå "x" i søkefeltet */
-.bp-sok-felt::-webkit-search-cancel-button {
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.bp-sok-felt-rad:focus-within {
-  border-bottom-width: 2.5px;
-}
-
-.bp-sok-knapp {
-  background: none;
-  border: none;
-  padding: 0.25rem;
-  color: var(--farge-tekst);
-  cursor: pointer;
-}
-
-.bp-sok-hint {
-  margin-top: 0.75rem;
-  font-size: 0.65rem;
-}
-
-.bp-sok-treff {
-  list-style: none;
-  margin: 1.25rem 0 0;
-  padding: 0;
-}
-
-.bp-sok-treff a {
-  display: block;
-  padding: 0.55rem 0;
-  border-bottom: 1px solid var(--farge-kant);
-  color: var(--farge-tekst);
-  text-decoration: none;
-}
-
-.bp-sok-treff a::after {
-  content: " →";
-}
-
-.bp-sok-treff a:hover {
-  text-decoration: underline;
-}
-
-.bp-sok-ingen {
-  font-size: 0.9rem;
-  color: var(--farge-tekst-svak);
+.bp-meny-loggut {
+  margin-top: 0.4rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--farge-akutt);
 }
 
 .bp-kommer {
@@ -484,10 +335,8 @@ a {
 }
 
 /* -------------------------------------------------------------------------
-   Forsiden: flis-rutenett øverst (som bildene på forsvaret.no)
-   Flisene har ikke fotografier (opphavsrett), men mørke flater med mønster.
-   Vil dere bruke egne bilder: legg dem i wwwroot/images og sett
-   background-image på .bp-flis-a / -b / -c.
+   Forsiden: flis-rutenett med bilder øverst (som på forsvaret.no).
+   Bildene ligger i wwwroot/images og settes inn med <img> i Home/Index.cshtml.
    ------------------------------------------------------------------------- */
 .bp-topp {
   background: linear-gradient(180deg, #ffffff 0%, #eeedeb 100%);
@@ -519,10 +368,13 @@ a {
   grid-row: 1 / 3;
 }
 
-/* Bildet/mønsteret ligger i et eget lag, så det kan zoome litt ved hover */
+/* Bildet fyller hele flisen. object-fit: cover beskjærer i stedet for å strekke. */
 .bp-flis-bilde {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 0.6s ease;
 }
 
@@ -530,55 +382,43 @@ a {
   transform: scale(1.03);
 }
 
-/* Stor flis: by om natten (samme "bylys"-idé som før) */
-.bp-flis-a .bp-flis-bilde {
-  background:
-    radial-gradient(1.5px 1.5px at 12% 82%, #f6c453, transparent),
-    radial-gradient(1.5px 1.5px at 18% 74%, #fff4d6, transparent),
-    radial-gradient(1.5px 1.5px at 27% 86%, #f6c453, transparent),
-    radial-gradient(1.5px 1.5px at 36% 78%, #fff4d6, transparent),
-    radial-gradient(1.5px 1.5px at 44% 88%, #f6c453, transparent),
-    radial-gradient(1.5px 1.5px at 58% 80%, #fff4d6, transparent),
-    radial-gradient(1.5px 1.5px at 66% 90%, #f6c453, transparent),
-    radial-gradient(1.5px 1.5px at 79% 76%, #fff4d6, transparent),
-    radial-gradient(1.5px 1.5px at 88% 85%, #f6c453, transparent),
-    radial-gradient(ellipse at 70% 15%, rgba(140, 160, 190, 0.35), transparent 55%),
-    linear-gradient(180deg, #3a4354 0%, #222937 55%, #141922 100%);
-}
+/* Hvilken del av bildet som vises når det beskjæres */
+.bp-flis-a .bp-flis-bilde { object-position: center 55%; }
+.bp-flis-b .bp-flis-bilde { object-position: center 40%; filter: saturate(0.7); }
+.bp-flis-c .bp-flis-bilde { object-position: center 62%; }
 
-/* Oppe til høyre: oliven med høydekurver, som et kart */
-.bp-flis-b .bp-flis-bilde {
-  background:
-    repeating-radial-gradient(circle at 28% 38%, transparent 0 18px, rgba(255, 255, 255, 0.08) 18px 19px),
-    repeating-radial-gradient(circle at 82% 90%, transparent 0 22px, rgba(255, 255, 255, 0.06) 22px 23px),
-    linear-gradient(135deg, #5f6a4b 0%, #39412d 100%);
-}
-
-/* Nede til høyre: skifergrå med rutenett */
-.bp-flis-c .bp-flis-bilde {
-  background:
-    repeating-linear-gradient(0deg, transparent 0 31px, rgba(255, 255, 255, 0.07) 31px 32px),
-    repeating-linear-gradient(90deg, transparent 0 31px, rgba(255, 255, 255, 0.07) 31px 32px),
-    linear-gradient(135deg, #4b5566 0%, #2a303b 100%);
-}
-
-/* Stort, tynt ikon som "motiv" i flisen */
-.bp-flis-motiv {
+/* Mørk toning oppå bildet ("falmet"), sterkest nederst der teksten står,
+   så bildet ikke overdøver skriften. */
+.bp-flis::after {
+  content: "";
   position: absolute;
-  top: 50%;
-  left: 38%;
-  transform: translate(-50%, -50%);
-  color: rgba(255, 255, 255, 0.16);
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(16, 20, 28, 0.6) 0%, rgba(16, 20, 28, 0.25) 55%, rgba(16, 20, 28, 0.12) 100%);
   pointer-events: none;
 }
 
-.bp-flis-liten .bp-flis-motiv {
-  left: 30%;
+/* Kartbildet er lyst og har mye detaljer, så det tones litt mer */
+.bp-flis-b::after {
+  background: linear-gradient(to top, rgba(16, 20, 28, 0.65) 0%, rgba(16, 20, 28, 0.35) 60%, rgba(16, 20, 28, 0.25) 100%);
+}
+
+/* Kildehenvisning for kartet (Kartverket krever at de krediteres) */
+.bp-flis-kreditt {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.6rem;
+  z-index: 2;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  color: #fff;
+  background-color: rgba(16, 20, 28, 0.55);
 }
 
 /* Den mørke tekstboksen nede i hjørnet */
 .bp-flis-tekst {
   position: relative;
+  z-index: 2;                       /* over toningen */
   background-color: rgba(18, 18, 18, 0.72);
   padding: 0.75rem 1rem 0.8rem;
   max-width: 85%;
@@ -1236,39 +1076,41 @@ a {
 }
 
 /* -------------------------------------------------------------------------
-   Nettbrett: menyen får to kolonner (søket flyttes under hovedlenkene)
+   Smal skjerm: sidelenkene får en egen rad under logoen
    ------------------------------------------------------------------------- */
-@media (max-width: 1100px) {
-  .bp-meny {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;     /* søket tar bare plassen det trenger */
+@media (max-width: 900px) {
+  :root {
+    --header-hoyde: 113px;          /* 64px + 48px lenkerad + 1px strek, brukes av kartsiden */
   }
 
-  .bp-meny-hoved {
-    grid-column: 1;
-    grid-row: 1 / 3;
-    padding-left: 2.5rem;
+  .bp-header-innhold {
+    grid-template-rows: 64px auto;
+    min-height: 0;
+    padding: 0 1rem;
   }
 
-  .bp-meny-kolonne {
-    min-height: auto;
+  /* Innlogget: lenkene på egen rad. Utlogget ("Logg inn") blir stående øverst til høyre. */
+  .bp-nav-innlogget {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    border-top: 1px solid var(--farge-flate-mork);
   }
 
-  .bp-meny-midt {
-    grid-column: 2;
-    grid-row: 2;
-    padding-left: 2.5rem;
+  .bp-nav-innlogget .bp-nav-lenker {
+    justify-content: space-around;
+    height: 48px;
+    gap: 0.5rem;
   }
 
-  .bp-meny-logo {
-    display: none;
+  .bp-logo svg {
+    width: 28px;
+    height: 28px;
   }
 
-  .bp-meny-sok {
-    grid-column: 2;
-    grid-row: 1;
-    padding: 6rem 2rem 1rem 2.5rem;
-    background-color: var(--farge-meny-midt);
+  /* Menyen legges under lenkeraden (48px + 1px strek) */
+  .bp-meny[data-bs-popper] {
+    top: calc(100% + 50px);
+    left: -1rem;
   }
 }
 
@@ -1276,61 +1118,6 @@ a {
    Mobil
    ------------------------------------------------------------------------- */
 @media (max-width: 767px) {
-  :root {
-    --header-hoyde: 72px;
-  }
-
-  /* Bare ikonene for "Min side" og "Søk" i toppen, så logoen får plass */
-  .bp-header-knapp-tekst {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-
-  .bp-header-hoyre {
-    gap: 1.1rem;
-  }
-
-  .bp-logo-tekst {
-    display: none;
-  }
-
-  /* Menyen: én kolonne. Hovedlenker, så søk, så trekkspillene. */
-  .bp-meny {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .bp-meny-hoved {
-    padding: 1.5rem 1.5rem 2rem;
-  }
-
-  .bp-meny-lukk {
-    margin-left: 0;
-    margin-bottom: 1.75rem;
-  }
-
-  .bp-meny-sok {
-    padding: 2rem 1.5rem 1rem;
-    background-color: var(--farge-bakgrunn);
-  }
-
-  .bp-meny-midt {
-    order: 1;            /* trekkspillene under søket */
-    flex: 1;
-    padding: 1.5rem;
-  }
-
-  .bp-meny-sma-lenker {
-    margin-top: 1.75rem;
-  }
-
-  .bp-meny-fot {
-    padding-top: 1.5rem;
-  }
-
   /* Flisene under hverandre */
   .bp-flis-grid {
     grid-template-columns: 1fr;
