@@ -18,6 +18,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BeredskapsPortalen</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
     <script type="importmap"></script>
     @* Skrifttype: Outfit (Google Fonts) ligner den geometriske skriften Forsvaret bruker.
        Uten nett faller nettleseren tilbake til systemskriften (se site.css). *@
@@ -85,11 +86,7 @@
             </div>
 
             <a class="bp-logo" asp-controller="Home" asp-action="Index" aria-label="BeredskapsPortalen, til forsiden">
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
-                    <line x1="12" y1="8" x2="12" y2="13" />
-                    <circle cx="12" cy="16.2" r="0.6" fill="currentColor" />
-                </svg>
+                <partial name="_Logo" />
                 <span class="bp-logo-tekst">BeredskapsPortalen</span>
             </a>
 
@@ -98,8 +95,12 @@
                 {
                     <ul class="bp-nav-lenker">
                         <li><a class="bp-nav-link @(ErAktiv("Oversikt") ? "aktiv" : "")" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
-                        <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
-                        <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
+                        @* Kart og Behov vises bare for offentlige aktører. Private aktører tilbyr bare ressurser. *@
+                        @if (User.IsInRole("OffentligAktor"))
+                        {
+                            <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
+                            <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
+                        }
                         <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
                     </ul>
                 }

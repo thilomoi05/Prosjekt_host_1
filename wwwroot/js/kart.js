@@ -52,7 +52,7 @@ const BOBLE_VALG = { minWidth: 280, maxWidth: 320, className: 'bp-boble-popup' }
  *
  * punkt er et objekt med:
  *   form, typeKode, fargeKlasse  ikonet øverst (samme som på kartet)
- *   merkelapp                    f.eks. "Akutt behov" eller "Ressurs"
+ *   merkelapp                    f.eks. "Høy prioritet" eller "Ressurs"
  *   tittel, undertittel          typen og beskrivelsen
  *   rader                        liste med [etikett, verdi], f.eks. ['Område', 'Lund']
  *   ekstraHtml                   ferdig HTML under radene (bildene), kan være tom
@@ -89,9 +89,10 @@ async function visBehov() {
     const alleBehov = await svar.json();
 
     for (const behov of alleBehov) {
-        // Akutte og planlagte behov har hver sin farge (se "Kartikoner" i site.css).
-        const erAkutt = behov.prioritet === 'Akutt';
-        const fargeKlasse = erAkutt ? 'bp-ikon-akutt' : 'bp-ikon-planlagt';
+        // Hver prioritet har sin farge (se "Kartikoner" i site.css).
+        // behov.prioritet er "hoy", "moderat" eller "lav", behov.prioritetTekst er "Høy", "Moderat" eller "Lav".
+        const fargeKlasse = 'bp-ikon-' + behov.prioritet;
+        const merkelapp = behov.prioritetTekst + ' prioritet';
 
         L.marker([behov.breddegrad, behov.lengdegrad], { icon: lagKartikon('behov', behov.typeKode, fargeKlasse) })
             .addTo(kart)
@@ -99,12 +100,12 @@ async function visBehov() {
                 form: 'behov',
                 typeKode: behov.typeKode,
                 fargeKlasse: fargeKlasse,
-                merkelapp: erAkutt ? 'Akutt behov' : 'Planlagt behov',
+                merkelapp: merkelapp,
                 tittel: behov.type,
                 undertittel: behov.beskrivelse,
                 rader: [
                     ['Område', behov.omrade],
-                    ['Prioritet', behov.prioritet],
+                    ['Prioritet', behov.prioritetTekst],
                     ['Status', behov.status]
                 ],
                 id: behov.id
@@ -116,7 +117,7 @@ async function visBehov() {
             form: 'behov',
             typeKode: behov.typeKode,
             fargeKlasse: fargeKlasse,
-            hva: erAkutt ? 'Akutt behov' : 'Planlagt behov',
+            hva: merkelapp,
             type: behov.type,
             sted: behov.omrade,
             beskrivelse: behov.beskrivelse

@@ -12,7 +12,7 @@ public interface IBehovRepository
     IReadOnlyList<Behov> HentSiste(int antall);
     Behov LeggTil(Behov behov);
     int TellAktive();
-    int TellUnderBehandling();
-    int TellAkutte();
+    int TellTildelte();
+    int TellVentende(Prioritet prioritet);
     
 }

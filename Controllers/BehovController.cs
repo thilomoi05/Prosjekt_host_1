@@ -8,8 +8,11 @@ namespace Beredskapsportal.Controllers;
 
 /// <summary>
 /// Håndterer listevisning og registrering av behov.
+/// Bare offentlige aktører (Heimevernet, kommuner osv.) kan se og melde behov.
+/// Private aktører skal bare tilby ressurser, og sendes til oversikten hvis de prøver
+/// å åpne disse sidene (se AccessDeniedPath i Program.cs).
 /// </summary>
-[Authorize]
+[Authorize(Roles = nameof(BrukerRolle.OffentligAktor))]
 public class BehovController : Controller
 {
     private readonly IBehovRepository _behovRepository;
@@ -54,7 +57,7 @@ public class BehovController : Controller
             Beskrivelse = modell.Beskrivelse,
             GeografiskOmrade = modell.GeografiskOmrade,
             Prioritet = modell.Prioritet,
-            Status = BehovStatus.Ny,
+            Status = BehovStatus.Venter,
             Kontaktperson = modell.Kontaktperson,
             Telefon = modell.Telefon,
             Dato = DateOnly.FromDateTime(DateTime.Now),

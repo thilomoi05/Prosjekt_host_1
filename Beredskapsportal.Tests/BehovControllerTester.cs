@@ -16,7 +16,7 @@ public class BehovControllerTester
         Type = BehovType.Oppvarming,
         Beskrivelse = "Varmeovner til varmestue",
         GeografiskOmrade = "Søm",
-        Prioritet = Prioritet.Akutt,
+        Prioritet = Prioritet.Hoy,
         Kontaktperson = "Kommunen",
         Telefon = "38070000",
         Breddegrad = 58.147,
@@ -33,11 +33,11 @@ public class BehovControllerTester
         // Act
         var resultat = controller.Registrer(GyldigSkjema());
 
-        // Assert: sendt tilbake til listen, og behovet ligger øverst med status Ny
+        // Assert: sendt tilbake til listen, og behovet ligger øverst med status Venter
         Assert.IsType<RedirectToActionResult>(resultat);
         var lagret = repository.HentSiste(1)[0];
         Assert.Equal("Søm", lagret.GeografiskOmrade);
-        Assert.Equal(BehovStatus.Ny, lagret.Status);
+        Assert.Equal(BehovStatus.Venter, lagret.Status);
     }
 
     [Fact]

@@ -71,7 +71,7 @@ function lagIkonSvg(form, typeKode, storrelse) {
 
 /**
  * Lager et Leaflet-ikon (markør) til kartet.
- *  fargeKlasse 'bp-ikon-akutt', 'bp-ikon-planlagt' eller 'bp-ikon-ressurs' (farger i site.css)
+ *  fargeKlasse 'bp-ikon-hoy', 'bp-ikon-moderat', 'bp-ikon-lav' eller 'bp-ikon-ressurs' (farger i site.css)
  */
 function lagKartikon(form, typeKode, fargeKlasse) {
     const storrelse = 36;

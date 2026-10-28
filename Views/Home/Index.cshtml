@@ -31,7 +31,7 @@
             <img class="bp-flis-bilde" src="~/images/forside-kart.jpg" alt="" />
             <span class="bp-flis-kreditt">Kart: © Kartverket</span>
             <span class="bp-flis-tekst">
-                <span class="bp-flis-etikett">@Model.AntallAkutteBehov akutte av @Model.AntallAktiveBehov aktive:</span>
+                <span class="bp-flis-etikett">@Model.AntallHoyPrioritet høy prioritet av @Model.AntallAktiveBehov aktive:</span>
                 <span class="bp-flis-tittel">Se meldte behov</span>
             </span>
         </a>
@@ -66,7 +66,6 @@
         {
             <li><a class="bp-hurtig-knapp" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a></li>
             <li><a class="bp-hurtig-knapp" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
-            <li><a class="bp-hurtig-knapp" asp-controller="Kart" asp-action="Index">Kart</a></li>
             <li><a class="bp-hurtig-knapp" asp-controller="Konto" asp-action="Profil">Min profil</a></li>
         }
     </ul>

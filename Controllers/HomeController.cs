@@ -30,7 +30,7 @@ public class HomeController : Controller
         var modell = new ForsideViewModel
         {
             AntallAktiveBehov = _behovRepository.TellAktive(),
-            AntallAkutteBehov = _behovRepository.TellAkutte(),
+            AntallHoyPrioritet = _behovRepository.TellVentende(Prioritet.Hoy),
             AntallTilgjengeligeRessurser = _ressursRepository.TellTilgjengelige()
         };
 
