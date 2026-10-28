@@ -1,24 +1,28 @@
 namespace Beredskapsportal.Models;
 
 /// <summary>
-/// Hvor alvorlig/tidskritisk et behov er.
-/// Brukes til å sortere og fargekode behov i oversikten.
+/// Hvor mye et behov haster:
+///  - Hoy:     trengs nå. Liv, helse eller kritiske funksjoner står på spill.
+///  - Moderat: trengs snart, i løpet av et døgn.
+///  - Lav:     trengs, men kan vente og planlegges.
+/// Skrives "Hoy" uten ø i koden. Skjermen viser "Høy" (se PrioritetVisning).
 /// </summary>
 public enum Prioritet
 {
-    Planlagt,
-    Akutt
+    Lav,
+    Moderat,
+    Hoy
 }
 
 /// <summary>
-/// Livssyklusen til et registrert behov, fra det meldes inn til det er løst.
+/// Status for et behov. Bare to steg:
+///  - Venter:  behovet er meldt inn, men har ikke fått noen ressurs ennå.
+///  - Tildelt: minst én ressurs er tildelt behovet (se Tildeling). Da regnes behovet som løst.
 /// </summary>
 public enum BehovStatus
 {
-    Ny,
     Venter,
-    Tildelt,
-    Fullfort
+    Tildelt
 }
 
 /// <summary>

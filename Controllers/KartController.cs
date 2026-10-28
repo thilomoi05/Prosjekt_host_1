@@ -21,7 +21,9 @@ namespace Beredskapsportal.Controllers;
 ///    rollen "OffentligAktor". Sjekken skjer her på serveren, så det hjelper ikke
 ///    å skjule knapper i nettleseren for å komme rundt den.
 /// </summary>
-[Authorize]
+// Bare offentlige aktører har tilgang til kartet. Private aktører ser verken
+// behov eller andres ressurser, så kartet er skjult for dem.
+[Authorize(Roles = RolleSomSerRessurser)]
 public class KartController : Controller
 {
     // Navnet på rollen som får se ressursene. Samlet ett sted, slik at det er
@@ -61,7 +63,8 @@ public class KartController : Controller
             type = behov.VisningsNavn,
             beskrivelse = behov.Beskrivelse,
             omrade = behov.GeografiskOmrade,
-            prioritet = behov.Prioritet.ToString(),   // "Akutt" eller "Planlagt"
+            prioritet = PrioritetVisning.CssNavn(behov.Prioritet),     // "hoy", "moderat" eller "lav" (velger farge)
+            prioritetTekst = PrioritetVisning.Tekst(behov.Prioritet),  // "Høy", "Moderat" eller "Lav" (vises)
             status = behov.Status.ToString(),
             breddegrad = behov.Breddegrad,
             lengdegrad = behov.Lengdegrad

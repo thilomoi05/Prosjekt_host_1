@@ -18,6 +18,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BeredskapsPortalen</title>
+    @* Ikonet i nettleserfanen (logoen). favicon.ico brukes av eldre nettlesere. *@
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -27,22 +29,23 @@
 </head>
 <body>
     <header class="bp-header">
-        <nav class="bp-navbar">
+        @* Når man ikke er logget inn, står logoen midt i menyen (klassen bp-navbar-midt). *@
+        <nav class="bp-navbar @(erInnlogget ? "" : "bp-navbar-midt")">
             <a class="bp-logo" asp-controller="Home" asp-action="Index">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
-                    <line x1="12" y1="8" x2="12" y2="13" />
-                    <circle cx="12" cy="16.2" r="0.6" fill="currentColor" />
-                </svg>
-                BeredskapsPortalen
+                <partial name="_Logo" />
+                <span class="bp-logo-navn"><strong>Beredskaps</strong>Portalen</span>
             </a>
 
             @if (erInnlogget)
             {
                 <ul class="bp-nav-lenker">
                     <li><a class="bp-nav-link @(ErAktiv("Oversikt") ? "aktiv" : "")" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
-                    <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
-                    <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
+                    @* Kart og Behov vises bare for offentlige aktører. Private aktører tilbyr bare ressurser. *@
+                    @if (User.IsInRole("OffentligAktor"))
+                    {
+                        <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
+                        <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
+                    }
                     <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
                     <li class="dropdown">
                         <button type="button" class="bp-bruker-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -78,7 +81,7 @@
             else
             {
                 <ul class="bp-nav-lenker">
-                    <li><a class="bp-nav-link @(ErAktiv("Home") ? "aktiv" : "")" asp-controller="Home" asp-action="Index">Hjem</a></li>
+                    @* Ingen "Hjem"-lenke: logoen til venstre tar deg allerede til forsiden. *@
                     @if (!ErAktiv("Home"))
                     {
                         <li><a class="btn btn-bp-primær" asp-controller="Konto" asp-action="LoggInn">Logg inn</a></li>
@@ -96,6 +99,12 @@
     @if (!ErAktiv("Kart"))
     {
         <footer class="bp-footer">
+            <p class="bp-footer-logo">
+                <a class="bp-logo" asp-controller="Home" asp-action="Index">
+                    <partial name="_Logo" />
+                    <span class="bp-logo-navn"><strong>Beredskaps</strong>Portalen</span>
+                </a>
+            </p>
             <p>BeredskapsPortalen &mdash; Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
             <p class="bp-footer-liten">&copy; 2026 Universitetet i Agder. Levert som del av beredskap og krisehåndtering.</p>
         </footer>

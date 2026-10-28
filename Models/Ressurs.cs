@@ -32,6 +32,10 @@ public class Ressurs
 
     public string Telefon { get; set; } = string.Empty;
 
+    // Brukernavnet til den som registrerte ressursen. Brukes til å vise private
+    // aktører hvilke av deres egne ressurser som er tildelt et behov.
+    public string RegistrertAv { get; set; } = string.Empty;
+
     // Plasseringen på kartet, i vanlige GPS-koordinater (grader).
     // Breddegrad = nord/sør (ca. 58 i Kristiansand), lengdegrad = øst/vest (ca. 8).
     // Settes når brukeren klikker i kartet i registreringsskjemaet.
