@@ -1312,15 +1312,18 @@ button.bp-meny-lenke:hover {
     margin-left: 0.75rem;
 }
 
-/* "Se detaljer"-knappen i kartboblen og listen under kartet */
-.bp-kart-detaljer {
+/* "Se detaljer"-knappen i kartboblen og listen under kartet.
+   ".leaflet-container a" står med, fordi Leaflet ellers gir lenker i boblen blå farge. */
+.bp-kart-detaljer,
+.leaflet-container a.bp-kart-detaljer {
     border-color: var(--farge-primær);
     color: var(--farge-primær);
     border-radius: 0;
     font-weight: 500;
 }
 
-    .bp-kart-detaljer:hover {
+    .bp-kart-detaljer:hover,
+    .leaflet-container a.bp-kart-detaljer:hover {
         background-color: var(--farge-primær);
         border-color: var(--farge-primær);
         color: #ffffff;
@@ -2211,7 +2214,8 @@ a.bp-nokkeltall-kort:hover {
 }
 
 /* -------------------------------------------------------------------------
-   Behovssiden: filter i kolonneoverskriftene (Views/Behov/_Filtermeny.cshtml + behovsliste.js)
+   Tabeller med filter i kolonneoverskriftene (Views/Shared/_Filtermeny.cshtml + tabellfilter.js),
+   brukt på Behov-siden og Tildelinger-siden
    ------------------------------------------------------------------------- */
 /* "Viser 8 av 12 behov" og "Nullstill filter" under overskriften */
 .bp-filter-status {
@@ -2290,8 +2294,8 @@ a.bp-nokkeltall-kort:hover {
     cursor: pointer;
 }
 
-/* Ikonene på behovssiden: litt luft mellom ikonet og navnet */
-#behov-tabell td .bp-kartikon {
+/* Ikonene i tabellene: litt luft mellom ikonet og navnet */
+.bp-tabell-ikoner td .bp-kartikon {
   margin-right: 0.5rem;
 }
 
@@ -2299,4 +2303,155 @@ a.bp-nokkeltall-kort:hover {
 .bp-ikon-noytral {
   color: var(--farge-primær);
   filter: none;
+}
+
+/* -------------------------------------------------------------------------
+   Detaljsidene for behov og ressurser (Views/Behov/Detaljer, Views/Ressurs/Detaljer)
+   ------------------------------------------------------------------------- */
+.bp-detaljer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* "← Tilbake" øverst */
+.bp-tilbake {
+  align-self: flex-start;
+  color: var(--farge-tekst-svak);
+  text-decoration: none;
+}
+
+.bp-tilbake:hover {
+  color: var(--farge-tekst);
+  text-decoration: underline;
+}
+
+/* Toppen: ikon, navn og merker på én linje (brytes på smal skjerm) */
+.bp-detaljer-hode {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.bp-detaljer-tittel {
+  flex: 1;                         /* tar plassen mellom ikonet og merkene */
+  min-width: 14rem;
+}
+
+.bp-detaljer-tittel h1 {
+  font-size: 2rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.bp-detaljer-tittel p {
+  color: var(--farge-tekst-svak);
+  margin: 0.25rem 0 0;
+}
+
+.bp-detaljer-merker {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* To kolonner: tekst til venstre, kart til høyre */
+.bp-detaljer-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+}
+
+.bp-detaljer-overskrift {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.bp-detaljer-tekst {
+  white-space: pre-line;           /* linjeskift i beskrivelsen vises som linjeskift */
+  margin-bottom: 1.5rem;
+}
+
+/* Feltene (Kontaktperson, Telefon osv.): navn til venstre, verdi til høyre */
+.bp-detaljer-felter {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  margin: 0;
+  border-top: 1px solid var(--farge-kant);
+}
+
+.bp-detaljer-felter dt,
+.bp-detaljer-felter dd {
+  margin: 0;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--farge-kant);
+}
+
+.bp-detaljer-felter dt {
+  font-weight: 500;
+  color: var(--farge-tekst-svak);
+}
+
+.bp-detaljer-felter a {
+  color: var(--farge-tekst);
+}
+
+/* Det lille kartet */
+.bp-detaljkart {
+  height: 18rem;
+  border: 1px solid var(--farge-kant);
+}
+
+/* Bildene av ressursen, på rekke */
+.bp-detaljer-bilder {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.bp-detaljer-bilder img {
+  width: 10rem;
+  height: 10rem;
+  object-fit: cover;               /* beskjærer i stedet for å strekke bildet */
+  border: 1px solid var(--farge-kant);
+}
+
+.bp-detaljer-bilder a:hover img {
+  border-color: var(--farge-primær);
+}
+
+/* Smal skjerm: kartet legger seg under teksten */
+@media (max-width: 767px) {
+  .bp-detaljer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bp-detaljer-felter {
+    grid-template-columns: 7.5rem 1fr;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Listen under kartet: filtermenyer i kolonneoverskriftene
+   (samme stil som på Behov-siden, se "Behovssiden: filter i kolonneoverskriftene")
+   ------------------------------------------------------------------------- */
+/* Overskriftene "Behov" og "Ressurser" inne i menyene Type og Status */
+.bp-kolonne-meny-overskrift {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--farge-tekst-lysere);
+  margin: 0.5rem 0 0.15rem;
+}
+
+.bp-kolonne-meny-overskrift:first-child {
+  margin-top: 0;
+}
+
+/* "Viser 9 av 40" under overskriften i listepanelet */
+.bp-kart-liste-panel .bp-filter-status {
+  margin: 0.15rem 0 0;
 }

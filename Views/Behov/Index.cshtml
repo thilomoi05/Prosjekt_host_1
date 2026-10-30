@@ -30,10 +30,10 @@
         <div class="bp-tabell-kort-hode">
             <div>
                 <h2>Alle meldte behov</h2>
-                @* Teksten og "Nullstill filter" oppdateres av behovsliste.js. *@
+                @* Teksten og "Nullstill filter" oppdateres av tabellfilter.js. *@
                 <p class="bp-filter-status">
-                    <span id="behov-antall">Viser @Model.Count behov</span>
-                    <button type="button" class="bp-filter-nullstill" id="behov-nullstill" hidden>Nullstill filter</button>
+                    <span id="tabell-antall">Viser @Model.Count behov</span>
+                    <button type="button" class="bp-filter-nullstill" id="tabell-nullstill" hidden>Nullstill filter</button>
                 </p>
             </div>
             <a class="btn btn-bp-primær" asp-controller="Behov" asp-action="Registrer">
@@ -46,41 +46,33 @@
         </div>
 
         <div class="table-responsive bp-tabell-med-filter">
-            <table class="bp-tabell" id="behov-tabell">
+            @* data-enhet er ordet i "Viser 8 av 12 behov" (tabellfilter.js). *@
+            <table class="bp-tabell bp-tabell-ikoner" id="filtertabell" data-enhet="behov">
                 <thead>
                     <tr>
                         <th><partial name="_Filtermeny" model='("Type behov", "type", typer)' /></th>
                         <th><partial name="_Filtermeny" model='("Område", "omrade", omrader)' /></th>
                         <th><partial name="_Filtermeny" model='("Prioritet", "prioritet", prioriteter)' /></th>
                         <th><partial name="_Filtermeny" model='("Status", "status", statuser)' /></th>
-                        <th>
-                            @* Dato: sortering i stedet for filter *@
-                            <div class="dropdown">
-                                <button type="button" class="bp-kolonne-knapp" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Dato <span class="bp-kolonne-teller" id="dato-retning">(nyeste først)</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
-                                </button>
-                                <div class="dropdown-menu bp-kolonne-meny" id="dato-meny">
-                                    <label class="bp-filter-valg"><input type="radio" name="dato-sortering" value="nyest" checked> Nyeste først</label>
-                                    <label class="bp-filter-valg"><input type="radio" name="dato-sortering" value="eldst"> Eldste først</label>
-                                </div>
-                            </div>
-                        </th>
+                        @* Dato: sortering i stedet for filter *@
+                        <th><partial name="_Datosortering" model='"Dato"' /></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var behov in Model)
                     {
-                        @* data-* er verdiene filteret og sorteringen bruker (behovsliste.js). *@
-                        <tr data-type="@behov.Type"
+                        @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filteret og sorteringen bruker. *@
+                        <tr data-rad
+                            data-type="@behov.Type"
                             data-omrade="@behov.GeografiskOmrade"
                             data-prioritet="@PrioritetVisning.CssNavn(behov.Prioritet)"
                             data-status="@behov.Status"
                             data-dato="@behov.Dato.ToString("yyyy-MM-dd")">
                             <td>
-                                @* Samme ikon som på kartet, i fargen til prioriteten. Fylles inn av behovsliste.js. *@
+                                @* Samme ikon som på kartet, i fargen til prioriteten. Fylles inn av tabellfilter.js.
+                                   Navnet er en lenke til detaljsiden for behovet (Behov/Detaljer/id). *@
                                 <span class="bp-kartikon bp-ikon-@PrioritetVisning.CssNavn(behov.Prioritet)" data-ikon-type="@behov.Type"></span>
-                                <strong>@behov.VisningsNavn</strong>
+                                <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behov.Id">@behov.VisningsNavn</a>
                             </td>
                             <td>@behov.GeografiskOmrade</td>
                             @* Tekst og farge for prioriteten kommer fra PrioritetVisning (Models/PrioritetVisning.cs). *@
@@ -100,8 +92,8 @@
                             <td>@behov.Dato.ToString("yyyy-MM-dd")</td>
                         </tr>
                     }
-                    @* Vises av behovsliste.js når ingen behov passer filteret. *@
-                    <tr id="behov-tom" hidden>
+                    @* Vises av tabellfilter.js når ingen behov passer filteret. *@
+                    <tr id="tabell-tom" hidden>
                         <td colspan="5" class="bp-oversikt-tom">Ingen behov passer filteret. Trykk «Nullstill filter» for å se alle.</td>
                     </tr>
                 </tbody>
@@ -113,5 +105,5 @@
 @section Scripts {
     @* kartikoner.js har funksjonen lagIkonSvg, som lager de samme ikonene som på kartet. *@
     <script src="~/js/kartikoner.js" asp-append-version="true"></script>
-    <script src="~/js/behovsliste.js" asp-append-version="true"></script>
+    <script src="~/js/tabellfilter.js" asp-append-version="true"></script>
 }

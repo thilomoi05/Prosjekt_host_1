@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace Beredskapsportal.Tests;
 
 /// <summary>
-/// Sjekker at sidene med behov og kartet bare er åpne for offentlige aktører.
+/// Sjekker at sidene med behov, kartet og tildelingene bare er åpne for offentlige aktører.
 /// Testen leser [Authorize(Roles = ...)] på controller-klassene, så den feiler
 /// hvis noen fjerner eller endrer rollekravet ved et uhell.
 /// </summary>
@@ -14,6 +14,7 @@ public class TilgangTester
     [Theory]
     [InlineData(typeof(BehovController))]
     [InlineData(typeof(KartController))]
+    [InlineData(typeof(TildelingController))]
     public void Controller_KreverRollenOffentligAktor(Type controllerType)
     {
         // Act: hent [Authorize]-attributtet som står på klassen

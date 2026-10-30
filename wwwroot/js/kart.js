@@ -7,8 +7,10 @@
 //  2. Henter behov fra serveren (/Kart/Behov) og tegner dem som kartnåler.
 //  3. Henter ressurser (/Kart/Ressurser) og tegner dem som firkanter,
 //     men bare hvis brukeren har lov (serveren sjekker det også).
-//  4. Lager filterpanelet til venstre (typer, prioritet, skjul tildelte).
+//  4. Lager filterpanelet til venstre (typer, prioritet, status).
 //  5. Viser bare punktene som passer filteret, både på kartet og i listen.
+//  6. Lager filtermenyene i kolonneoverskriftene i listen. De er koblet til
+//     boksene i filterpanelet, så kartet og listen alltid viser det samme.
 // =========================================================================
 
 const kart = lagKart('kart');
@@ -43,14 +45,15 @@ function trygg(tekst) {
 }
 
 /**
- * Lager knappen "Se detaljer". Brukes både i boblen på kartet og i listen.
+ * Lager lenken "Se detaljer". Brukes både i boblen på kartet og i listen.
+ * form er 'behov' eller 'ressurs' og bestemmer hvilken detaljside lenken går til:
+ * /Behov/Detaljer/5 eller /Ressurs/Detaljer/7.
  * ekstraKlasser er ekstra CSS-klasser, f.eks. 'w-100 mt-2' for full bredde i boblen.
- * Foreløpig gjør knappen ingenting. id-en er lagt på knappen (data-id),
- * slik at vi senere kan sende brukeren til en side med detaljer om punktet.
  */
-function seDetaljerKnapp(id, ekstraKlasser = '') {
-    return '<button type="button" class="btn btn-sm btn-outline-primary bp-kart-detaljer ' + ekstraKlasser + '" ' +
-        'data-id="' + trygg(String(id)) + '" title="Kommer senere">Se detaljer &rarr;</button>';
+function seDetaljerKnapp(form, id, ekstraKlasser = '') {
+    const adresse = (form === 'ressurs' ? '/Ressurs/Detaljer/' : '/Behov/Detaljer/') + encodeURIComponent(id);
+    return '<a href="' + adresse + '" class="btn btn-sm btn-outline-primary bp-kart-detaljer ' + ekstraKlasser + '">' +
+        'Se detaljer &rarr;</a>';
 }
 
 // Innstillinger for boblen som åpnes når man klikker på et punkt.
@@ -67,7 +70,7 @@ const BOBLE_VALG = { minWidth: 280, maxWidth: 320, className: 'bp-boble-popup' }
  *   tittel, undertittel          typen og beskrivelsen
  *   rader                        liste med [etikett, verdi], f.eks. ['Område', 'Lund']
  *   ekstraHtml                   ferdig HTML under radene (bildene), kan være tom
- *   id                           brukes av "Se detaljer"-knappen
+ *   id                           brukes av "Se detaljer"-lenken (sammen med form)
  */
 function lagBoble(punkt) {
     // Hver rad blir en etikett (grå, til venstre) og en verdi (til høyre).
@@ -90,7 +93,7 @@ function lagBoble(punkt) {
         // Radene med opplysninger. <dl> er HTML for "liste med etiketter og verdier".
         '<dl class="bp-boble-rader">' + raderHtml + '</dl>' +
         (punkt.ekstraHtml ?? '') +
-        seDetaljerKnapp(punkt.id, 'w-100 mt-3') +
+        seDetaljerKnapp(punkt.form, punkt.id, 'w-100 mt-3') +
         '</div>';
 }
 
@@ -127,14 +130,15 @@ async function visBehov() {
             id: behov.id,
             markor: markor,
             prioritet: behov.prioritet,      // "hoy", "moderat" eller "lav", brukes av filteret
+            prioritetTekst: behov.prioritetTekst,
+            status: behov.status,            // "Venter" eller "Tildelt", brukes av filteret
             // Samme ikon som på kartet, brukes i listen.
             form: 'behov',
             typeKode: behov.typeKode,
             fargeKlasse: fargeKlasse,
-            hva: merkelapp,
+            hva: 'Behov',
             type: behov.type,
-            sted: behov.omrade,
-            beskrivelse: behov.beskrivelse
+            sted: behov.omrade
         });
     }
 }
@@ -184,11 +188,11 @@ async function visRessurser() {
             form: 'ressurs',
             typeKode: ressurs.typeKode,
             fargeKlasse: 'bp-ikon-ressurs',
-            hva: ressurs.tildelt ? 'Ressurs (tildelt)' : 'Ressurs',
-            erTildelt: ressurs.tildelt,
+            hva: 'Ressurs',
+            // "Tilgjengelig" eller "Tildelt", brukes av filteret og vises i listen.
+            status: ressurs.tildelt ? 'Tildelt' : 'Tilgjengelig',
             type: ressurs.type,
-            sted: ressurs.adresse,
-            beskrivelse: ressurs.beskrivelse
+            sted: ressurs.adresse
         });
     }
 }
@@ -198,24 +202,36 @@ function visTabell() {
     // Bare punktene filteret viser (se filtrer() lenger ned).
     const punkter = punkterTilTabell.filter(punkt => punkt.synlig);
 
-    // Viser antall punkter i overskriften på listen.
-    document.getElementById('kart-antall').textContent = punkter.length;
+    // "Viser 9 av 40" over listen, og "Nullstill filter" når noe er filtrert bort.
+    const totalt = punkterTilTabell.length;
+    document.getElementById('kart-antall').textContent = punkter.length < totalt
+        ? 'Viser ' + punkter.length + ' av ' + totalt
+        : 'Viser alle ' + totalt;
+    document.getElementById('liste-nullstill').hidden = punkter.length === totalt;
 
     if (punkter.length === 0) {
-        tabell.innerHTML = '<tr><td colspan="5" class="text-muted">Ingen punkter å vise.</td></tr>';
+        tabell.innerHTML = '<tr><td colspan="6" class="text-muted">Ingen punkter passer filteret. Trykk «Nullstill filter» for å se alle.</td></tr>';
         return;
     }
 
     let rader = '';
     for (const punkt of punkter) {
+        // Status vises som et merke, samme farger som på Behov-siden: gul = venter/tilgjengelig, blå = tildelt.
+        const statusKlasse = punkt.status === 'Tildelt' ? 'bp-badge-tildelt' : 'bp-badge-venter';
+        // Bare behov har prioritet. Ressurser får en strek.
+        const prioritet = punkt.form === 'behov'
+            ? '<span class="bp-prioritet-' + punkt.prioritet + '">' + trygg(punkt.prioritetTekst) + '</span>'
+            : '<span class="text-muted">&ndash;</span>';
+
         rader += '<tr>' +
             // Ikonet foran teksten (litt mindre enn på kartet), så listen og kartet ser like ut.
             '<td><span class="bp-kartikon ' + punkt.fargeKlasse + '">' +
                 lagIkonSvg(punkt.form, punkt.typeKode, 24) + '</span> ' + trygg(punkt.hva) + '</td>' +
             '<td>' + trygg(punkt.type) + '</td>' +
             '<td>' + trygg(punkt.sted) + '</td>' +
-            '<td>' + trygg(punkt.beskrivelse) + '</td>' +
-            '<td class="text-end">' + seDetaljerKnapp(punkt.id, 'text-nowrap') + '</td>' +
+            '<td>' + prioritet + '</td>' +
+            '<td><span class="bp-badge ' + statusKlasse + '">' + trygg(punkt.status) + '</span></td>' +
+            '<td class="text-end">' + seDetaljerKnapp(punkt.form, punkt.id, 'text-nowrap') + '</td>' +
             '</tr>';
     }
     tabell.innerHTML = rader;
@@ -285,16 +301,24 @@ function byggFilter() {
                 html += lagFilterValg('data-prioritet="' + kode + '"', '<span class="bp-kart-prikk ' + kode + '"></span>', tekst, null, '');
             }
             html += '</div>';
-        } else {
-            // Skjul ressurser som allerede er tildelt et behov (av som standard)
-            html += '<label class="bp-filter-valg bp-filter-ekstra">' +
-                '<input type="checkbox" id="filter-skjul-tildelte">' +
-                '<span class="bp-filter-navn">Skjul tildelte</span></label>';
         }
+
+        // Status: behov venter eller er tildelt, ressurser er tilgjengelige eller tildelt.
+        // data-status er f.eks. "ressurs:Tildelt". Å fjerne det krysset skjuler tildelte ressurser.
+        const statuser = erBehov ? ['Venter', 'Tildelt'] : ['Tilgjengelig', 'Tildelt'];
+        html += '<div class="bp-filter-prioritet"><span class="bp-filter-undertittel">Status</span>';
+        for (const status of statuser) {
+            html += lagFilterValg('data-status="' + form + ':' + status + '"', '', status, null, '');
+        }
+        html += '</div>';
+
         html += '</div>';
     }
 
     filterInnhold.innerHTML = html;
+
+    // Hver boks får en id (filter-boks-0, filter-boks-1, ...), så boksene i listen kan peke på dem.
+    filterInnhold.querySelectorAll('input').forEach((boks, nummer) => { boks.id = 'filter-boks-' + nummer; });
 }
 
 /** Krysser av (eller fjerner krysset) for en hel gruppe, f.eks. alle behov. */
@@ -335,8 +359,11 @@ function filtrer() {
         valgtePrioriteter[boks.dataset.prioritet] = boks.checked;
     });
 
-    const skjulTildelteBoks = document.getElementById('filter-skjul-tildelte');
-    const skjulTildelte = skjulTildelteBoks ? skjulTildelteBoks.checked : false;
+    // Hvilke statuser som er valgt, f.eks. { "behov:Venter": true, "ressurs:Tildelt": false }
+    const valgteStatuser = {};
+    filterInnhold.querySelectorAll('[data-status]').forEach(boks => {
+        valgteStatuser[boks.dataset.status] = boks.checked;
+    });
 
     let antallSynlige = 0;
     for (const punkt of punkterTilTabell) {
@@ -344,7 +371,7 @@ function filtrer() {
         if (punkt.form === 'behov' && !valgtePrioriteter[punkt.prioritet]) {
             synlig = false;
         }
-        if (punkt.form === 'ressurs' && skjulTildelte && punkt.erTildelt) {
+        if (!valgteStatuser[punkt.form + ':' + punkt.status]) {
             synlig = false;
         }
 
@@ -365,6 +392,7 @@ function filtrer() {
         antallSynlige < totalt ? '(' + antallSynlige + ' av ' + totalt + ')' : '';
 
     visTabell();
+    oppdaterListemenyer();
 }
 
 // Når en boks i panelet endres: oppdater hovedboksene og filtrer på nytt.
@@ -382,10 +410,6 @@ filterInnhold.addEventListener('change', function (hendelse) {
 // "Nullstill": alt vises igjen
 document.getElementById('filter-nullstill').addEventListener('click', function () {
     filterInnhold.querySelectorAll('input[type="checkbox"]').forEach(boks => { boks.checked = true; });
-    const skjulTildelte = document.getElementById('filter-skjul-tildelte');
-    if (skjulTildelte) {
-        skjulTildelte.checked = false;
-    }
     oppdaterHovedboks('behov');
     oppdaterHovedboks('ressurs');
     filtrer();
@@ -405,6 +429,124 @@ function settFilterApent(apent) {
 filterKnapp.addEventListener('click', function () { settFilterApent(true); });
 document.getElementById('filter-lukk').addEventListener('click', function () { settFilterApent(false); });
 
+// =========================================================================
+// Filtermenyene i kolonneoverskriftene i listen
+//
+// Menyene har ingen egen logikk. Hver avkrysningsboks i en meny er koblet til
+// en boks i filterpanelet (data-styrer="filter-boks-3"). Krysser man av i listen,
+// krysses boksen i panelet av, og filtrer() kjører som vanlig. Etterpå kopierer
+// oppdaterListemenyer() krysset tilbake fra panelet. Én kilde, to visninger.
+// =========================================================================
+
+// Hvilke bokser i panelet hver kolonne viser. Hver del er [overskrift, CSS-velger].
+// Overskriften skiller behov og ressurser når kolonnen har begge (tom = ingen overskrift).
+const LISTEKOLONNER = [
+    { th: 'liste-kolonne-hva', tittel: 'Hva', deler: [['', '[data-gruppe-hoved]']] },
+    { th: 'liste-kolonne-type', tittel: 'Type', deler: [['Behov', '[data-gruppe="behov"]'], ['Ressurser', '[data-gruppe="ressurs"]']] },
+    { th: 'liste-kolonne-prioritet', tittel: 'Prioritet', deler: [['', '[data-prioritet]']] },
+    { th: 'liste-kolonne-status', tittel: 'Status', deler: [['Behov', '[data-status^="behov:"]'], ['Ressurser', '[data-status^="ressurs:"]']] }
+];
+
+/** Lager menyene i kolonneoverskriftene. Kjøres én gang, etter byggFilter(). */
+function byggListemenyer() {
+    for (const kolonne of LISTEKOLONNER) {
+        let valgHtml = '';
+        for (const [overskrift, velger] of kolonne.deler) {
+            const panelBokser = filterInnhold.querySelectorAll(velger);
+            if (panelBokser.length === 0) {
+                continue;   // f.eks. ingen ressurser
+            }
+            if (overskrift) {
+                valgHtml += '<span class="bp-kolonne-meny-overskrift">' + overskrift + '</span>';
+            }
+            for (const panelBoks of panelBokser) {
+                // Henter ikonet og navnet fra samme rad i panelet, så de ser like ut.
+                const rad = panelBoks.closest('label');
+                const ikon = rad.querySelector('.bp-kartikon, .bp-kart-prikk, .bp-kart-firkant');
+                valgHtml += '<label class="bp-filter-valg">' +
+                    '<input type="checkbox" checked data-styrer="' + panelBoks.id + '">' +
+                    (ikon ? ikon.outerHTML : '') +
+                    '<span class="bp-filter-navn">' + trygg(rad.querySelector('.bp-filter-navn').textContent) + '</span>' +
+                    '</label>';
+            }
+        }
+
+        // Samme oppbygning som _Filtermeny.cshtml på Behov-siden (knapp med pil + meny).
+        // data-bs-auto-close="outside": menyen lukker seg ikke når man krysser av.
+        document.getElementById(kolonne.th).innerHTML =
+            '<div class="dropdown">' +
+                '<button type="button" class="bp-kolonne-knapp" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">' +
+                    kolonne.tittel + ' <span class="bp-kolonne-teller"></span>' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>' +
+                '</button>' +
+                '<div class="dropdown-menu bp-kolonne-meny">' + valgHtml +
+                    '<div class="bp-kolonne-meny-fot">' +
+                        '<button type="button" data-velg="alle">Alle</button>' +
+                        '<button type="button" data-velg="ingen">Ingen</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+    }
+}
+
+/** Kopierer kryssene fra panelet til menyene i listen, og oppdaterer tellerne på knappene. */
+function oppdaterListemenyer() {
+    for (const kolonne of LISTEKOLONNER) {
+        const th = document.getElementById(kolonne.th);
+        const listeBokser = [...th.querySelectorAll('[data-styrer]')];
+        if (listeBokser.length === 0) {
+            continue;   // menyene er ikke laget ennå
+        }
+
+        for (const listeBoks of listeBokser) {
+            const panelBoks = document.getElementById(listeBoks.dataset.styrer);
+            listeBoks.checked = panelBoks.checked;
+            listeBoks.indeterminate = panelBoks.indeterminate;   // halvveis (f.eks. bare noen behovstyper)
+        }
+
+        // Kolonner med filter i bruk får understrek og antall valgte, f.eks. "Type (3)".
+        const antallValgt = listeBokser.filter(boks => boks.checked && !boks.indeterminate).length;
+        const erFiltrert = antallValgt < listeBokser.length;
+        th.querySelector('.bp-kolonne-knapp').classList.toggle('aktiv', erFiltrert);
+        th.querySelector('.bp-kolonne-teller').textContent = erFiltrert ? '(' + antallValgt + ')' : '';
+    }
+}
+
+/** Setter en boks i panelet til samme kryss som boksen i listen, og lar panelet gjøre resten. */
+function styrPanelboks(listeBoks) {
+    const panelBoks = document.getElementById(listeBoks.dataset.styrer);
+    panelBoks.checked = listeBoks.checked;
+    // Later som brukeren klikket i panelet, så den vanlige koden kjører (hovedbokser + filtrer()).
+    panelBoks.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+const listeHode = document.getElementById('kart-liste-hode');
+
+// En boks i en meny i listen endres
+listeHode.addEventListener('change', function (hendelse) {
+    if (hendelse.target.dataset.styrer) {
+        styrPanelboks(hendelse.target);
+    }
+});
+
+// "Alle" og "Ingen" nederst i hver meny
+listeHode.addEventListener('click', function (hendelse) {
+    const knapp = hendelse.target.closest('[data-velg]');
+    if (!knapp) {
+        return;
+    }
+    const meny = knapp.closest('.bp-kolonne-meny');
+    meny.querySelectorAll('[data-styrer]').forEach(listeBoks => {
+        listeBoks.checked = knapp.dataset.velg === 'alle';
+        styrPanelboks(listeBoks);
+    });
+});
+
+// "Nullstill filter" over listen gjør det samme som "Nullstill" i panelet.
+document.getElementById('liste-nullstill').addEventListener('click', function () {
+    document.getElementById('filter-nullstill').click();
+});
+
 /** Starter alt sammen. Kjøres én gang når siden lastes. */
 async function start() {
     try {
@@ -413,12 +555,13 @@ async function start() {
             await visRessurser();
         }
         byggFilter();
+        byggListemenyer();
 
         // Kommer brukeren fra "Tilgjengelige ressurser" på oversikten, settes filteret
         // til bare ressurser som ikke er tildelt, og listen får en annen overskrift.
         if (listeValg === 'ressurser') {
             settGruppe('behov', false);
-            document.getElementById('filter-skjul-tildelte').checked = true;
+            filterInnhold.querySelector('[data-status="ressurs:Tildelt"]').checked = false;
             document.getElementById('kart-liste-tittel-tekst').textContent = 'Tilgjengelige ressurser';
         }
 
@@ -431,7 +574,7 @@ async function start() {
         }
     } catch (feil) {
         console.error(feil);
-        tabell.innerHTML = '<tr><td colspan="5" class="text-danger">Klarte ikke å hente punktene til kartet.</td></tr>';
+        tabell.innerHTML = '<tr><td colspan="6" class="text-danger">Klarte ikke å hente punktene til kartet.</td></tr>';
     }
 }
 

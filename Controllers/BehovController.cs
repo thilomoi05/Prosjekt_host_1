@@ -16,16 +16,51 @@ namespace Beredskapsportal.Controllers;
 public class BehovController : Controller
 {
     private readonly IBehovRepository _behovRepository;
+    private readonly IRessursRepository _ressursRepository;
+    private readonly ITildelingRepository _tildelingRepository;
 
-    public BehovController(IBehovRepository behovRepository)
+    public BehovController(IBehovRepository behovRepository, IRessursRepository ressursRepository,
+        ITildelingRepository tildelingRepository)
     {
         _behovRepository = behovRepository;
+        _ressursRepository = ressursRepository;
+        _tildelingRepository = tildelingRepository;
     }
 
     public IActionResult Index()
     {
         var alleBehov = _behovRepository.HentAlle();
         return View(alleBehov);
+    }
+
+    /// <summary>
+    /// Detaljsiden for ett behov, f.eks. /Behov/Detaljer/5.
+    /// Viser alt om behovet, et lite kart og ressursene som er tildelt det.
+    /// </summary>
+    [HttpGet]
+    public IActionResult Detaljer(int id)
+    {
+        var behov = _behovRepository.HentMedId(id);
+        if (behov is null)
+        {
+            return NotFound();   // ukjent id: "Fant ikke siden"
+        }
+
+        // Id-ene til ressursene som er tildelt dette behovet.
+        var ressursIder = _tildelingRepository.HentAlle()
+            .Where(t => t.BehovId == id)
+            .Select(t => t.RessursId)
+            .ToList();
+
+        var modell = new BehovDetaljerViewModel
+        {
+            Behov = behov,
+            TildelteRessurser = _ressursRepository.HentAlle()
+                .Where(r => ressursIder.Contains(r.Id))
+                .ToList()
+        };
+
+        return View(modell);
     }
 
     [HttpGet]
