@@ -1,10 +1,20 @@
 @model (string Tittel, string Filter, List<(string Verdi, string Tekst)> Valg)
+@{
+    // Menyene for typer får et lite ikon foran hvert valg, så typen er lett å kjenne igjen:
+    // nål for behovstyper, firkant for ressurstyper. Andre menyer får ikke ikon (null).
+    var ikonForm = Model.Filter switch
+    {
+        "type" or "behovtype" => "behov",
+        "ressurstype" => "ressurs",
+        _ => null
+    };
+}
 @* =========================================================================
-   Én filtermeny i en kolonneoverskrift på behovssiden: en knapp med pil,
+   Én filtermeny i en kolonneoverskrift (Behov-siden og Tildelinger-siden): en knapp med pil,
    og en meny med avkrysningsbokser (alle er krysset av fra start).
    Bootstrap sin dropdown åpner og lukker menyen. data-bs-auto-close="outside"
    gjør at menyen ikke lukker seg når man krysser av, bare når man klikker utenfor.
-   behovsliste.js leser data-filter og avkrysningene, og filtrerer radene.
+   tabellfilter.js leser data-filter og avkrysningene, og filtrerer radene.
    Brukes slik: <partial name="_Filtermeny" model='("Område", "omrade", omrader)' />
    ========================================================================= *@
 <div class="dropdown">
@@ -21,10 +31,9 @@
         {
             <label class="bp-filter-valg">
                 <input type="checkbox" value="@verdi" checked />
-                @* I Type-menyen får hvert valg et lite ikon, så det er lett å kjenne igjen typen. *@
-                @if (Model.Filter == "type")
+                @if (ikonForm is not null)
                 {
-                    <span class="bp-kartikon bp-ikon-noytral" data-ikon-type="@verdi" data-ikon-storrelse="22"></span>
+                    <span class="bp-kartikon bp-ikon-noytral" data-ikon-type="@verdi" data-ikon-form="@ikonForm" data-ikon-storrelse="22"></span>
                 }
                 <span class="bp-filter-navn">@tekst</span>
             </label>

@@ -59,9 +59,15 @@ public class OversiktController : Controller
 
         if (User.IsInRole(nameof(BrukerRolle.OffentligAktor)))
         {
-            // Offentlige aktører: hvert tildelt behov med alle ressursene det har fått.
+            // Offentlige aktører: de fem behovene som sist fikk en ressurs, med alle ressursene de har fått.
+            // Resten finnes på siden "Alle tildelte ressurser" (TildelingController).
             modell.TildelteBehov = alleBehov
                 .Where(b => b.Status == BehovStatus.Tildelt)
+                // Sorterer på den nyeste tildelingen til hvert behov. DefaultIfEmpty gjør at
+                // et behov uten tildelinger (skal ikke skje) havner sist i stedet for å gi feil.
+                .OrderByDescending(b => tildelinger.Where(t => t.BehovId == b.Id)
+                    .Select(t => t.Tidspunkt).DefaultIfEmpty().Max())
+                .Take(5)
                 .Select(b => new TildeltBehov
                 {
                     Behov = b,

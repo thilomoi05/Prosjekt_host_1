@@ -30,6 +30,15 @@ public class InMemoryBehovRepository : IBehovRepository
         }
     }
 
+    public Behov? HentMedId(int id)
+    {
+        lock (_lasObjekt)
+        {
+            // FirstOrDefault gir null hvis ingen behov har denne id-en.
+            return _behov.FirstOrDefault(b => b.Id == id);
+        }
+    }
+
     public IReadOnlyList<Behov> HentSiste(int antall)
     {
         lock (_lasObjekt)

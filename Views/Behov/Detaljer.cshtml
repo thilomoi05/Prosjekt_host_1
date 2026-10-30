@@ -1,0 +1,99 @@
+@model BehovDetaljerViewModel
+@{
+    var behov = Model.Behov;
+    ViewData["Title"] = behov.VisningsNavn;
+    var prioritetCss = PrioritetVisning.CssNavn(behov.Prioritet);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
+
+<div class="bp-side-innhold bp-detaljer">
+    @* "Tilbake" går til forrige side (kartet, lista eller oversikten). Se detaljkart.js.
+       href er reserve hvis siden ble åpnet direkte. *@
+    <a class="bp-tilbake" asp-controller="Behov" asp-action="Index" data-tilbake>&larr; Tilbake</a>
+
+    @* Toppen: ikon, navn, sted og dato, og merkene for status og prioritet *@
+    <div class="bp-detaljer-hode">
+        <span class="bp-kartikon bp-ikon-@prioritetCss" data-ikon-type="@behov.Type" data-ikon-storrelse="48"></span>
+        <div class="bp-detaljer-tittel">
+            <h1>@behov.VisningsNavn</h1>
+            <p>@behov.GeografiskOmrade · meldt @behov.Dato.ToString("yyyy-MM-dd")</p>
+        </div>
+        <div class="bp-detaljer-merker">
+            @if (behov.Status == BehovStatus.Tildelt)
+            {
+                <span class="bp-badge bp-badge-tildelt">Tildelt</span>
+            }
+            else
+            {
+                <span class="bp-badge bp-badge-venter">Venter</span>
+            }
+            <span class="bp-badge bp-badge-@prioritetCss">@PrioritetVisning.Tekst(behov.Prioritet) prioritet</span>
+        </div>
+    </div>
+
+    <div class="bp-detaljer-grid">
+        @* Venstre: beskrivelse og kontaktinfo *@
+        <section class="bp-tabell-kort">
+            <h2 class="bp-detaljer-overskrift">Beskrivelse</h2>
+            <p class="bp-detaljer-tekst">@behov.Beskrivelse</p>
+
+            @* <dl> er en liste med par: <dt> er navnet på feltet, <dd> er verdien. *@
+            <dl class="bp-detaljer-felter">
+                <dt>Område</dt>
+                <dd>@behov.GeografiskOmrade</dd>
+
+                <dt>Meldt</dt>
+                <dd>@behov.Dato.ToString("yyyy-MM-dd")</dd>
+
+                <dt>Kontaktperson</dt>
+                <dd>@behov.Kontaktperson</dd>
+
+                <dt>Telefon</dt>
+                @* tel: gjør at telefonnummeret kan trykkes på for å ringe fra mobilen *@
+                <dd><a href="tel:@behov.Telefon">@behov.Telefon</a></dd>
+            </dl>
+        </section>
+
+        @* Høyre: lite kart med punktet. Tegnes av detaljkart.js ut fra data-*. *@
+        <section class="bp-tabell-kort">
+            <h2 class="bp-detaljer-overskrift">Plassering</h2>
+            <div id="detaljkart" class="bp-detaljkart"
+                 data-breddegrad="@behov.Breddegrad" data-lengdegrad="@behov.Lengdegrad"
+                 data-form="behov" data-type="@behov.Type" data-farge="bp-ikon-@prioritetCss"></div>
+        </section>
+    </div>
+
+    @* Ressursene som er satt inn på behovet *@
+    <section class="bp-tabell-kort">
+        <h2 class="bp-detaljer-overskrift">Tildelte ressurser</h2>
+        @if (Model.TildelteRessurser.Count == 0)
+        {
+            <p class="bp-oversikt-tom">Ingen ressurser er tildelt dette behovet ennå.</p>
+        }
+        else
+        {
+            <ul class="bp-oversikt-liste">
+                @foreach (var ressurs in Model.TildelteRessurser)
+                {
+                    <li>
+                        <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs"></span>
+                        <span class="bp-oversikt-liste-tekst">
+                            <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">@ressurs.Type</a>
+                            <span>@ressurs.Adresse</span>
+                        </span>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/detaljkart.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,16 @@
+@model string
+@* =========================================================================
+   Kolonneoverskrift for dato, med en meny for å sortere nyeste eller eldste først.
+   Brukes av Behov-siden og Tildelinger-siden. tabellfilter.js gjør selve sorteringen.
+   Modellen er teksten i overskriften, f.eks. <partial name="_Datosortering" model='"Dato"' />
+   ========================================================================= *@
+<div class="dropdown">
+    <button type="button" class="bp-kolonne-knapp" data-bs-toggle="dropdown" aria-expanded="false">
+        @Model <span class="bp-kolonne-teller" id="dato-retning">(nyeste først)</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+    </button>
+    <div class="dropdown-menu bp-kolonne-meny" id="dato-meny">
+        <label class="bp-filter-valg"><input type="radio" name="dato-sortering" value="nyest" checked> Nyeste først</label>
+        <label class="bp-filter-valg"><input type="radio" name="dato-sortering" value="eldst"> Eldste først</label>
+    </div>
+</div>

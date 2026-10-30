@@ -28,7 +28,7 @@ public class BehovControllerTester
     {
         // Arrange
         var repository = new InMemoryBehovRepository();
-        var controller = new BehovController(repository);
+        var controller = new BehovController(repository, new InMemoryRessursRepository(), new InMemoryTildelingRepository());
 
         // Act
         var resultat = controller.Registrer(GyldigSkjema());
@@ -45,7 +45,7 @@ public class BehovControllerTester
     {
         // Arrange: later som ASP.NET fant en valideringsfeil
         var repository = new InMemoryBehovRepository();
-        var controller = new BehovController(repository);
+        var controller = new BehovController(repository, new InMemoryRessursRepository(), new InMemoryTildelingRepository());
         controller.ModelState.AddModelError("Beskrivelse", "Du må beskrive behovet.");
         var antallFor = repository.HentAlle().Count;
 
