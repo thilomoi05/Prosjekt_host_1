@@ -22,7 +22,6 @@ const lengdegradFelt = document.getElementById('Lengdegrad');
 const adresseFelt = document.getElementById('Adresse');
 const finnAdresseKnapp = document.getElementById('finn-adresse');
 const adresseMelding = document.getElementById('adresse-melding');
-const bekreftBoks = document.getElementById('PlasseringBekreftet');
 
 // Markøren som viser valgt plassering. null = ingen plassering valgt ennå.
 let markor = null;
@@ -39,9 +38,10 @@ function velgPosisjon(breddegrad, lengdegrad) {
     breddegradFelt.value = breddegrad.toFixed(6);
     lengdegradFelt.value = lengdegrad.toFixed(6);
 
-    // Markøren er flyttet, så brukeren må bekrefte den nye plasseringen på nytt.
-    if (bekreftBoks) {
-        bekreftBoks.checked = false;
+    // Fjerner en eventuell feilmelding om manglende plassering (ressursskjemaet).
+    const plasseringFeil = document.getElementById('plassering-feil');
+    if (plasseringFeil) {
+        plasseringFeil.textContent = '';
     }
 }
 
@@ -85,8 +85,7 @@ async function finnAdresse() {
 
         adresseMelding.textContent =
             'Fant: ' + treff.adressetekst + ', ' + treff.postnummer + ' ' + treff.poststed +
-            '. Står markøren riktig? Hvis ikke, klikk der ressursen faktisk er. ' +
-            'Kryss så av for at plasseringen er riktig.';
+            '. Står markøren riktig? Hvis ikke, klikk der ressursen faktisk er.';
     } catch (feil) {
         console.error(feil);
         adresseMelding.textContent = 'Klarte ikke å søke etter adressen akkurat nå. Klikk i kartet der ressursen er.';
@@ -111,13 +110,7 @@ if (finnAdresseKnapp) {
 if (breddegradFelt.value && lengdegradFelt.value) {
     const bredde = parseFloat(breddegradFelt.value);
     const lengde = parseFloat(lengdegradFelt.value);
-    const varBekreftet = bekreftBoks ? bekreftBoks.checked : false;
 
     velgPosisjon(bredde, lengde);
     velgerKart.setView([bredde, lengde], 16);
-
-    // velgPosisjon fjerner avkrysningen, men her er plasseringen ikke endret.
-    if (bekreftBoks) {
-        bekreftBoks.checked = varBekreftet;
-    }
 }

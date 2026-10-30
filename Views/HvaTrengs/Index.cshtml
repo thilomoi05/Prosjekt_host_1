@@ -1,0 +1,65 @@
+@model List<UtstyrSomTrengs>
+@{
+    ViewData["Title"] = "Hva trengs";
+}
+
+<div class="bp-side-innhold">
+    <div class="bp-oversikt-hode">
+        <div>
+            <h1>Hva trengs</h1>
+            <p>
+                Utstyr som trengs akkurat nå, og i hvilke områder. Har du noe av dette,
+                kan du tilby det som en ressurs.
+            </p>
+        </div>
+        <a class="btn btn-bp-primær" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <p class="bp-oversikt-tom">Det er ikke meldt inn behov for utstyr akkurat nå.</p>
+    }
+    else
+    {
+        @* Ett kort per type utstyr. Det som haster mest står først. *@
+        <ul class="bp-trengs-grid">
+            @foreach (var utstyr in Model)
+            {
+                var prioritetCss = PrioritetVisning.CssNavn(utstyr.HoyestePrioritet);
+                <li class="bp-trengs-kort">
+                    <div class="bp-trengs-topp">
+                        @* Samme ikon som på kartet. Fylles inn av skriptet nederst (kartikoner.js). *@
+                        <span class="bp-kartikon bp-ikon-@prioritetCss" data-ikon-type="@utstyr.Type"></span>
+                        <div>
+                            <h2>@utstyr.Navn</h2>
+                            <span class="bp-badge bp-badge-@prioritetCss">@PrioritetVisning.Tekst(utstyr.HoyestePrioritet) prioritet</span>
+                        </div>
+                    </div>
+
+                    <dl class="bp-trengs-fakta">
+                        <dt>Trengs i</dt>
+                        <dd>@string.Join(", ", utstyr.Omrader)</dd>
+
+                        <dt>Antall behov</dt>
+                        <dd>@utstyr.Antall</dd>
+                    </dl>
+                </li>
+            }
+        </ul>
+    }
+
+    <p class="bp-trengs-merknad">
+        Siden viser bare hva som trengs og i hvilket område. Hvem som har meldt behovet,
+        og nøyaktig hvor, ser bare Heimevernet og andre autoriserte aktører.
+    </p>
+</div>
+
+@section Scripts {
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script>
+        // Setter inn kartikonet for hver type utstyr. Typen står i data-ikon-type.
+        document.querySelectorAll('[data-ikon-type]').forEach(function (element) {
+            element.innerHTML = lagIkonSvg('behov', element.dataset.ikonType, 40);
+        });
+    </script>
+}

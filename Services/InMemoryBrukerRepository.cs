@@ -25,6 +25,16 @@ public class InMemoryBrukerRepository : IBrukerRepository
             Passord = "test",
             Rolle = BrukerRolle.OffentligAktor
         });
+
+        // Testbruker for privat aktør (bedrift/privatperson), så begge rollene kan testes.
+        LeggTil(new Bruker
+        {
+            FulltNavn = "Privat Testesen",
+            Epost = "privat@example.com",
+            Brukernavn = "privat",
+            Passord = "privat",
+            Rolle = BrukerRolle.PrivatAktor
+        });
     }
 
     public Bruker? FinnVedBrukernavn(string brukernavn)

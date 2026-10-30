@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Beredskapsportal.Migrations
 {
     [DbContext(typeof(BeredskapsDbContext))]
-    [Migration("20261030105706_Opprett")]
+    [Migration("20261030114227_Opprett")]
     partial class Opprett
     {
         /// <inheritdoc />
@@ -155,6 +155,11 @@ namespace Beredskapsportal.Migrations
                     b.Property<double>("Lengdegrad")
                         .HasColumnType("double");
 
+                    b.Property<string>("RegistrertAv")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
                     b.Property<string>("Telefon")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -178,6 +183,48 @@ namespace Beredskapsportal.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Ressurser", (string)null);
+                });
+
+            modelBuilder.Entity("Beredskapsportal.Models.Tildeling", b =>
+                {
+                    b.Property<int>("BehovId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RessursId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kommentar")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime>("Tidspunkt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TildeltAv")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("BehovId", "RessursId");
+
+                    b.HasIndex("RessursId");
+
+                    b.ToTable("Tildelinger", (string)null);
+                });
+
+            modelBuilder.Entity("Beredskapsportal.Models.Tildeling", b =>
+                {
+                    b.HasOne("Beredskapsportal.Models.Behov", null)
+                        .WithMany()
+                        .HasForeignKey("BehovId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Beredskapsportal.Models.Ressurs", null)
+                        .WithMany()
+                        .HasForeignKey("RessursId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

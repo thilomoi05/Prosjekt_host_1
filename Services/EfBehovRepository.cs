@@ -32,11 +32,13 @@ public class EfBehovRepository : IBehovRepository
         return behov;
     }
 
-    public int TellAktive() => _db.Behov.Count(b => b.Status != BehovStatus.Fullfort);
+    // Behov som venter på en ressurs. Tildelte behov regnes som løst.
+    public int TellAktive() => _db.Behov.Count(b => b.Status == BehovStatus.Venter);
 
-    public int TellAkutte() =>
-        _db.Behov.Count(b => b.Prioritet == Prioritet.Akutt && b.Status != BehovStatus.Fullfort);
+    // Ventende behov med en gitt prioritet, f.eks. TellVentende(Prioritet.Hoy).
+    public int TellVentende(Prioritet prioritet) =>
+        _db.Behov.Count(b => b.Prioritet == prioritet && b.Status == BehovStatus.Venter);
 
-    public int TellUnderBehandling() =>
-        _db.Behov.Count(b => b.Status == BehovStatus.Venter || b.Status == BehovStatus.Tildelt);
+    // Behov som har fått minst én ressurs.
+    public int TellTildelte() => _db.Behov.Count(b => b.Status == BehovStatus.Tildelt);
 }

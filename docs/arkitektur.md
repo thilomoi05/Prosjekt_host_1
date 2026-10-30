@@ -173,7 +173,7 @@ To detaljer om dagens lagring:
 
 - `AddSingleton` er brukt fordi listene lever i minnet. Med `AddScoped` ville hver forespørsel fått sin egen tomme liste.
 - Repositoriene bruker `lock` rundt listene, siden flere forespørsler kan komme samtidig.
-- Eksempeldata: 12 behov og 28 ressurser, pluss testbrukeren `test`. `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
+- Eksempeldata: 12 behov, 28 ressurser og 5 tildelinger, pluss testbrukerne `test` (offentlig aktør) og `privat` (privat aktør). `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
 
 ## 6. Innlogging og tilgang
 

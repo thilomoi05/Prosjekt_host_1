@@ -32,6 +32,7 @@ if (brukerDatabase)
     builder.Services.AddScoped<IBrukerRepository, EfBrukerRepository>();
     builder.Services.AddScoped<IBehovRepository, EfBehovRepository>();
     builder.Services.AddScoped<IRessursRepository, EfRessursRepository>();
+    builder.Services.AddScoped<ITildelingRepository, EfTildelingRepository>();
 }
 else
 {
@@ -40,6 +41,7 @@ else
     builder.Services.AddSingleton<IBrukerRepository, InMemoryBrukerRepository>();
     builder.Services.AddSingleton<IBehovRepository, InMemoryBehovRepository>();
     builder.Services.AddSingleton<IRessursRepository, InMemoryRessursRepository>();
+    builder.Services.AddSingleton<ITildelingRepository, InMemoryTildelingRepository>();
 }
 
 // Enkel cookie-basert innlogging: når en bruker logger inn får de en signert
@@ -51,7 +53,9 @@ builder.Services
     .AddCookie(options =>
     {
         options.LoginPath = "/Konto/LoggInn";
-        options.AccessDeniedPath = "/Konto/LoggInn";
+        // Prøver en innlogget bruker å åpne en side rollen ikke har tilgang til
+        // (f.eks. en privat aktør på /Behov), sendes de til oversikten.
+        options.AccessDeniedPath = "/Oversikt";
     });
 
 var app = builder.Build();

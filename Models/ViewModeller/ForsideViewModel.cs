@@ -8,7 +8,8 @@ public class ForsideViewModel
 {
     public int AntallAktiveBehov { get; set; }
 
-    public int AntallAkutteBehov { get; set; }
+    // Behov med høy prioritet som venter.
+    public int AntallHoyPrioritet { get; set; }
 
     public int AntallTilgjengeligeRessurser { get; set; }
 }

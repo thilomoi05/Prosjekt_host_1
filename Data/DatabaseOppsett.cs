@@ -32,35 +32,48 @@ public static class DatabaseOppsett
             }
         }
 
+        // Testbrukerne er de samme som i InMemoryBrukerRepository.
         if (!db.Brukere.Any())
         {
-            db.Brukere.Add(new Bruker
-            {
-                FulltNavn = "Test Testesen",
-                Epost = "test@example.com",
-                Brukernavn = "test",
-                Passord = "test",
-                Rolle = BrukerRolle.OffentligAktor
-            });
+            db.Brukere.AddRange(
+                new Bruker
+                {
+                    FulltNavn = "Test Testesen",
+                    Epost = "test@example.com",
+                    Brukernavn = "test",
+                    Passord = "test",
+                    Rolle = BrukerRolle.OffentligAktor
+                },
+                new Bruker
+                {
+                    FulltNavn = "Privat Testesen",
+                    Epost = "privat@example.com",
+                    Brukernavn = "privat",
+                    Passord = "privat",
+                    Rolle = BrukerRolle.PrivatAktor
+                });
+            db.SaveChanges();
         }
 
+        // Eksempeldataene beholder sine Id-er (1, 2, 3 ...), fordi tildelingene
+        // under peker på behov og ressurser med akkurat de Id-ene.
         if (!db.Behov.Any())
         {
-            // Eksempeldataene er sortert nyeste først. Vi legger inn eldste først,
-            // slik at høyere Id betyr nyere behov.
-            var behov = InMemoryBehovRepository.LagEksempelData();
-            behov.Reverse();
-            behov.ForEach(b => b.Id = 0);
-            db.Behov.AddRange(behov);
+            db.Behov.AddRange(InMemoryBehovRepository.LagEksempelData());
+            db.SaveChanges();
         }
 
         if (!db.Ressurser.Any())
         {
-            var ressurser = InMemoryRessursRepository.LagEksempelData();
-            ressurser.ForEach(r => r.Id = 0);
-            db.Ressurser.AddRange(ressurser);
+            db.Ressurser.AddRange(InMemoryRessursRepository.LagEksempelData());
+            db.SaveChanges();
         }
 
-        db.SaveChanges();
+        // Tildelingene lagres sist, siden de peker på behov og ressurser som må finnes.
+        if (!db.Tildelinger.Any())
+        {
+            db.Tildelinger.AddRange(InMemoryTildelingRepository.LagEksempelData());
+            db.SaveChanges();
+        }
     }
 }

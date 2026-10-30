@@ -44,13 +44,16 @@ dotnet run
 
 Åpne **http://localhost:5220** i nettleseren.
 
-## Testbruker
+## Testbrukere
 
-En testbruker opprettes automatisk når appen starter:
+To testbrukere opprettes automatisk når appen starter (i `InMemoryBrukerRepository`), én for hver rolle:
 
-| Brukernavn | Passord |
-|---|---|
-| `test` | `test` |
+| Brukernavn | Passord | Rolle | Hva du ser |
+|---|---|---|---|
+| `test` | `test` | Offentlig aktør (f.eks. Heimevernet) | Oversikt, kart, behov, ressurser og hva som trengs |
+| `privat` | `privat` | Privat aktør (bedrift eller privatperson) | Egne ressurser, tilby ressurs og hva som trengs |
+
+Testbrukerne er bare for testing og skal fjernes før portalen tas i bruk.
 
 ## Kjente begrensninger
 

@@ -1,18 +1,25 @@
 /* =========================================================================
-   BeredskapsPortalen - design system
-   Alle farger/avstander samlet som CSS-variabler øverst, slik at hele
-   fargeprofilen kan justeres ett sted når vi finpusser designet videre.
+   BeredskapsPortalen - design system (utkast: inspirert av forsvaret.no)
+   Stramt og rolig: hvitt og varm lysegrå, nesten svart tekst, rette hjørner
+   og ingen skygger. Alle farger/avstander er samlet som CSS-variabler her,
+   slik at hele fargeprofilen kan justeres ett sted.
    ========================================================================= */
 :root {
-  --farge-primær: #3b5fe2;
-  --farge-primær-mork: #2f4ecc;
-  --farge-bakgrunn: #f3f4f6;
+  /* Grunnfarger */
+  --farge-primær: #1d1d1b;          /* nesten svart: knapper, tekst, linjer */
+  --farge-primær-mork: #45443f;     /* hover på mørke knapper */
+  --farge-bakgrunn: #ffffff;        /* sidebakgrunn */
+  --farge-flate: #f0efed;           /* varm lysegrå: kort og blokker */
+  --farge-flate-mork: #e4e2de;      /* litt mørkere grå: tabellhoder o.l. */
   --farge-kort: #ffffff;
-  --farge-kant: #e5e7eb;
-  --farge-tekst: #1e293b;
-  --farge-tekst-svak: #4b5563;
-  --farge-tekst-lysere: #6b7280;
+  --farge-kant: #d6d4cf;
+  --farge-tekst: #1d1d1b;
+  --farge-tekst-svak: #4a4945;
+  --farge-tekst-lysere: #6e6c67;
+  --farge-mork: #1f2531;            /* mørk marine: bildeflater og footer */
+  --farge-logo: #3f4a32;            /* dempet oliven til skjoldet */
 
+  /* Status (uendret fra før, så badgene betyr det samme) */
   --farge-badge-ny-bg: #fee2e2;
   --farge-badge-ny-tekst: #b91c1c;
   --farge-badge-venter-bg: #fef3c7;
@@ -22,28 +29,31 @@
   --farge-badge-fullfort-bg: #dcfce7;
   --farge-badge-fullfort-tekst: #166534;
 
-  --farge-akutt: #dc2626;
-  --farge-planlagt: #d97706;
-  --farge-ressurs: #059669;
+  --farge-akutt: #c8281e;
+  --farge-planlagt: #b45f06;
+  --farge-ressurs: #2f6b4f;
 
-  --radius-kort: 0.75rem;
-  --skygge-kort: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --radius-kort: 0;                 /* Forsvaret bruker rette hjørner */
+  --skygge-kort: none;
+  --header-hoyde: 96px;             /* brukes av kartsiden for å fylle resten av skjermen */
+  --side-bredde: 1320px;
 }
 
 html {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 @media (min-width: 768px) {
   html {
-    font-size: 16px;
+    font-size: 17px;
   }
 }
 
 body {
   background-color: var(--farge-bakgrunn);
   color: var(--farge-tekst);
-  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Outfit", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
   margin: 0;
   min-height: 100vh;
   display: flex;
@@ -54,6 +64,11 @@ main {
   flex: 1;
 }
 
+h1, h2, h3, h4 {
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus,
 .form-select:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem var(--farge-primær);
@@ -61,116 +76,229 @@ main {
 
 a {
   color: var(--farge-primær);
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--farge-primær);
+  outline-offset: 3px;
 }
 
 /* -------------------------------------------------------------------------
-   Toppmeny
+   Toppen: Meny | logo | Oversikt, Kart, Behov, Ressurser
    ------------------------------------------------------------------------- */
 .bp-header {
-  background-color: var(--farge-kort);
-  border-bottom: 1px solid var(--farge-kant);
+  position: relative;
+  z-index: 1100;                    /* over kartet, så nedtrekksmenyen ikke havner bak det */
+  background-color: var(--farge-bakgrunn);
+  border-bottom: 1px solid var(--farge-flate-mork);
 }
 
-.bp-navbar {
+.bp-header-innhold {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;   /* logoen står alltid midt på */
+  align-items: center;
+  min-height: var(--header-hoyde);
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 5vw, 5rem);
+}
+
+.bp-header-knapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  background: none;
+  border: none;
+  color: var(--farge-tekst);
+  font: inherit;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.bp-header-knapp:hover,
+.bp-header-knapp[aria-expanded="true"] {
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.bp-meny-omrade {
+  justify-self: start;
+  align-self: stretch;              /* like høy som toppen, så menyen kan legges rett under den */
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .bp-logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--farge-tekst);
+  gap: 0.2rem;
+  color: var(--farge-logo);
   text-decoration: none;
 }
 
-.bp-logo svg {
-  color: var(--farge-primær);
-  flex-shrink: 0;
+.bp-logo-tekst {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--farge-tekst);
+}
+
+/* Sidelenkene til høyre */
+.bp-nav {
+  justify-self: end;
 }
 
 .bp-nav-lenker {
   display: flex;
   align-items: center;
-  gap: 1.75rem;
+  gap: 2rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.bp-nav-lenker a.bp-nav-link {
-  color: var(--farge-tekst-svak);
+.bp-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  color: var(--farge-tekst);
   text-decoration: none;
+  border-bottom: 1.5px solid transparent;   /* strek under aktiv side, uten at teksten hopper */
+}
+
+.bp-nav-link:hover {
+  color: var(--farge-tekst);
+  border-bottom-color: var(--farge-tekst-lysere);
+}
+
+.bp-nav-link.aktiv {
+  border-bottom-color: var(--farge-tekst);
+}
+
+/* -------------------------------------------------------------------------
+   Nedtrekksmenyen under "Meny" (Bootstrap dropdown, se _Layout.cshtml)
+   Halvgjennomsiktig med uskarp bakgrunn, og glir inn når den åpnes.
+   ------------------------------------------------------------------------- */
+.bp-meny {
+  min-width: 17rem;
+  padding: 0.75rem 0;
+  border: none;
+  border-radius: 0;
+  background-color: rgba(236, 235, 232, 0.8);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
+  color: var(--farge-tekst);
+  font-size: 1rem;
+}
+
+/* Plassering: rett under toppen, kant i kant med "Meny".
+   data-bs-popper settes av Bootstrap når menyen er åpen. */
+.bp-meny[data-bs-popper] {
+  top: calc(100% + 1px);            /* rett under streken nederst i toppen */
+  left: -1.5rem;
+  margin-top: 0;
+}
+
+.bp-meny.show {
+  animation: bp-meny-inn 0.2s ease-out;
+}
+
+@keyframes bp-meny-inn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bp-meny-hode {
+  padding: 0.35rem 1.5rem 0.9rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.bp-meny-navn {
   font-weight: 500;
 }
 
-.bp-nav-lenker a.bp-nav-link.aktiv {
-  color: var(--farge-primær);
-  font-weight: 600;
+.bp-meny-rolle {
+  font-size: 0.85rem;
+  color: var(--farge-tekst-svak);
 }
 
-.bp-nav-lenker a.bp-nav-link:hover {
-  color: var(--farge-primær);
-}
-
-.bp-bruker-info {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--farge-tekst);
-  font-weight: 600;
+.bp-meny-lenke {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 1.5rem;
   background: none;
   border: none;
-  padding: 0;
-  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  color: var(--farge-tekst);
+  text-decoration: none;
 }
 
-.bp-bruker-info:hover {
-  color: var(--farge-primær);
+a.bp-meny-lenke:hover,
+button.bp-meny-lenke:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  color: var(--farge-tekst);
+  text-decoration: underline;
 }
 
-/* Nedtrekksmenyen under brukernavnet øverst til høyre */
-.bp-brukermeny {
-    min-width: 15rem;
-    padding: 0.5rem 0;
-    border: 1px solid var(--farge-kant);
-    border-radius: 0.75rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+.bp-meny-lenke.aktiv {
+  text-decoration: underline;
 }
 
-.bp-brukermeny-hode {
-    padding: 0.5rem 1rem;
+.bp-meny .deaktivert {
+  color: var(--farge-tekst-lysere);
+  cursor: default;
 }
 
-.bp-brukermeny-navn {
-    font-weight: 700;
+.bp-meny-sprak {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 1.5rem 0.7rem;
 }
 
-.bp-brukermeny-rolle {
-    font-size: 0.85rem;
-    color: var(--farge-tekst-svak);
+.bp-meny-sprak-etikett {
+  font-size: 0.75rem;
+  color: var(--farge-tekst-svak);
 }
 
-.bp-brukermeny .dropdown-item {
-    padding: 0.5rem 1rem;
+.bp-meny-sprak-valg {
+  display: flex;
+  gap: 1rem;
 }
 
-.bp-brukermeny .bp-brukermeny-loggut {
-    color: var(--farge-akutt);
+.bp-meny-sprak-valg .aktiv {
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.bp-meny form {
+  margin: 0;
+}
+
+.bp-meny-loggut {
+  margin-top: 0.4rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--farge-akutt);
 }
 
 .bp-kommer {
-    font-size: 0.7rem;
-    margin-left: 0.35rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 999px;
-    background-color: var(--farge-bakgrunn);
+  font-size: 0.65rem;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.45rem;
+  background-color: var(--farge-flate-mork);
+  color: var(--farge-tekst-svak);
+  vertical-align: 0.1em;
 }
 
 /* -------------------------------------------------------------------------
@@ -178,11 +306,11 @@ a {
    ------------------------------------------------------------------------- */
 .btn-bp-primær {
   background-color: var(--farge-primær);
-  border-color: var(--farge-primær);
+  border: 1px solid var(--farge-primær);
   color: #fff;
-  font-weight: 600;
-  padding: 0.55rem 1.25rem;
-  border-radius: 0.5rem;
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 0;
 }
 
 .btn-bp-primær:hover,
@@ -194,76 +322,263 @@ a {
 
 .btn-bp-sekundær {
   background-color: #fff;
-  border: 1px solid var(--farge-kant);
+  border: 1px solid var(--farge-primær);
   color: var(--farge-tekst);
-  font-weight: 600;
-  padding: 0.55rem 1.25rem;
-  border-radius: 0.5rem;
+  font-weight: 500;
+  padding: 0.65rem 1.4rem;
+  border-radius: 0;
 }
 
 .btn-bp-sekundær:hover {
-  background-color: var(--farge-bakgrunn);
+  background-color: var(--farge-flate);
   color: var(--farge-tekst);
 }
 
 /* -------------------------------------------------------------------------
-   Hero-seksjon på forsiden
+   Forsiden: flis-rutenett med bilder øverst (som på forsvaret.no).
+   Bildene ligger i wwwroot/images og settes inn med <img> i Home/Index.cshtml.
    ------------------------------------------------------------------------- */
-.bp-hero {
-  position: relative;
-  overflow: hidden;
-  background: radial-gradient(ellipse at 20% 30%, rgba(59, 95, 226, 0.25), transparent 55%),
-              radial-gradient(ellipse at 80% 70%, rgba(217, 119, 6, 0.15), transparent 50%),
-              linear-gradient(180deg, #0b1220 0%, #111827 60%, #0b1220 100%);
-  color: #fff;
-  padding: 5rem 1.5rem;
-  text-align: center;
+.bp-topp {
+  background: linear-gradient(180deg, #ffffff 0%, #eeedeb 100%);
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 3.5rem;
 }
 
-/* Enkle "bylys" laget med gjentakende radiale prikker, for å antyde en by om natten
-   uten å måtte laste inn et eksternt (og opphavsrettsbeskyttet) fotografi. */
-.bp-hero::before {
+.bp-flis-grid {
+  display: grid;
+  grid-template-columns: 1.78fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1650px;
+  margin: 0 auto;
+  height: clamp(26rem, 38vw, 37rem);
+}
+
+.bp-flis {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  color: #fff;
+  text-decoration: none;
+  background-color: var(--farge-mork);
+}
+
+.bp-flis-stor {
+  grid-row: 1 / 3;
+}
+
+/* Bildet fyller hele flisen. object-fit: cover beskjærer i stedet for å strekke. */
+.bp-flis-bilde {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.bp-flis:hover .bp-flis-bilde {
+  transform: scale(1.03);
+}
+
+/* Hvilken del av bildet som vises når det beskjæres */
+.bp-flis-a .bp-flis-bilde { object-position: center 55%; }
+.bp-flis-b .bp-flis-bilde { object-position: center 40%; filter: saturate(0.7); }
+.bp-flis-c .bp-flis-bilde { object-position: center 62%; }
+
+/* Mørk toning oppå bildet ("falmet"), sterkest nederst der teksten står,
+   så bildet ikke overdøver skriften. */
+.bp-flis::after {
   content: "";
   position: absolute;
   inset: 0;
-  opacity: 0.5;
-  background-image:
-    radial-gradient(1px 1px at 10% 80%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 20% 60%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 30% 85%, #f8fafc, transparent),
-    radial-gradient(1px 1px at 45% 70%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 60% 90%, #f8fafc, transparent),
-    radial-gradient(1px 1px at 70% 65%, #fbbf24, transparent),
-    radial-gradient(1px 1px at 85% 80%, #f8fafc, transparent),
-    radial-gradient(1px 1px at 95% 60%, #fbbf24, transparent);
-  background-repeat: repeat-x;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(16, 20, 28, 0.6) 0%, rgba(16, 20, 28, 0.25) 55%, rgba(16, 20, 28, 0.12) 100%);
   pointer-events: none;
 }
 
-.bp-hero-innhold {
+/* Kartbildet er lyst og har mye detaljer, så det tones litt mer */
+.bp-flis-b::after {
+  background: linear-gradient(to top, rgba(16, 20, 28, 0.65) 0%, rgba(16, 20, 28, 0.35) 60%, rgba(16, 20, 28, 0.25) 100%);
+}
+
+/* Kildehenvisning for kartet (Kartverket krever at de krediteres) */
+.bp-flis-kreditt {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.6rem;
+  z-index: 2;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  color: #fff;
+  background-color: rgba(16, 20, 28, 0.55);
+}
+
+/* Den mørke tekstboksen nede i hjørnet */
+.bp-flis-tekst {
   position: relative;
-  max-width: 760px;
-  margin: 0 auto;
+  z-index: 2;                       /* over toningen */
+  background-color: rgba(18, 18, 18, 0.72);
+  padding: 0.75rem 1rem 0.8rem;
+  max-width: 85%;
 }
 
-.bp-hero h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: 1.5rem;
+.bp-flis-etikett {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
 }
 
-.bp-hero p {
-  font-size: 1.1rem;
-  color: #cbd5e1;
-  margin-bottom: 2rem;
+.bp-flis-tittel {
+  display: block;
+  font-size: clamp(1.15rem, 1.6vw, 1.6rem);
+  font-weight: 500;
+  line-height: 1.25;
 }
 
-.bp-hero-knapper {
+.bp-flis:hover .bp-flis-tittel {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+/* Hurtigknappene under flisene */
+.bp-hurtig-knapper {
   display: flex;
-  gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 3rem auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bp-hurtig-knapp {
+  display: inline-block;
+  padding: 0.8rem 1.4rem;
+  background-color: #fff;
+  border: 1px solid var(--farge-kant);
+  color: var(--farge-tekst);
+  font-size: 1.2rem;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.bp-hurtig-knapp:hover {
+  border-color: var(--farge-primær);
+  color: var(--farge-tekst);
+}
+
+/* -------------------------------------------------------------------------
+   Forsiden: blokker med "bilde" og grå flate som overlapper (som
+   "Nytt arkivsystem" / "Hør den nyeste episoden" på forsvaret.no)
+   ------------------------------------------------------------------------- */
+.bp-blokker {
+  padding: 4.5rem 1.5rem 2rem;
+}
+
+.bp-blokker > h2 {
+  text-align: center;
+  font-size: clamp(1.9rem, 2.6vw, 2.5rem);
+  margin-bottom: 3.5rem;
+}
+
+.bp-blokk {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 3rem auto 3rem;
+  max-width: var(--side-bredde);
+  margin: 0 auto 5rem;
+}
+
+/* Den grå flaten bak. Er et eget element så tekst og bilde kan plasseres fritt. */
+.bp-blokk-flate {
+  grid-row: 1 / 4;
+  background-color: var(--farge-flate);
+}
+
+.bp-blokk-bilde {
+  grid-row: 2 / 3;
+  position: relative;
+  z-index: 1;
+  min-height: 21rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background-color: var(--farge-mork);
+  color: #d8dcc4;
+  text-align: center;
+  padding: 2rem;
+}
+
+.bp-blokk-bilde-tekst {
+  font-size: clamp(1.6rem, 2.4vw, 2.3rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #e6e8ee;
+}
+
+.bp-blokk-tekst {
+  grid-row: 2 / 3;
+  align-self: center;
+  position: relative;
+  z-index: 1;
+  padding: 2rem 0;
+}
+
+/* Variant 1: bilde til venstre, flate til høyre */
+.bp-blokk-venstre .bp-blokk-bilde { grid-column: 1 / 7; }
+.bp-blokk-venstre .bp-blokk-flate { grid-column: 5 / 13; }
+.bp-blokk-venstre .bp-blokk-tekst { grid-column: 8 / 12; }
+
+/* Variant 2: flate til venstre, bilde til høyre (litt lavere) */
+.bp-blokk-hoyre .bp-blokk-flate { grid-column: 1 / 9; }
+.bp-blokk-hoyre .bp-blokk-tekst { grid-column: 2 / 7; }
+.bp-blokk-hoyre .bp-blokk-bilde { grid-column: 7 / 13; }
+
+.bp-blokk-tekst h3 {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 400;
+  line-height: 1.35;
+  margin-bottom: 1.25rem;
+}
+
+.bp-blokk-tekst p {
+  color: var(--farge-tekst);
+  font-weight: 300;
+  line-height: 1.75;
+}
+
+.bp-blokk-tekst .bp-blokk-hvem {
+  color: var(--farge-tekst-svak);
+  font-weight: 400;
+}
+
+.bp-pil-lenke {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  color: var(--farge-tekst);
+  text-decoration: none;
+  font-weight: 400;
+}
+
+.bp-pil-lenke svg {
+  transition: transform 0.15s ease;
+}
+
+.bp-pil-lenke:hover svg {
+  transform: translateX(4px);
+}
+
+.bp-pil-lenke:hover span {
+  text-decoration: underline;
 }
 
 /* -------------------------------------------------------------------------
@@ -271,14 +586,14 @@ a {
    ------------------------------------------------------------------------- */
 .bp-seksjon {
   padding: 4rem 1.5rem;
-  max-width: 1200px;
+  max-width: var(--side-bredde);
   margin: 0 auto;
 }
 
 .bp-seksjon h2 {
   text-align: center;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
+  font-size: clamp(1.9rem, 2.6vw, 2.5rem);
+  margin-bottom: 3rem;
 }
 
 .bp-kort-grid {
@@ -288,36 +603,64 @@ a {
 }
 
 .bp-kort {
-  background-color: var(--farge-kort);
-  border: 1px solid var(--farge-kant);
+  background-color: var(--farge-flate);
   border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
-  padding: 1.75rem;
+  padding: 2rem;
 }
 
 .bp-ikon-sirkel {
   width: 3rem;
   height: 3rem;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
+  background-color: var(--farge-mork);
+  color: #fff;
 }
 
-.bp-ikon-sirkel.blaa { background-color: #dbeafe; color: #2563eb; }
-.bp-ikon-sirkel.gronn { background-color: #d1fae5; color: #059669; }
-.bp-ikon-sirkel.gul { background-color: #fef3c7; color: #d97706; }
-
 .bp-kort h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-bottom: 0.6rem;
 }
 
 .bp-kort p {
   color: var(--farge-tekst-svak);
+  font-weight: 300;
+  line-height: 1.65;
   margin: 0;
+}
+
+/* "Slik fungerer det": tre steg med tall og piler mellom */
+.bp-steg-flyt {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.bp-steg {
+  flex: 1;
+}
+
+.bp-steg-topp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.bp-steg-nummer {
+  font-size: 2.75rem;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--farge-tekst);
+}
+
+.bp-steg-pil {
+  display: flex;
+  align-items: center;
+  color: var(--farge-tekst-lysere);
 }
 
 /* -------------------------------------------------------------------------
@@ -326,64 +669,70 @@ a {
 .bp-skjema-side {
   display: flex;
   justify-content: center;
-  padding: 3rem 1.5rem;
+  padding: 3rem 1.5rem 4rem;
 }
 
 .bp-skjema-kort {
-  background-color: var(--farge-kort);
-  border: 1px solid var(--farge-kant);
+  background-color: var(--farge-flate);
   border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
-  padding: 2.5rem;
+  padding: 2.75rem;
   width: 100%;
-  max-width: 34rem;
+  max-width: 36rem;
 }
 
 .bp-skjema-kort h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.9rem;
+  font-weight: 400;
   text-align: center;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem;
 }
 
 .bp-skjema-kort .form-label {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--farge-tekst);
+}
+
+/* Skjemafelt: rette hjørner og tydelig kant */
+.form-control,
+.form-select {
+  border-radius: 0;
+  border-color: #b9b6b0;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--farge-primær);
 }
 
 .bp-skjema-fot {
   text-align: center;
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
   color: var(--farge-tekst-svak);
 }
 
 .bp-skjema-fot a {
-  font-weight: 600;
-  text-decoration: none;
+  font-weight: 500;
 }
 
 /* -------------------------------------------------------------------------
    Dashbord ("Oversikt")
    ------------------------------------------------------------------------- */
 .bp-side-innhold {
-  max-width: 1200px;
+  max-width: var(--side-bredde);
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 4rem;
 }
 
 .bp-stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
 .bp-stat-kort {
-  background-color: var(--farge-kort);
-  border: 1px solid var(--farge-kant);
-  border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
-  padding: 1.5rem;
+  background-color: var(--farge-flate);
+  padding: 1.75rem;
 }
 
 .bp-stat-kort .bp-stat-etikett {
@@ -392,8 +741,9 @@ a {
 }
 
 .bp-stat-kort .bp-stat-tall {
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 2.6rem;
+  font-weight: 300;
+  line-height: 1.1;
 }
 
 .bp-stat-kort .bp-stat-tall.varsel {
@@ -401,10 +751,8 @@ a {
 }
 
 .bp-tabell-kort {
-  background-color: var(--farge-kort);
+  background-color: var(--farge-bakgrunn);
   border: 1px solid var(--farge-kant);
-  border-radius: var(--radius-kort);
-  box-shadow: var(--skygge-kort);
   padding: 1.75rem;
 }
 
@@ -418,8 +766,8 @@ a {
 }
 
 .bp-tabell-kort-hode h2 {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 400;
   margin: 0;
 }
 
@@ -431,9 +779,9 @@ a {
 .bp-tabell th {
   text-align: left;
   font-size: 0.85rem;
-  text-transform: none;
+  font-weight: 500;
   color: var(--farge-tekst-svak);
-  background-color: #f9fafb;
+  background-color: var(--farge-flate);
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--farge-kant);
 }
@@ -448,15 +796,27 @@ a {
   border-bottom: none;
 }
 
-.bp-prioritet-akutt { color: var(--farge-akutt); font-weight: 700; }
-.bp-prioritet-planlagt { color: var(--farge-planlagt); font-weight: 700; }
+.bp-prioritet-hoy {
+    color: var(--farge-hoy);
+    font-weight: 600;
+}
+
+.bp-prioritet-moderat {
+    color: var(--farge-moderat);
+    font-weight: 600;
+}
+
+.bp-prioritet-lav {
+    color: var(--farge-lav);
+    font-weight: 500;
+}
 
 .bp-badge {
   display: inline-block;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .bp-badge-ny { background-color: var(--farge-badge-ny-bg); color: var(--farge-badge-ny-tekst); }
@@ -499,8 +859,9 @@ a {
 }
 
 .bp-kart-prikk { border-radius: 50%; }
-.bp-kart-prikk.akutt { background-color: var(--kart-akutt); }
-.bp-kart-prikk.planlagt { background-color: var(--kart-planlagt); }
+.bp-kart-prikk.hoy { background-color: var(--kart-hoy); }
+.bp-kart-prikk.moderat { background-color: var(--kart-moderat); }
+.bp-kart-prikk.lav { background-color: var(--kart-lav); }
 .bp-kart-firkant { background-color: var(--kart-ressurs); border-radius: 3px; }
 
 /* Kartikoner (wwwroot/js/kartikoner.js)
@@ -508,13 +869,15 @@ a {
    (grønn skog, blått vann, røde veier). SVG-ene bruker currentColor,
    så det er "color" under som bestemmer fargen på ikonet. */
 :root {
-  --kart-akutt: #e11d48;          /* magenta/rød-rosa */
-  --kart-planlagt: #7c3aed;       /* lilla */
-  --kart-ressurs: #1e3a8a;        /* mørk marineblå */
+    --kart-hoy: #e11d48; /* høy prioritet: magenta */
+    --kart-moderat: #7c3aed; /* moderat prioritet: lilla */
+    --kart-lav: #64748b; /* lav prioritet: blågrå */
+    --kart-ressurs: #1e3a8a; /* mørk marineblå */
 }
 
-.bp-ikon-akutt { color: var(--kart-akutt); }
-.bp-ikon-planlagt { color: var(--kart-planlagt); }
+.bp-ikon-hoy { color: var(--kart-hoy); }
+.bp-ikon-moderat { color: var(--kart-moderat); }
+.bp-ikon-lav { color: var(--kart-lav); }
 .bp-ikon-ressurs { color: var(--kart-ressurs); }
 
 .bp-kartikon {
@@ -618,7 +981,7 @@ a {
 /* Kartsiden i fullskjerm (Views/Kart/Index.cshtml) */
 .bp-kart-fullskjerm {
   position: relative;             /* knapp og tegnforklaring plasseres i forhold til denne */
-  height: calc(100vh - 66px);     /* hele skjermhøyden minus menyen øverst */
+  height: calc(100vh - var(--header-hoyde));   /* hele skjermhøyden minus toppen */
 }
 
 .bp-kart-fullskjerm .bp-kart {
@@ -634,7 +997,7 @@ a {
   margin: 0;
   padding: 0.5rem 1rem;
   background-color: var(--farge-kort);
-  border-radius: 999px;           /* avrundet "pille" */
+  border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -658,12 +1021,12 @@ a {
   bottom: 1.5rem;
   left: 50%;
   transform: translateX(-50%);    /* flytter knappen tilbake halve bredden, så den står midt på */
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.6rem 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Knappen "Skjul liste", midt på i toppen av listepanelet */
+/* Knappen "Vis kart", midt på i toppen av listepanelet */
 .bp-kart-liste-panel .offcanvas-header {
   position: relative;             /* knappen plasseres i forhold til denne */
 }
@@ -672,34 +1035,51 @@ a {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);    /* midt på, samme triks som "Vis liste" */
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.4rem 1.5rem;
 }
 
-/* Panelet med listen: halve skjermhøyden og runde hjørner øverst */
+/* Panelet med listen: hele skjermhøyden under menyen, så listen får all plassen */
 .bp-kart-liste-panel {
-  --bs-offcanvas-height: 50vh;
-  border-radius: 1rem 1rem 0 0;
+  --bs-offcanvas-height: calc(100vh - var(--header-hoyde));
+  border-radius: 0;
+  border-top: none;
 }
 
 /* -------------------------------------------------------------------------
    Footer
    ------------------------------------------------------------------------- */
 .bp-footer {
-  background-color: var(--farge-kort);
-  border-top: 1px solid var(--farge-kant);
-  text-align: center;
-  padding: 2rem 1.5rem;
-  color: var(--farge-tekst-svak);
+  background-color: var(--farge-mork);
+  color: #c9ccd3;
+  padding: 3rem 1.5rem;
+}
+
+.bp-footer-innhold {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  max-width: var(--side-bredde);
+  margin: 0 auto;
 }
 
 .bp-footer p {
   margin: 0.25rem 0;
+  font-weight: 300;
+}
+
+.bp-footer .bp-footer-navn {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0.02em;
 }
 
 .bp-footer .bp-footer-liten {
-  font-size: 0.85rem;
-  color: var(--farge-tekst-lysere);
+  font-size: 0.8rem;
+  color: #9aa0ab;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -711,211 +1091,107 @@ a {
   text-align: start;
 }
 
-/* For scenario avsnitt på forsiden */
-.bp-scenario {
-  background-color: var(--farge-kort);
-  border-bottom: 1px solid var(--farge-kant);
-  padding: 3.5rem 1.5rem;
-}
-
-.bp-scenario-innhold {
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.bp-scenario-etikett {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--farge-akutt);
-  margin-bottom: 0.75rem;
-}
-
-.bp-scenario h2 {
-  font-weight: 700;
-  margin-bottom: 1.25rem;
-}
-
-.bp-scenario p {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: var(--farge-tekst-svak);
-}
-
-.bp-scenario .bp-scenario-poeng {
-  color: var(--farge-tekst);
-  font-weight: 600;
-  border-left: 4px solid var(--farge-primær);
-  padding-left: 1rem;
-}
-
-/* Hvordan applikasjonen fungerer med piler og tall mellom */
-.bp-steg-flyt {
-  display: flex;
-  align-items: stretch;
-  gap: 1rem;
-}
-
-.bp-steg {
-  flex: 1;
-}
-
-.bp-steg-topp {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.bp-steg-nummer {
-  font-size: 2.5rem;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--farge-tekst-lysere);
-}
-
-.bp-steg-pil {
-  display: flex;
-  align-items: center;
-  font-size: 1.75rem;
-  color: var(--farge-tekst-lysere);
-}
-
-/* Hvem er portalen for? to kolonner osm viser offentlig og privat hensikt */
-.bp-malgrupper {
-  background-color: var(--farge-kort);
-  border-top: 1px solid var(--farge-kant);
-  padding: 4rem 1.5rem;
-}
-
-.bp-malgrupper-innhold {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.bp-malgrupper h2 {
-  text-align: center;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
-}
-
-.bp-malgruppe-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-}
-
-.bp-malgruppe {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--farge-bakgrunn);
-  border-radius: var(--radius-kort);
-  padding: 2rem;
-}
-
-.bp-malgruppe h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 1rem 0 0.25rem;
-}
-
-.bp-malgruppe-hvem {
-  color: var(--farge-tekst-svak);
-  margin-bottom: 1.25rem;
-}
-
-.bp-sjekkliste {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1.5rem;
-}
-
-.bp-sjekkliste li {
-  position: relative;
-  padding-left: 1.75rem;
-  margin-bottom: 0.6rem;
-}
-
-.bp-sjekkliste li::before {
-  content: "✓";
-  position: absolute;
-  left: 0;
-  color: var(--farge-primær);
-  font-weight: 700;
-}
-
-.bp-malgruppe .btn {
-  margin-top: auto;
-  align-self: flex-start;
-}
-
-/* Tallstripe på forsiden som viser situasjonen oppdatert */
-.bp-tallstripe {
-  background-color: var(--farge-kort);
-  border-bottom: 1px solid var(--farge-kant);
-  padding: 1.75rem 1.5rem;
-}
-
-.bp-tallstripe-innhold {
-  max-width: 900px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  text-align: center;
-}
-
-.bp-tall {
-  display: flex;
-  flex-direction: column;
-  padding: 0 1rem;
-}
-
-.bp-tall + .bp-tall {
-  border-left: 1px solid var(--farge-kant);
-}
-
-.bp-tall-verdi {
-  font-size: 2.25rem;
-  font-weight: 800;
-  line-height: 1.1;
-}
-
-.bp-tall-verdi.akutt {
-  color: var(--farge-akutt);
-}
-
-.bp-tall-etikett {
-  font-size: 0.9rem;
-  color: var(--farge-tekst-svak);
-}
-
- /*For mobilskjermvisning */
-@media (max-width: 767px) {
-  /* Toppmeny med logoen på egen linje, og menypunktene under */
-  .bp-navbar {
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
+/* -------------------------------------------------------------------------
+   Smal skjerm: sidelenkene får en egen rad under logoen
+   ------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  :root {
+    --header-hoyde: 113px;          /* 64px + 48px lenkerad + 1px strek, brukes av kartsiden */
   }
 
-  .bp-nav-lenker {
-    width: 100%;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+  .bp-header-innhold {
+    grid-template-rows: 64px auto;
+    min-height: 0;
+    padding: 0 1rem;
+  }
+
+  /* Innlogget: lenkene på egen rad. Utlogget ("Logg inn") blir stående øverst til høyre. */
+  .bp-nav-innlogget {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    border-top: 1px solid var(--farge-flate-mork);
+  }
+
+  .bp-nav-innlogget .bp-nav-lenker {
+    justify-content: space-around;
+    height: 48px;
+    gap: 0.5rem;
+  }
+
+  .bp-logo svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Menyen legges under lenkeraden (48px + 1px strek) */
+  .bp-meny[data-bs-popper] {
+    top: calc(100% + 50px);
+    left: -1rem;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Mobil
+   ------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* Flisene under hverandre */
+  .bp-flis-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 18rem 11rem 11rem;
+    gap: 1rem;
+    height: auto;
+  }
+
+  .bp-flis-stor {
+    grid-row: auto;
+  }
+
+  .bp-hurtig-knapper {
+    margin-top: 2rem;
+    gap: 0.6rem;
+  }
+
+  .bp-hurtig-knapp {
+    font-size: 1rem;
+    padding: 0.65rem 1rem;
+  }
+
+  /* Blokkene: bilde øverst, tekst under, uten overlapp */
+  .bp-blokker {
+    padding: 3rem 1rem 1rem;
+  }
+
+  .bp-blokk {
+    display: block;
+    background-color: var(--farge-flate);
+    margin-bottom: 2.5rem;
+  }
+
+  .bp-blokk-flate {
+    display: none;
+  }
+
+  .bp-blokk-bilde {
+    min-height: 12rem;
+  }
+
+  .bp-blokk-tekst {
+    padding: 1.75rem 1.25rem 2rem;
   }
 
   /* Mindre luft rundt innholdet, så det får mer plass på smal skjerm */
   .bp-side-innhold {
-    padding: 1.25rem 0.75rem;
+    padding: 1.25rem 0.75rem 3rem;
   }
 
   /* Tabeller: scroll sidelengs inne i boksen i stedet for å gjøre hele siden for bred */
   .bp-tabell-kort {
     padding: 1rem;
     overflow-x: auto;
+  }
+
+  .bp-skjema-kort {
+    padding: 1.75rem 1.25rem;
   }
 
   /* "Slik fungerer det": stegene under hverandre, pilene peker ned */
@@ -928,13 +1204,1099 @@ a {
     transform: rotate(90deg);
   }
 
-
-  /* Tall-stripe: litt mindre tall, så de får plass */
-  .bp-tall {
-    padding: 0 0.5rem;
+  .bp-footer-innhold {
+    flex-direction: column;
+    align-items: flex-start;
   }
+}
 
-  .bp-tall-verdi {
-    font-size: 1.75rem;
-  }
+
+/* =========================================================================
+   Fra Emil (frontend-test): logo, prioriteter, tildeling og ny Oversikt-side.
+   Tilpasset designet: rette hjørner, ingen skygger, nesten svart i stedet
+   for oransje på knapper. Fargene for prioritet er de samme som på kartet,
+   så høy/moderat/lav betyr det samme overalt.
+   ========================================================================= */
+:root {
+    --farge-hoy: #e11d48; /* magenta */
+    --farge-moderat: #7c3aed; /* lilla */
+    --farge-lav: #64748b; /* blågrå */
+    --farge-signal: #ff6a13; /* signaloransje, bare i logoen */
+}
+
+/* -------------------------------------------------------------------------
+   Logo (Views/Shared/_Logo.cshtml): mørkt skjold, hvitt nettverk, oransje topp
+   ------------------------------------------------------------------------- */
+.bp-logo-symbol {
+    width: 2.1rem;
+    height: 2.1rem;
+    flex-shrink: 0;
+}
+
+.bp-logo-skjold {
+    fill: var(--farge-mork);
+}
+
+.bp-logo-punkt {
+    fill: #ffffff;
+}
+
+.bp-logo-topp {
+    fill: var(--farge-signal);
+}
+
+.bp-logo-linjer {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 1.6;
+    stroke-linejoin: round;
+}
+
+/* -------------------------------------------------------------------------
+   Ikoner og farger som betyr det samme som på kartet
+   ------------------------------------------------------------------------- */
+.bp-ikon-firkant {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    background-color: color-mix(in srgb, currentColor 14%, white); /* lys utgave av fargen */
+}
+
+.bp-farge-behov {
+    color: var(--farge-hoy);
+}
+
+.bp-farge-ressurs {
+    color: var(--kart-ressurs);
+}
+
+.bp-badge-hoy {
+    background-color: color-mix(in srgb, var(--farge-hoy) 12%, white);
+    color: #be123c;
+}
+
+.bp-badge-moderat {
+    background-color: color-mix(in srgb, var(--farge-moderat) 12%, white);
+    color: #6d28d9;
+}
+
+.bp-badge-lav {
+    background-color: color-mix(in srgb, var(--farge-lav) 14%, white);
+    color: #475569;
+}
+
+/* Små fargeprikker foran "høy", "moderat" og "lav" */
+.bp-prikk {
+    display: inline-block;
+    width: 0.55rem;
+    height: 0.55rem;
+    margin-right: 0.35rem;
+    border-radius: 50%;
+    vertical-align: 0.05rem;
+}
+
+.bp-prikk-hoy {
+    background-color: var(--farge-hoy);
+}
+
+.bp-prikk-moderat {
+    background-color: var(--farge-moderat);
+    margin-left: 0.75rem;
+}
+
+.bp-prikk-lav {
+    background-color: var(--farge-lav);
+    margin-left: 0.75rem;
+}
+
+/* "Se detaljer"-knappen i kartboblen og listen under kartet */
+.bp-kart-detaljer {
+    border-color: var(--farge-primær);
+    color: var(--farge-primær);
+    border-radius: 0;
+    font-weight: 500;
+}
+
+    .bp-kart-detaljer:hover {
+        background-color: var(--farge-primær);
+        border-color: var(--farge-primær);
+        color: #ffffff;
+    }
+
+/* -------------------------------------------------------------------------
+   Oversikt (Views/Oversikt/Index.cshtml)
+   ------------------------------------------------------------------------- */
+
+/* Tittel til venstre, "Oppdatert kl." til høyre */
+.bp-oversikt-hode {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+    .bp-oversikt-hode h1 {
+        font-size: clamp(1.9rem, 2.6vw, 2.5rem);
+        font-weight: 400;
+        margin: 0 0 0.25rem;
+    }
+
+    .bp-oversikt-hode p {
+        color: var(--farge-tekst-svak);
+        font-weight: 300;
+        margin: 0;
+    }
+
+.bp-oversikt-oppdatert {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--farge-tekst-svak);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+    .bp-oversikt-oppdatert:hover {
+        color: var(--farge-tekst);
+        text-decoration: underline;
+    }
+
+/* Tre nøkkeltall i hvert sitt kort (grå flater, som kortene ellers i designet) */
+.bp-nokkeltall {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.bp-nokkeltall-to {
+    grid-template-columns: repeat(2, 1fr); /* private aktører har bare to kort */
+}
+
+.bp-nokkeltall-kort {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1.5rem 1.75rem;
+    background-color: var(--farge-flate);
+    border: 1px solid transparent;
+    color: var(--farge-tekst);
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+}
+
+a.bp-nokkeltall-kort:hover {
+    border-color: var(--farge-primær);
+    color: var(--farge-tekst);
+}
+
+.bp-nokkeltall-etikett,
+.bp-nokkeltall-tall,
+.bp-nokkeltall-detalj {
+    display: block;
+}
+
+.bp-nokkeltall-etikett {
+    color: var(--farge-tekst-svak);
+}
+
+.bp-nokkeltall-tall {
+    font-size: 2.6rem;
+    font-weight: 300;
+    line-height: 1.15;
+}
+
+.bp-nokkeltall-detalj {
+    font-size: 0.9rem;
+    color: var(--farge-tekst-svak);
+}
+
+/* To paneler ved siden av hverandre */
+.bp-oversikt-kolonner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.bp-oversikt-panel {
+    background-color: var(--farge-bakgrunn);
+    border: 1px solid var(--farge-kant);
+    padding: 1.75rem;
+}
+
+.bp-oversikt-panel-hode {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+    .bp-oversikt-panel-hode h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.4rem;
+        font-weight: 400;
+        margin: 0 0 0.2rem;
+    }
+
+    .bp-oversikt-panel-hode p {
+        font-size: 0.9rem;
+        color: var(--farge-tekst-svak);
+        margin: 0;
+    }
+
+    .bp-oversikt-panel-hode a {
+        white-space: nowrap;
+    }
+
+/* Listene med behov: ikon, navn og område, status og dato på én linje */
+.bp-oversikt-liste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+    .bp-oversikt-liste li {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.75rem 0;
+        border-top: 1px solid var(--farge-kant);
+    }
+
+.bp-oversikt-liste-tekst {
+    flex: 1; /* tar ledig plass, så status og dato havner til høyre */
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.bp-oversikt-lenke {
+    font-weight: 500;
+    color: var(--farge-tekst);
+    text-decoration: none;
+}
+
+    .bp-oversikt-lenke:hover {
+        color: var(--farge-tekst);
+        text-decoration: underline;
+    }
+
+.bp-oversikt-liste-tekst span {
+    font-size: 0.9rem;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-oversikt-dato {
+    width: 3rem;
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--farge-tekst-svak);
+    font-variant-numeric: tabular-nums;
+}
+
+.bp-oversikt-tom {
+    color: var(--farge-tekst-svak);
+    margin: 0;
+}
+
+/* Panel som står alene i full bredde (Tildelte ressurser, Snarveier) */
+.bp-oversikt-blokk {
+    margin-bottom: 1.5rem;
+}
+
+/* Tildelte ressurser: behovet til venstre, ressursene det har fått til høyre */
+.bp-oversikt-liste li.bp-tildeling {
+    align-items: flex-start;
+}
+
+    .bp-oversikt-liste li.bp-tildeling > .bp-oversikt-liste-tekst {
+        flex: 0 0 34%;
+    }
+
+.bp-tildeling-ressurser {
+    flex: 1;
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 1rem;
+    border-left: 2px dashed var(--farge-kant); /* stiplet strek: "koblet til" */
+}
+
+    .bp-tildeling-ressurser li {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.15rem 0;
+        border-top: none;
+    }
+
+        .bp-tildeling-ressurser li + li {
+            margin-top: 0.4rem;
+        }
+
+/* Snarveier: fire knapper i en rad */
+.bp-snarveier {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.bp-snarvei {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--farge-kant);
+    color: var(--farge-tekst);
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+}
+
+    .bp-snarvei:hover {
+        border-color: var(--farge-primær);
+        color: var(--farge-tekst);
+    }
+
+    .bp-snarvei svg {
+        flex-shrink: 0;
+    }
+
+    .bp-snarvei strong,
+    .bp-snarvei span span {
+        display: block;
+    }
+
+    .bp-snarvei strong {
+        font-weight: 500;
+    }
+
+    .bp-snarvei span span {
+        font-size: 0.85rem;
+        color: var(--farge-tekst-svak);
+    }
+
+/* Snarveien som passer rollen: mørk, som hovedknappene */
+.bp-snarvei-fremhevet,
+.bp-snarvei-fremhevet:hover {
+    background-color: var(--farge-primær);
+    border-color: var(--farge-primær);
+    color: #ffffff;
+}
+
+    .bp-snarvei-fremhevet span span {
+        color: #d6d4cf;
+    }
+
+@media (max-width: 900px) {
+    .bp-oversikt-kolonner {
+        grid-template-columns: 1fr;
+    }
+
+    .bp-snarveier {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .bp-nokkeltall,
+    .bp-nokkeltall-to {
+        grid-template-columns: 1fr;
+    }
+}
+/* -------------------------------------------------------------------------
+   Hva trengs (Views/HvaTrengs/Index.cshtml)
+   Ett kort per type utstyr, i et rutenett. Fargen følger høyeste prioritet.
+   ------------------------------------------------------------------------- */
+.bp-trengs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));   /* så mange kolonner som får plass */
+    gap: 1.25rem;
+    list-style: none;
+    margin: 0 0 2rem;
+    padding: 0;
+}
+
+.bp-trengs-kort {
+    background-color: var(--farge-flate);
+    padding: 1.5rem;
+}
+
+.bp-trengs-topp {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.bp-trengs-topp h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0.1rem 0 0.4rem;
+}
+
+/* Fakta under: "Trengs i" og "Antall behov" */
+.bp-trengs-fakta {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.35rem 0.75rem;
+    margin: 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--farge-kant);
+}
+
+.bp-trengs-fakta dt {
+    font-weight: 400;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-trengs-fakta dd {
+    margin: 0;
+    font-weight: 500;
+}
+
+.bp-trengs-merknad {
+    max-width: 44rem;
+    font-size: 0.9rem;
+    color: var(--farge-tekst-svak);
+}
+
+/* -------------------------------------------------------------------------
+   Oversikt: litt mer kontrast, så det viktigste er lettere å se og lese
+   ------------------------------------------------------------------------- */
+/* Tallene på kortene i halvfet skrift, så de "popper" */
+.bp-nokkeltall-tall {
+    font-weight: 600;
+}
+
+/* Overskriftene i panelene litt tydeligere */
+.bp-oversikt-panel-hode h2 {
+    font-weight: 600;
+}
+
+/* Prioritetsmerkene litt kraftigere */
+.bp-badge {
+    font-weight: 600;
+}
+
+/* Hopper man ned til "Tildelte ressurser", skal ikke overskriften havne under menyen */
+#tildelte {
+    scroll-margin-top: 1.5rem;
+}
+
+/* Myk rulling når man hopper til et sted på siden (slås av hvis brukeren har bedt om mindre bevegelse) */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Filter på kartet (panelet til venstre, Views/Kart/Index.cshtml + kart.js)
+   Hvit flate med rette hjørner, som resten av siden.
+   ------------------------------------------------------------------------- */
+.bp-filter {
+    position: absolute;
+    z-index: 1001;                         /* over kartet og markørene */
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 21rem;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--farge-bakgrunn);
+    border-right: 1px solid var(--farge-kant);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+}
+
+/* Skjult: panelet skyves ut til venstre, men fanen står igjen på kanten */
+.bp-filter.skjult {
+    transform: translateX(-100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bp-filter {
+        transition: none;
+    }
+}
+
+/* Toppen: "Filter", "Nullstill" og "Treff (antall)" */
+.bp-filter-hode {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--farge-kant);
+}
+
+.bp-filter-hode strong {
+    font-weight: 600;
+}
+
+.bp-filter-nullstill {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--farge-tekst-svak);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.bp-filter-nullstill:hover {
+    color: var(--farge-tekst);
+}
+
+.bp-filter-treff {
+    margin-left: auto;                     /* skyves helt til høyre */
+    font-weight: 600;
+}
+
+/* Selve valgene. Rulles hvis det er flere enn det er plass til. */
+.bp-filter-innhold {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem 1.25rem 1.25rem;
+}
+
+.bp-filter-gruppe {
+    padding: 0.75rem 0;
+}
+
+.bp-filter-gruppe + .bp-filter-gruppe {
+    border-top: 1px solid var(--farge-kant);
+}
+
+/* Én rad: avkrysningsboks, ikon, navn og antall til høyre */
+.bp-filter-valg {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.3rem 0;
+    cursor: pointer;
+}
+
+.bp-filter-valg input {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    accent-color: var(--farge-primær);     /* nesten svart avkrysning, som resten av siden */
+}
+
+.bp-filter-navn {
+    flex: 1;
+    min-width: 0;                          /* lar lange navn bryte over to linjer */
+}
+
+.bp-filter-antall {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: var(--farge-tekst-lysere);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Hovedvalget (Behov / Ressurser) i halvfet, typene under rykket inn */
+.bp-filter-hoved .bp-filter-navn {
+    font-weight: 600;
+}
+
+.bp-filter-type,
+.bp-filter-prioritet,
+.bp-filter-ekstra {
+    margin-left: 1.6rem;
+}
+
+.bp-filter-type .bp-kartikon {
+    filter: none;                          /* ingen skygge på de små ikonene i panelet */
+}
+
+/* Prioritet: liten overskrift og tre valg på rad */
+.bp-filter-prioritet {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.7rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--farge-kant);
+}
+
+.bp-filter-undertittel {
+    width: 100%;
+    font-size: 0.85rem;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-filter-prioritet .bp-filter-valg .bp-filter-navn {
+    flex: none;
+}
+
+/* De tre prioritetene står på én rad */
+.bp-filter-prioritet .bp-filter-valg {
+    gap: 0.4rem;
+}
+
+.bp-filter-ekstra {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--farge-kant);
+    color: var(--farge-tekst-svak);
+}
+
+.bp-filter-laster {
+    color: var(--farge-tekst-svak);
+    margin: 0.75rem 0;
+}
+
+/* Krysset øverst til høyre i panelet, som lukker det */
+.bp-filter-lukk {
+    display: flex;
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    color: var(--farge-tekst);
+    cursor: pointer;
+}
+
+/* Knappen "Filter" øverst til venstre på kartet. Fargene kommer fra btn-bp-primær,
+   samme som "Vis liste". */
+.bp-filter-knapp {
+    position: absolute;
+    z-index: 1000;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* "hidden" skal skjule knappen selv om den har display: flex over */
+.bp-filter-knapp[hidden] {
+    display: none;
+}
+
+/* Når panelet er skjult, skal heller ikke skyggen synes på kanten */
+.bp-filter.skjult {
+    box-shadow: none;
+}
+
+@media (max-width: 767px) {
+    .bp-filter {
+        width: 85vw;                       /* nesten hele bredden på mobil */
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Tilby ressurs: skjema i tre steg (Views/Ressurs/Registrer.cshtml + ressursskjema.js)
+   ------------------------------------------------------------------------- */
+.bp-steg-skjema {
+    width: 100%;
+    max-width: 44rem;
+    background-color: var(--farge-flate);
+    padding: 2.5rem;
+}
+
+.bp-steg-skjema h1 {
+    font-size: 2rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+}
+
+.bp-steg-skjema-ingress {
+    color: var(--farge-tekst-svak);
+    margin-bottom: 2rem;
+}
+
+/* Fremdriftslinjen: tre steg med nummer, en strek mellom */
+.bp-fremdrift {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    list-style: none;
+    margin: 0 0 2rem;
+    padding: 0;
+    counter-reset: none;
+}
+
+.bp-fremdrift li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+    color: var(--farge-tekst-lysere);
+    text-align: center;
+}
+
+/* Streken fra hvert steg til neste (ikke etter det siste) */
+.bp-fremdrift li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 1rem;                             /* midt på nummersirkelen */
+    left: calc(50% + 1.25rem);
+    right: calc(-50% + 1.25rem);
+    border-top: 2px solid var(--farge-kant);
+}
+
+.bp-fremdrift-nummer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 2px solid var(--farge-kant);
+    background-color: var(--farge-bakgrunn);
+    font-weight: 600;
+}
+
+/* Steget man er på: mørk sirkel og mørk tekst */
+.bp-fremdrift li.aktiv {
+    color: var(--farge-tekst);
+    font-weight: 600;
+}
+
+.bp-fremdrift li.aktiv .bp-fremdrift-nummer {
+    background-color: var(--farge-primær);
+    border-color: var(--farge-primær);
+    color: #ffffff;
+}
+
+/* Ferdige steg: hake i stedet for tall, og mørk strek videre */
+.bp-fremdrift li.ferdig {
+    color: var(--farge-tekst);
+}
+
+.bp-fremdrift li.ferdig .bp-fremdrift-nummer {
+    border-color: var(--farge-primær);
+    color: transparent;                    /* skjuler tallet */
+    background: var(--farge-primær) center / 0.9rem no-repeat
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17 19 7'/%3E%3C/svg%3E");
+}
+
+.bp-fremdrift li.ferdig:not(:last-child)::after {
+    border-top-color: var(--farge-primær);
+}
+
+/* Hvert steg */
+.bp-steg-innhold h2 {
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin-bottom: 1.25rem;
+}
+
+.bp-steg-innhold fieldset {
+    border: none;
+    padding: 0;
+}
+
+/* Typeknappene: radioknapper som ser ut som store knapper med ikon */
+.bp-type-valg {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.bp-type-knapp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.5rem;
+    background-color: var(--farge-bakgrunn);
+    border: 2px solid var(--farge-kant);
+    font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+}
+
+.bp-type-knapp:hover {
+    border-color: var(--farge-tekst-lysere);
+}
+
+/* Selve radioknappen er skjult, men fortsatt med for tastatur og skjermleser */
+.bp-type-knapp input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Valgt type: mørk ramme. :has() betyr "knappen som inneholder en avkrysset radioknapp" */
+.bp-type-knapp:has(input:checked) {
+    border-color: var(--farge-primær);
+    box-shadow: inset 0 0 0 1px var(--farge-primær);
+}
+
+.bp-type-knapp:has(input:focus-visible) {
+    outline: 3px solid var(--farge-primær);
+    outline-offset: 2px;
+}
+
+.bp-type-knapp .bp-kartikon {
+    filter: none;
+}
+
+/* Bildefeltet: hele feltet er filvelgeren, så man kan klikke eller dra bilder inn */
+.bp-bildefelt {
+    position: relative;
+    padding: 1.5rem;
+    background-color: var(--farge-bakgrunn);
+    border: 2px dashed var(--farge-kant);
+    text-align: center;
+}
+
+.bp-bildefelt:hover,
+.bp-bildefelt:focus-within {
+    border-color: var(--farge-tekst-lysere);
+}
+
+/* Filvelgeren ligger usynlig over hele feltet, så klikk og "slipp bilder her" treffer den */
+.bp-bildefelt input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.bp-bildefelt-tekst strong {
+    text-decoration: underline;
+}
+
+.bp-bildefelt-tekst span {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-bilde-forhandsvisning {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.bp-bilde-forhandsvisning img {
+    width: 5rem;
+    height: 5rem;
+    object-fit: cover;                     /* beskjærer i stedet for å strekke */
+    border: 1px solid var(--farge-kant);
+}
+
+/* Adressefelt og knapp på samme linje */
+.bp-adressesok {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.bp-adressesok .form-control {
+    flex: 1;
+}
+
+.bp-adressesok .btn {
+    white-space: nowrap;
+}
+
+.bp-posisjonsvelger-stor {
+    height: 320px;
+}
+
+.bp-avkryssing {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.bp-avkryssing input {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--farge-primær);
+}
+
+/* Oppsummeringen i steg 3 */
+.bp-oppsummering {
+    background-color: var(--farge-bakgrunn);
+    border: 1px solid var(--farge-kant);
+    padding: 1.25rem 1.5rem;
+}
+
+.bp-oppsummering h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.bp-oppsummering dl {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.5rem 1rem;
+    margin: 0;
+}
+
+.bp-oppsummering dt {
+    font-weight: 400;
+    color: var(--farge-tekst-svak);
+}
+
+.bp-oppsummering dd {
+    margin: 0;
+}
+
+.bp-oppsummering-endre {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--farge-tekst-svak);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Knappene nederst: Forrige/Avbryt til venstre, Neste/Registrer til høyre */
+.bp-steg-knapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--farge-kant);
+}
+
+.bp-steg-knapper #steg-neste,
+.bp-steg-knapper #steg-registrer {
+    margin-left: auto;                     /* skyves helt til høyre */
+}
+
+.bp-steg-avbryt {
+    color: var(--farge-tekst-svak);
+}
+
+/* Bekreftelsen øverst på siden etter at noe er lagret (TempData["Melding"]) */
+.bp-melding {
+    max-width: var(--side-bredde);
+    margin: 1.5rem auto 0;
+    padding: 0.9rem 1.25rem;
+    background-color: #e8f3ec;
+    border: 1px solid #b7d8c3;
+    color: #1f5135;
+    font-weight: 500;
+}
+
+@media (max-width: 767px) {
+    .bp-steg-skjema {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .bp-type-valg {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .bp-adressesok {
+        flex-direction: column;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Behovssiden: filter i kolonneoverskriftene (Views/Behov/_Filtermeny.cshtml + behovsliste.js)
+   ------------------------------------------------------------------------- */
+/* "Viser 8 av 12 behov" og "Nullstill filter" under overskriften */
+.bp-filter-status {
+    display: flex;
+    gap: 0.9rem;
+    margin: 0.3rem 0 0;
+    font-size: 0.9rem;
+    color: var(--farge-tekst-svak);
+}
+
+/* Menyene må få stikke ut av tabellen (ellers kuttes de av rammen som ruller sidelengs) */
+.bp-tabell-med-filter {
+    overflow: visible;
+}
+
+/* Kolonneoverskriften er en knapp med pil */
+.bp-kolonne-knapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.bp-kolonne-knapp:hover {
+    color: var(--farge-tekst);
+}
+
+/* Filter i bruk: mørk tekst og strek under, så man ser hvor det er filtrert */
+.bp-kolonne-knapp.aktiv {
+    color: var(--farge-tekst);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.bp-kolonne-teller {
+    font-weight: 400;
+}
+
+/* Selve menyen: hvit, rette hjørner, tynn kant, som resten av siden */
+.bp-kolonne-meny {
+    min-width: 14rem;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--farge-kant);
+    border-radius: 0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.bp-kolonne-meny .bp-filter-valg {
+    white-space: nowrap;
+}
+
+/* "Alle" og "Ingen" nederst i menyen */
+.bp-kolonne-meny-fot {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.4rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--farge-kant);
+}
+
+.bp-kolonne-meny-fot button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--farge-tekst-svak);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Ikonene på behovssiden: litt luft mellom ikonet og navnet */
+#behov-tabell td .bp-kartikon {
+  margin-right: 0.5rem;
+}
+
+/* Ikonene i Type-menyen er nøytrale (mørke), siden menyen ikke handler om prioritet */
+.bp-ikon-noytral {
+  color: var(--farge-primær);
+  filter: none;
 }

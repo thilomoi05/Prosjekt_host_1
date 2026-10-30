@@ -6,7 +6,7 @@ namespace Beredskapsportal.Data;
 
 /// <summary>
 /// Koblingen mellom C#-modellene og MariaDB-databasen (Entity Framework Core).
-/// Hver DbSet blir en tabell: Brukere, Behov og Ressurser.
+/// Hver DbSet blir en tabell: Brukere, Behov, Ressurser og Tildelinger.
 /// </summary>
 public class BeredskapsDbContext : DbContext
 {
@@ -17,6 +17,7 @@ public class BeredskapsDbContext : DbContext
     public DbSet<Bruker> Brukere => Set<Bruker>();
     public DbSet<Behov> Behov => Set<Behov>();
     public DbSet<Ressurs> Ressurser => Set<Ressurs>();
+    public DbSet<Tildeling> Tildelinger => Set<Tildeling>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +51,7 @@ public class BeredskapsDbContext : DbContext
             ressurs.Property(r => r.Adresse).HasMaxLength(300);
             ressurs.Property(r => r.Kontaktperson).HasMaxLength(200);
             ressurs.Property(r => r.Telefon).HasMaxLength(30);
+            ressurs.Property(r => r.RegistrertAv).HasMaxLength(100);
 
             ressurs.Property(r => r.Bilder)
                 .HasConversion(
@@ -60,6 +62,21 @@ public class BeredskapsDbContext : DbContext
                         liste => liste.Aggregate(0, (hash, fil) => HashCode.Combine(hash, fil.GetHashCode())),
                         liste => liste.ToList()))
                 .HasMaxLength(2000);
+        });
+
+        modelBuilder.Entity<Tildeling>(tildeling =>
+        {
+            tildeling.ToTable("Tildelinger");
+
+            // Sammensatt primærnøkkel: samme ressurs kan bare tildeles samme behov én gang.
+            tildeling.HasKey(t => new { t.BehovId, t.RessursId });
+
+            // Fremmednøkler: en tildeling må peke på et behov og en ressurs som finnes.
+            tildeling.HasOne<Behov>().WithMany().HasForeignKey(t => t.BehovId);
+            tildeling.HasOne<Ressurs>().WithMany().HasForeignKey(t => t.RessursId);
+
+            tildeling.Property(t => t.TildeltAv).HasMaxLength(100);
+            tildeling.Property(t => t.Kommentar).HasMaxLength(500);
         });
     }
 }

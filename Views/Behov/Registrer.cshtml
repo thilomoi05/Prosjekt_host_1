@@ -49,9 +49,12 @@
 
             <div class="mb-3">
                 <label asp-for="Prioritet" class="form-label"></label>
+                @* Hjelpeteksten forklarer nivåene, så alle bruker dem likt. *@
+                <p class="bp-skjema-hjelp">Hvor mye haster det?</p>
                 <select asp-for="Prioritet" class="form-select">
-                    <option value="Planlagt">Planlagt</option>
-                    <option value="Akutt">Akutt</option>
+                    <option value="Hoy">Høy – trengs nå (liv, helse eller kritiske funksjoner)</option>
+                    <option value="Moderat">Moderat – trengs i løpet av et døgn</option>
+                    <option value="Lav">Lav – kan vente og planlegges</option>
                 </select>
             </div>
 

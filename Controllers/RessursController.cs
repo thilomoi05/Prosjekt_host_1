@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
 using Beredskapsportal.Services;
@@ -41,7 +42,13 @@ public class RessursController : Controller
     [HttpGet]
     public IActionResult Registrer()
     {
-        return View(new RessursViewModel());
+        // Kontaktpersonen fylles inn med navnet til den innloggede brukeren,
+        // så de fleste slipper å skrive det. Det kan endres i skjemaet.
+        var modell = new RessursViewModel
+        {
+            Kontaktperson = User?.FindFirst(ClaimTypes.GivenName)?.Value ?? string.Empty
+        };
+        return View(modell);
     }
 
     // "async Task" fordi det tar litt tid å lagre filer på disk. Mens vi venter
@@ -84,12 +91,19 @@ public class RessursController : Controller
             TilgjengeligTil = modell.TilgjengeligTil,
             Kontaktperson = modell.Kontaktperson,
             Telefon = modell.Telefon,
+            // Brukernavnet til den innloggede brukeren (fra innloggingscookien).
+            // "?." og "??" gjør at det blir tom tekst hvis ingen er logget inn (f.eks. i tester).
+            RegistrertAv = User?.Identity?.Name ?? string.Empty,
             // Trygt å bruke ".Value": ModelState.IsValid har sjekket at feltene finnes.
             Breddegrad = modell.Breddegrad!.Value,
             Lengdegrad = modell.Lengdegrad!.Value
         };
 
         _ressursRepository.LeggTil(nyRessurs);
+
+        // Meldingen vises øverst på neste side (se _Layout.cshtml). TempData husker den
+        // akkurat så lenge at den overlever omdirigeringen til oversikten.
+        TempData["Melding"] = "Takk! Ressursen er registrert.";
 
         return RedirectToAction("Index", "Oversikt");
     }

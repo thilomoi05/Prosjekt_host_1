@@ -79,6 +79,13 @@ public class InMemoryRessursRepository : IRessursRepository
             });
         }
 
+        // Ressurs 10 og 16 er registrert av testbrukeren "privat" (en privat aktør),
+        // slik at den brukeren kan se at ressursene sine er tildelt et behov.
+        foreach (var ressurs in data.Where(r => r.Id == 10 || r.Id == 16))
+        {
+            ressurs.RegistrertAv = "privat";
+        }
+
         return data;
     }
 }
