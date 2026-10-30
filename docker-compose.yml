@@ -1,7 +1,10 @@
+# Starter hele løsningen: MariaDB-databasen og nettsiden.
+# Kjør fra rotmappa: docker compose up --build
 services:
   db:
     image: mariadb:11.4
     container_name: beredskap-db
+    restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_DATABASE: beredskapsportal
@@ -12,6 +15,25 @@ services:
       - "127.0.0.1:3306:3306"
     volumes:
       - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    container_name: beredskapsportal
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      ConnectionStrings__BeredskapsDb: "Server=db;Port=3306;Database=beredskapsportal;User=beredskap;Password=${DB_PASSWORD}"
+    volumes:
+      - opplastinger:/app/Opplastinger
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   dbdata:
+  opplastinger:
