@@ -22,8 +22,9 @@ Prosjektet er laget som gruppeoppgave (Oppgave 1) og er en **ASP.NET Core MVC-ap
 ```bash
 git clone https://github.com/thilomoi05/Prosjekt_host_1.git
 cd Prosjekt_host_1
-docker build -t beredskapsportal .
-docker run --rm -p 8080:8080 beredskapsportal
+cp .env.example .env
+docker compose up --build
+Sett egne passord i `.env` før du starter. Se [docs/drift.md](docs/drift.md).
 ```
 
 Åpne **http://localhost:8080** og logg inn med en av testbrukerne:
@@ -54,20 +55,20 @@ Mer om kjøring, begrensninger og feilsøking: **[docs/drift.md](docs/drift.md)*
 | Innlogging | Cookie-autentisering. Passord lagres midlertidig i klartekst, og skal byttes til ASP.NET Core Identity |
 | Kart | [Leaflet](https://leafletjs.com/) med kartfliser fra Kartverket |
 | Adressesøk | Geonorge sitt adresse-API (`ws.geonorge.no/adresser/v1`) |
-| Datalagring | Minnebasert (InMemory-repositories). Byttes med database senere. |
-| Drift | Docker (flerstegs Dockerfile) |
+| Datalagring | MariaDB 11.4 med Entity Framework Core 10 (Microting.EntityFrameworkCore.MySql) og migrations |
+| Drift | Docker Compose (app og database) |
 
 ---
 
 ## Arkitektur
 
-Applikasjonen følger **MVC-mønsteret** (Model–View–Controller), med et eget **repository-lag** for datalagring. Controllerne kjenner bare repository-grensesnittene, så dagens minnebaserte lagring kan byttes med en database uten å endre dem.
+Applikasjonen følger **MVC-mønsteret** (Model–View–Controller), med et eget **repository-lag** for datalagring. Controllerne kjenner bare repository-grensesnittene, derfor ble MariaDB lagt til uten å endre dem. 
 
 ```mermaid
 flowchart LR
     B[Nettleser] -->|GET / POST| C[Controller]
     C -->|leser/skriver| R[Repository]
-    R --> D[(Minne)]
+    R --> D[(MariaDB)] 
     C -->|ViewModel| V[View .cshtml]
     V -->|HTML| B
     K[kart.js] -->|GET JSON| C
