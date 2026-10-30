@@ -6,3 +6,4 @@ obj/
 .idea/
 Opplastinger/
 Beredskapsportal.Tests/
+.env

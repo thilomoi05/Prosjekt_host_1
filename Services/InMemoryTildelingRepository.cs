@@ -37,7 +37,8 @@ public class InMemoryTildelingRepository : ITildelingRepository
     /// Eksempeldata. Behovene her har status Tildelt i InMemoryBehovRepository,
     /// og ressursene passer til behovet (f.eks. aggregat til nødstrøm).
     /// </summary>
-    private static List<Tildeling> LagEksempelData()
+
+    internal static List<Tildeling> LagEksempelData()
     {
         return new List<Tildeling>
         {

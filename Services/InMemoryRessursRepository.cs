@@ -49,7 +49,8 @@ public class InMemoryRessursRepository : IRessursRepository
     /// jevnt på type og område, slik at "Tilgjengelige ressurser" viser noe
     /// realistisk helt fra start.
     /// </summary>
-    private static List<Ressurs> LagEksempelData()
+
+    internal static List<Ressurs> LagEksempelData()
     {
         var typer = new[] { RessursType.Aggregat, RessursType.Drivstoff, RessursType.Ups, RessursType.Transport, RessursType.Kommunikasjonsutstyr };
         var omrader = new[] { "Sentrum", "Lund", "Vågsbygd", "Grim", "Eg", "Randesund", "Songdalen", "Søm" };

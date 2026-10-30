@@ -85,7 +85,7 @@ public class InMemoryBehovRepository : IBehovRepository
 
     // Behov 3, 6, 8 og 11 har status Tildelt, fordi de har tildelte ressurser
     // i eksempeldataene i InMemoryTildelingRepository. Resten venter.
-    private static List<Behov> LagEksempelData()
+    internal static List<Behov> LagEksempelData()
     {
         var data = new List<Behov>
         {
