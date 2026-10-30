@@ -78,7 +78,7 @@ public class InMemoryBehovRepository : IBehovRepository
         }
     }
 
-    private static List<Behov> LagEksempelData()
+    internal static List<Behov> LagEksempelData()
     {
         var data = new List<Behov>
         {

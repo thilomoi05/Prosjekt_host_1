@@ -56,6 +56,12 @@ builder.Services
 
 var app = builder.Build();
 
+// Lager tabellene og legger inn eksempeldata første gang appen kobler til databasen.
+if (brukerDatabase)
+{
+    DatabaseOppsett.Initialiser(app.Services);
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
