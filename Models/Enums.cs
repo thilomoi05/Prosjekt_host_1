@@ -52,8 +52,9 @@ public enum RessursType
 }
 
 /// <summary>
-/// Rollen en bruker registrerer seg med. Styrer hva slags aktør de representerer
-/// (det offentlige som melder behov, eller private/bedrifter som tilbyr ressurser).
+/// Rollen en bruker kan velge når de registrerer seg: det offentlige som melder behov,
+/// eller private/bedrifter som tilbyr ressurser. Admin er bevisst ikke med her, så ingen
+/// kan registrere seg selv som administrator. Rollenavnene i databasen står i Roller.cs.
 /// </summary>
 public enum BrukerRolle
 {

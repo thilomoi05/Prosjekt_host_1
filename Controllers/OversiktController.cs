@@ -57,7 +57,7 @@ public class OversiktController : Controller
             SisteBehov = ventende.Take(5).ToList()
         };
 
-        if (User.IsInRole(nameof(BrukerRolle.OffentligAktor)))
+        if (User.IsInRole(Roller.OffentligAktor))
         {
             // Offentlige aktører: de fem behovene som sist fikk en ressurs, med alle ressursene de har fått.
             // Resten finnes på siden "Alle tildelte ressurser" (TildelingController).

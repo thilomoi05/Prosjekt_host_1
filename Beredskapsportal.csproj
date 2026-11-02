@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.12" />
+    <!-- ASP.NET Core Identity: brukere, passord-hashing og roller, lagret i databasen med EF Core -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

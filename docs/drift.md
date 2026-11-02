@@ -18,7 +18,10 @@ cp .env.example .env
 ```
 DB_ROOT_PASSWORD=ditt-root-passord
 DB_PASSWORD=ditt-app-passord
+TESTBRUKER_PASSORD=passordet-til-testbrukerne
 ```
+
+`TESTBRUKER_PASSORD` er passordet til testbrukerne (se [Testbrukere](#testbrukere)). Er det tomt, lages ingen testbrukere.
 
 Bruk minst 16 tegn og ulike passord. Bruk bare bokstaver, tall, `-` og `_`. Del aldri `.env` på GitHub eller i chat.
 
@@ -48,7 +51,7 @@ docker compose up --build
 
 Appen finner databasen gjennom miljøvariabelen `ConnectionStrings__BeredskapsDb`. Passordet hentes fra `.env`.
 
-Ved oppstart kjører appen migrations fra mappa `Migrations` (`DatabaseOppsett.cs`). Da lages eller oppdateres tabellene `Brukere`, `Behov`, `Ressurser` og `Tildelinger`. Er tabellene tomme, fylles de med eksempeldata.
+Ved oppstart kjører appen migrations fra mappa `Migrations` (`DatabaseOppsett.cs`). Da lages eller oppdateres tabellene `Behov`, `Ressurser` og `Tildelinger`, og tabellene til ASP.NET Core Identity (`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles` med flere). Rollene og testbrukerne lages av `Data/IdentitetOppsett.cs`. Er tabellene tomme, fylles de med eksempeldata.
 
 Begge containerne er bare tilgjengelige fra egen maskin (`127.0.0.1`).
 
@@ -71,6 +74,7 @@ Lagre tilkoblingsstrengen med User Secrets. Bruk `DB_PASSWORD` fra `.env`:
 
 ```bash
 dotnet user-secrets set "ConnectionStrings:BeredskapsDb" "Server=localhost;Port=3306;Database=beredskapsportal;User=beredskap;Password=DITT-APP-PASSORD"
+dotnet user-secrets set "Testbrukere:Passord" "PASSORDET-TIL-TESTBRUKERNE"
 ```
 
 Start appen:
@@ -81,7 +85,7 @@ dotnet run
 
 Åpne **http://localhost:5220** i nettleseren.
 
-Uten tilkoblingsstreng bruker appen minnebasert lagring, som før. Det brukes også av testene.
+Uten tilkoblingsstreng stopper appen med en feilmelding, fordi innloggingen (ASP.NET Core Identity) lagrer brukerne i databasen. Testene trenger ikke database.
 
 ## Endre databasen
 
@@ -107,18 +111,33 @@ SELECT Id, Type, Status FROM Behov;
 
 ## Testbrukere
 
-To testbrukere opprettes automatisk ved første oppstart, én for hver rolle:
+Tre testbrukere opprettes automatisk ved oppstart (`Data/IdentitetOppsett.cs`), hvis `TESTBRUKER_PASSORD` er satt i `.env` (eller `Testbrukere:Passord` i User Secrets). Alle tre får det samme passordet. I gruppa bruker vi:
+
+```
+TESTBRUKER_PASSORD=Beredt2026
+```
 
 | Brukernavn | Passord | Rolle | Hva du ser |
 |---|---|---|---|
-| `test` | `test` | Offentlig aktør (f.eks. Heimevernet) | Oversikt, kart, behov, ressurser og hva som trengs |
-| `privat` | `privat` | Privat aktør (bedrift eller privatperson) | Egne ressurser, tilby ressurs og hva som trengs |
+| `test` | `Beredt2026` | Offentlig aktør (f.eks. Heimevernet) | Oversikt, kart, behov, ressurser og hva som trengs |
+| `privat` | `Beredt2026` | Privat aktør (bedrift eller privatperson) | Egne ressurser, tilby ressurs og hva som trengs |
+| `admin` | `Beredt2026` | Administrator (har også rollen offentlig aktør) | Alt en offentlig aktør ser. Tildeling og godkjenning av offentlige aktører kommer senere |
+
+Passordet må følge passordreglene: minst 8 tegn, med stor og liten bokstav og tall. Ellers stopper appen med en feilmelding ved oppstart.
+
+Testbrukerne lages bare hvis de ikke finnes fra før. Byttet du passord etter at de ble laget, slett databasen med `docker compose down -v` og start på nytt.
 
 Testbrukerne er bare for testing og skal fjernes før portalen tas i bruk.
 
+### Nye brukere og godkjenning
+
+- **Privat aktør:** registrerer seg på `/Konto/Registrer` og logges inn med en gang.
+- **Offentlig aktør:** registrerer seg på samme side, men kan ikke logge inn før en administrator har godkjent kontoen (`VenterPaGodkjenning` i `AspNetUsers`). Siden der Admin godkjenner, kommer sammen med tildelingssiden.
+- **Admin:** kan ikke velges ved registrering. Lages bare av `IdentitetOppsett`.
+
 ## Kjente begrensninger
 
-- **Passord lagres i klartekst** i tabellen `Brukere`. Skal byttes til ASP.NET Core Identity med hashing.
+- **Offentlige aktører kan ikke godkjennes ennå.** Siden for Admin kommer sammen med tildelingssiden. Til da brukes testbrukeren `test`.
 - **Innloggede brukere logges ut** når containeren startes på nytt. Nøklene som signerer innloggings-cookien lagres inne i containeren. Dette gir advarslene `DataProtection-Keys ... may not be persisted` og `No XML encryptor configured` ved oppstart.
 - **Bare http i Docker.** Advarselen `Failed to determine the https port for redirect` er forventet.
 - **Hver person har sin egen lokale database.** Data du registrerer vises bare hos deg.

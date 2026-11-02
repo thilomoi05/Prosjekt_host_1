@@ -17,4 +17,7 @@ public class LoggInnViewModel
     [DataType(DataType.Password)]
     [Display(Name = "Passord")]
     public string Passord { get; set; } = string.Empty;
+
+    // Siden brukeren prøvde å åpne før innlogging, f.eks. "/Kart". Ligger i et skjult felt i skjemaet.
+    public string? ReturnUrl { get; set; }
 }

@@ -9,6 +9,8 @@
 
         <form asp-controller="Konto" asp-action="LoggInn" method="post">
             <div asp-validation-summary="All" class="text-danger mb-3"></div>
+            @* Siden brukeren skal tilbake til etter innlogging (se KontoController.LoggInn). *@
+            <input type="hidden" asp-for="ReturnUrl" />
 
             <div class="mb-3">
                 <label asp-for="Brukernavn" class="form-label"></label>

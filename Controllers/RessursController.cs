@@ -37,8 +37,8 @@ public class RessursController : Controller
         _bildemappe = Path.Combine(miljo.ContentRootPath, "Opplastinger", "bilder");
     }
 
-    // Nav-punktet "Ressurser" peker rett på registreringsskjemaet,
-    // siden det foreløpig ikke finnes noen egen liste-visning for ressurser.
+    // Menypunktet "Tilby ressurs" peker hit. Sender rett videre til registreringsskjemaet,
+    // siden det ikke finnes noen egen listeside for ressurser (de vises på kartet og i Oversikt).
     public IActionResult Index()
     {
         return RedirectToAction(nameof(Registrer));
@@ -58,8 +58,8 @@ public class RessursController : Controller
 
     // "async Task" fordi det tar litt tid å lagre filer på disk. Mens vi venter
     // (await), kan serveren gjøre andre ting i stedet for å stå og vente.
+    // Anti-forgery-tokenet sjekkes av filteret i Program.cs (gjelder alle POST-metoder).
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Registrer(RessursViewModel modell)
     {
         // Sjekker bildene i tillegg til de vanlige [Required]-reglene i view-modellen.
@@ -190,7 +190,7 @@ public class RessursController : Controller
     }
 
     // Hjelpere for tilgangssjekkene over. "?." gjør at de også virker i tester uten innlogget bruker.
-    private bool ErOffentligAktor() => User?.IsInRole(KartController.RolleSomSerRessurser) == true;
+    private bool ErOffentligAktor() => User?.IsInRole(Roller.OffentligAktor) == true;
 
     private string Brukernavn() => User?.Identity?.Name ?? string.Empty;
 

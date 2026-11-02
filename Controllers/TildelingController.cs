@@ -11,7 +11,7 @@ namespace Beredskapsportal.Controllers;
 /// Oversikten viser bare de fem siste, og lenker hit ("Se alle tildelinger").
 /// Bare offentlige aktører har tilgang, samme regel som for behov og kart.
 /// </summary>
-[Authorize(Roles = nameof(BrukerRolle.OffentligAktor))]
+[Authorize(Roles = Roller.OffentligAktor)]
 public class TildelingController : Controller
 {
     private readonly IBehovRepository _behovRepository;

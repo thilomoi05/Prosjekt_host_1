@@ -1,4 +1,3 @@
-@model ForsideViewModel
 @{
     ViewData["Title"] = "Hjem";
 
@@ -10,7 +9,7 @@
     var fornavn = fulltNavn.Split(' ')[0];
 
     // Offentlige aktører melder behov, private aktører tilbyr ressurser.
-    var erOffentligAktor = User.IsInRole("OffentligAktor");
+    var erOffentligAktor = User.IsInRole(Roller.OffentligAktor);
 }
 
 @* =========================================================================

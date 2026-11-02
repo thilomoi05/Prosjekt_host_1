@@ -7,34 +7,29 @@ using Microsoft.AspNetCore.Mvc;
 namespace Beredskapsportal.Tests;
 
 /// <summary>
-/// Tester at controllerne sender riktige data til viewene etter endringene på forsiden.
+/// Tester at forsiden og registreringsskjemaet vises riktig.
 /// </summary>
 public class ControllerTester
 {
     [Fact]
-    public void HomeIndex_SenderRiktigeTallTilForsiden()
+    public void HomeIndex_ViserForsiden()
     {
-        // Arrange: lag controlleren med ekte repositoryer, slik Program.cs gjør
-        var behovRepository = new InMemoryBehovRepository();
-        var ressursRepository = new InMemoryRessursRepository();
-        var controller = new HomeController(behovRepository, ressursRepository);
+        // Arrange
+        var controller = new HomeController();
 
         // Act: be om forsiden
         var resultat = controller.Index();
 
-        // Assert: det er en side (ViewResult), og pakken har riktige tall
-        var side = Assert.IsType<ViewResult>(resultat);
-        var modell = Assert.IsType<ForsideViewModel>(side.Model);
-        Assert.Equal(behovRepository.TellAktive(), modell.AntallAktiveBehov);
-        Assert.Equal(behovRepository.TellVentende(Prioritet.Hoy), modell.AntallHoyPrioritet);
-        Assert.Equal(ressursRepository.TellTilgjengelige(), modell.AntallTilgjengeligeRessurser);
+        // Assert: det er en side (ViewResult). Forsiden har bare fast tekst, så ingen modell.
+        Assert.IsType<ViewResult>(resultat);
     }
 
     [Fact]
     public void KontoRegistrer_ForhandsvelgerRollenFraLenken()
     {
         // Arrange
-        var controller = new KontoController(new InMemoryBrukerRepository());
+        var brukerManager = IdentitetHjelpere.LagBrukerManager();
+        var controller = new KontoController(brukerManager, IdentitetHjelpere.LagInnloggingManager(brukerManager));
 
         // Act: samme som å åpne /Konto/Registrer?rolle=PrivatAktor
         var resultat = controller.Registrer(BrukerRolle.PrivatAktor);

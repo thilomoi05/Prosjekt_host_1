@@ -56,10 +56,6 @@
 
 @section Scripts {
     <script src="~/js/kartikoner.js" asp-append-version="true"></script>
-    <script>
-        // Setter inn kartikonet for hver type utstyr. Typen står i data-ikon-type.
-        document.querySelectorAll('[data-ikon-type]').forEach(function (element) {
-            element.innerHTML = lagIkonSvg('behov', element.dataset.ikonType, 40);
-        });
-    </script>
+    @* Ikonene settes inn av hvatrengs.js (ikke skript i HTML-en, på grunn av Content-Security-Policy). *@
+    <script src="~/js/hvatrengs.js" asp-append-version="true"></script>
 }

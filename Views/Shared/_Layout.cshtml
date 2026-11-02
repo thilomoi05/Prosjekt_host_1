@@ -8,7 +8,9 @@
 
     // Navn og rolle til innlogget bruker, vises i menyen.
     var brukerNavn = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
-    var rolleTekst = User.IsInRole("OffentligAktor") ? "Offentlig aktør" : "Privat aktør";
+    var rolleTekst = User.IsInRole(Roller.Admin) ? "Administrator"
+        : User.IsInRole(Roller.OffentligAktor) ? "Offentlig aktør"
+        : "Privat aktør";
 
     bool ErAktiv(string controller) => string.Equals(gjeldendeController, controller, StringComparison.OrdinalIgnoreCase);
 }
@@ -96,7 +98,7 @@
                     <ul class="bp-nav-lenker">
                         <li><a class="bp-nav-link @(ErAktiv("Oversikt") ? "aktiv" : "")" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
                         @* Kart og Behov vises bare for offentlige aktører. Private aktører tilbyr bare ressurser. *@
-                        @if (User.IsInRole("OffentligAktor"))
+                        @if (User.IsInRole(Roller.OffentligAktor))
                         {
                             <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
                             <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
@@ -151,7 +153,6 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -15,8 +15,8 @@ public class ModellTester
         FulltNavn = "Kari Nordmann",
         Epost = "kari@example.com",
         Brukernavn = "kari",
-        Passord = "passord123",
-        BekreftPassord = "passord123"
+        Passord = "Passord123",
+        BekreftPassord = "Passord123"
     };
 
     [Fact]
@@ -34,15 +34,15 @@ public class ModellTester
     }
 
     [Fact]
-    public void Registrering_PassordetMaHaMinst6Tegn()
+    public void Registrering_PassordetMaHaMinst8Tegn()
     {
         var modell = GyldigRegistrering();
-        modell.Passord = "12345";
-        modell.BekreftPassord = "12345";
+        modell.Passord = "Kort123";
+        modell.BekreftPassord = "Kort123";
 
         var feil = TestHjelpere.Valider(modell);
 
-        Assert.Contains(feil, f => f.ErrorMessage == "Passordet må være på minst 6 tegn.");
+        Assert.Contains(feil, f => f.ErrorMessage == "Passordet må være på minst 8 tegn.");
     }
 
     [Fact]

@@ -3,8 +3,9 @@ using Beredskapsportal.Models;
 namespace Beredskapsportal.Services;
 
 /// <summary>
-/// Midlertidig, minnebasert lagring av ressurser tilbudt av bedrifter og privatpersoner.
-/// Se InMemoryBrukerRepository for begrunnelsen bak den enkle minnebaserte løsningen.
+/// Minnebasert lagring av ressurser, med eksempeldata.
+/// Appen bruker MariaDB (EfRessursRepository). Denne klassen brukes av enhetstestene,
+/// og eksempeldataene (LagEksempelData) legges inn i databasen første gang (DatabaseOppsett).
 /// </summary>
 public class InMemoryRessursRepository : IRessursRepository
 {
@@ -45,17 +46,9 @@ public class InMemoryRessursRepository : IRessursRepository
         }
     }
 
-    public int TellTilgjengelige()
-    {
-        lock (_lasObjekt)
-        {
-            return _ressurser.Count;
-        }
-    }
-
     /// <summary>
     /// Genererer 28 eksempelressurser (matcher tallet fra Figma-skissen) fordelt
-    /// jevnt på type og område, slik at "Tilgjengelige ressurser" viser noe
+    /// jevnt på type og område, slik at kartet og oversikten viser noe
     /// realistisk helt fra start.
     /// </summary>
 

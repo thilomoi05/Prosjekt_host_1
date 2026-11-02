@@ -22,7 +22,9 @@ public class RegistrerBrukerViewModel
 
     [Required(ErrorMessage = "Du må lage et passord.")]
     [DataType(DataType.Password)]
-    [MinLength(6, ErrorMessage = "Passordet må være på minst 6 tegn.")]
+    // Samme lengde som i passordreglene til Identity (Program.cs). Resten av reglene
+    // (tall, stor og liten bokstav) sjekkes av Identity når brukeren lagres.
+    [MinLength(8, ErrorMessage = "Passordet må være på minst 8 tegn.")]
     [Display(Name = "Passord")]
     public string Passord { get; set; } = string.Empty;
 
