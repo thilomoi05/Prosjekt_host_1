@@ -14,6 +14,12 @@ public interface IBehovRepository
     // Ett behov med gitt id, eller null hvis det ikke finnes (brukes av detaljsiden).
     Behov? HentMedId(int id);
     Behov LeggTil(Behov behov);
+
+    // Endrer status (Venter eller Tildelt). Brukes når ressurser tildeles eller fjernes.
+    void SettStatus(int id, BehovStatus status);
+
+    // Sletter behovet. Brukes når den som meldte det, trekker det tilbake.
+    void Slett(int id);
     int TellAktive();
     int TellTildelte();
     int TellVentende(Prioritet prioritet);

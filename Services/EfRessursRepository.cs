@@ -30,4 +30,28 @@ public class EfRessursRepository : IRessursRepository
         return ressurs;
     }
 
+    public void SettStatus(int id, RessursStatus status, string? avvisningsgrunn = null)
+    {
+        // Find henter ressursen slik at EF følger med på endringer. SaveChanges lagrer endringen.
+        var ressurs = _db.Ressurser.Find(id);
+        if (ressurs is null)
+        {
+            return;
+        }
+        ressurs.Status = status;
+        ressurs.Avvisningsgrunn = avvisningsgrunn;
+        _db.SaveChanges();
+    }
+
+    public void Slett(int id)
+    {
+        var ressurs = _db.Ressurser.Find(id);
+        if (ressurs is null)
+        {
+            return;
+        }
+        _db.Ressurser.Remove(ressurs);
+        _db.SaveChanges();
+    }
+
 }

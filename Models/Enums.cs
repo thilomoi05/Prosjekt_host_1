@@ -26,6 +26,36 @@ public enum BehovStatus
 }
 
 /// <summary>
+/// Status for en ressurs som er sendt inn. Bare godkjente ressurser vises for
+/// offentlige aktører, så falske innsendinger ikke når frem før en administrator har sett dem.
+///  - Venter:   sendt inn, men ikke sjekket av en administrator ennå.
+///  - Godkjent: sjekket og godkjent. Vises på kartet og kan tildeles behov.
+///  - Avvist:   avvist av en administrator, med en begrunnelse eieren kan se.
+/// Om ressursen er tildelt et behov, står ikke her. Det ser vi i tabellen Tildelinger.
+/// </summary>
+public enum RessursStatus
+{
+    Venter,
+    Godkjent,
+    Avvist
+}
+
+/// <summary>
+/// Status for en forespørsel fra en offentlig aktør om å få en ressurs til sitt behov.
+///  - Venter:   sendt, men ikke behandlet av en administrator ennå.
+///  - Godkjent: administratoren sa ja, og ressursen er tildelt behovet.
+///  - Avslatt:  administratoren sa nei (med begrunnelse), eller forespørselen ble lukket
+///              fordi ressursen gikk til et annet behov eller ble trukket tilbake.
+/// Skrives "Avslatt" uten å i koden. Skjermen viser "Avslått".
+/// </summary>
+public enum ForesporselStatus
+{
+    Venter,
+    Godkjent,
+    Avslatt
+}
+
+/// <summary>
 /// Hvilken type behov en aktør melder inn. Listen kan utvides etter behov.
 /// </summary>
 public enum BehovType

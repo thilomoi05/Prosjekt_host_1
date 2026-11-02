@@ -23,12 +23,20 @@ public class BehovControllerTester
         Lengdegrad = 8.07
     };
 
+    private static BehovController LagController(InMemoryBehovRepository repository)
+    {
+        var ressurser = new InMemoryRessursRepository();
+        var tildelinger = new InMemoryTildelingRepository();
+        return new BehovController(repository, ressurser, tildelinger,
+            TestHjelpere.LagTildelingTjeneste(repository, ressurser, tildelinger));
+    }
+
     [Fact]
     public void Registrer_GyldigSkjemaLagrerBehovet()
     {
         // Arrange
         var repository = new InMemoryBehovRepository();
-        var controller = new BehovController(repository, new InMemoryRessursRepository(), new InMemoryTildelingRepository());
+        var controller = LagController(repository);
 
         // Act
         var resultat = controller.Registrer(GyldigSkjema());
@@ -45,7 +53,7 @@ public class BehovControllerTester
     {
         // Arrange: later som ASP.NET fant en valideringsfeil
         var repository = new InMemoryBehovRepository();
-        var controller = new BehovController(repository, new InMemoryRessursRepository(), new InMemoryTildelingRepository());
+        var controller = LagController(repository);
         controller.ModelState.AddModelError("Beskrivelse", "Du må beskrive behovet.");
         var antallFor = repository.HentAlle().Count;
 

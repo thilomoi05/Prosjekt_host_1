@@ -1,0 +1,48 @@
+@model List<ForesporselRad>
+@* =========================================================================
+   Forespørslene til ett behov og status på dem. Brukes på detaljsiden til behovet:
+   <partial name="_Foresporsler" model="Model.Foresporsler" />
+   ========================================================================= *@
+<section class="bp-tabell-kort">
+    <h2 class="bp-detaljer-overskrift">Forespørsler</h2>
+    <ul class="bp-oversikt-liste">
+        @foreach (var rad in Model)
+        {
+            var f = rad.Foresporsel;
+            <li>
+                <span class="bp-oversikt-liste-tekst">
+                    @if (rad.Ressurs is not null)
+                    {
+                        <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@rad.Ressurs.Id">@rad.Ressurs.VisningsNavn</a>
+                        <span>@rad.Ressurs.Adresse</span>
+                    }
+                    else
+                    {
+                        <strong>Ressurs som er trukket tilbake</strong>
+                    }
+                    <span class="bp-foresporsel-detalj">Forespurt @f.Tidspunkt.ToString("dd.MM.yyyy HH:mm") av @f.ForespurtAv</span>
+                    @if (!string.IsNullOrEmpty(f.Kommentar))
+                    {
+                        <span class="bp-foresporsel-detalj">Kommentar: @f.Kommentar</span>
+                    }
+                    @if (f.Status == ForesporselStatus.Avslatt && !string.IsNullOrEmpty(f.Begrunnelse))
+                    {
+                        <span class="bp-foresporsel-detalj">Begrunnelse: @f.Begrunnelse</span>
+                    }
+                </span>
+                @switch (f.Status)
+                {
+                    case ForesporselStatus.Venter:
+                        <span class="bp-badge bp-badge-godkjenning">Venter på Admin</span>
+                        break;
+                    case ForesporselStatus.Godkjent:
+                        <span class="bp-badge bp-badge-tildelt">Godkjent</span>
+                        break;
+                    default:
+                        <span class="bp-badge bp-badge-avvist">Avslått</span>
+                        break;
+                }
+            </li>
+        }
+    </ul>
+</section>

@@ -43,6 +43,11 @@ builder.Services.AddDbContext<BeredskapsDbContext>(options =>
 builder.Services.AddScoped<IBehovRepository, EfBehovRepository>();
 builder.Services.AddScoped<IRessursRepository, EfRessursRepository>();
 builder.Services.AddScoped<ITildelingRepository, EfTildelingRepository>();
+builder.Services.AddScoped<IHendelseRepository, EfHendelseRepository>();
+builder.Services.AddScoped<IForesporselRepository, EfForesporselRepository>();
+
+// Godkjenning, tildeling og tilbaketrekking av behov og ressurser (se Services/TildelingTjeneste.cs).
+builder.Services.AddScoped<TildelingTjeneste>();
 
 // ASP.NET Core Identity: brukere, passord og roller, lagret i databasen (BeredskapsDbContext).
 builder.Services

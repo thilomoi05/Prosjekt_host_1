@@ -1,0 +1,32 @@
+@model BehovDetaljerViewModel
+@{
+    var behov = Model.Behov;
+    ViewData["Title"] = "Trekk tilbake behov";
+}
+
+@* "Er du sikker?"-siden før et behov trekkes tilbake (BehovController.TrekkTilbake).
+   Behovet slettes først når brukeren trykker på knappen (POST). *@
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort">
+        <h1>Trekk tilbake behovet?</h1>
+        <p><strong>@behov.VisningsNavn</strong> i @behov.GeografiskOmrade, meldt @behov.Dato.ToString("yyyy-MM-dd").</p>
+
+        <p>Behovet fjernes fra kartet og listene. Det kan ikke angres.</p>
+
+        @if (Model.TildelteRessurser.Count > 0)
+        {
+            <p>Disse ressursene er tildelt behovet, og blir ledige igjen:</p>
+            <ul>
+                @foreach (var ressurs in Model.TildelteRessurser)
+                {
+                    <li>@ressurs.VisningsNavn, @ressurs.Adresse</li>
+                }
+            </ul>
+        }
+
+        <form asp-controller="Behov" asp-action="TrekkTilbake" asp-route-id="@behov.Id" method="post" class="bp-bekreft-knapper">
+            <button type="submit" class="btn btn-bp-fare">Ja, trekk tilbake</button>
+            <a class="btn btn-bp-sekundær" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behov.Id">Avbryt</a>
+        </form>
+    </div>
+</div>

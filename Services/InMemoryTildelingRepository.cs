@@ -33,6 +33,14 @@ public class InMemoryTildelingRepository : ITildelingRepository
         }
     }
 
+    public void Fjern(int behovId, int ressursId)
+    {
+        lock (_lasObjekt)
+        {
+            _tildelinger.RemoveAll(t => t.BehovId == behovId && t.RessursId == ressursId);
+        }
+    }
+
     /// <summary>
     /// Eksempeldata. Behovene her har status Tildelt i InMemoryBehovRepository,
     /// og ressursene passer til behovet (f.eks. aggregat til nødstrøm).

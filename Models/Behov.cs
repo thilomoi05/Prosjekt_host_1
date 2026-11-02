@@ -24,6 +24,10 @@ public class Behov
 
     public DateOnly Dato { get; set; }
 
+    // Brukernavnet til den som meldte behovet. Brukes til å avgjøre hvem som kan trekke det tilbake
+    // (den som meldte det, eller en administrator).
+    public string RegistrertAv { get; set; } = string.Empty;
+
     // Plasseringen på kartet, i vanlige GPS-koordinater (grader).
     // Breddegrad = nord/sør (ca. 58 i Kristiansand), lengdegrad = øst/vest (ca. 8).
     // Settes når brukeren klikker i kartet i registreringsskjemaet.

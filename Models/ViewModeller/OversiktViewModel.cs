@@ -42,7 +42,7 @@ public class TildeltBehov
 
 /// <summary>
 /// En av brukerens egne ressurser. Private aktører får bare vite om ressursen er
-/// tildelt et behov, ikke hvilket behov det er.
+/// tildelt et behov, ikke hvilket behov det er. Godkjenningsstatusen står i Ressurs.Status.
 /// </summary>
 public class MinRessurs
 {

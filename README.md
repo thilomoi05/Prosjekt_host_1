@@ -33,7 +33,7 @@ Sett egne passord i `.env` før du starter. Se [docs/drift.md](docs/drift.md).
 |---|---|---|---|
 | `test` | `Beredt2026` | Offentlig aktør (f.eks. Heimevernet) | Oversikt, kart, behov, ressurser og hva som trengs |
 | `privat` | `Beredt2026` | Privat aktør (bedrift eller privatperson) | Egne ressurser, tilby ressurs og hva som trengs |
-| `admin` | `Beredt2026` | Administrator (har også rollen offentlig aktør) | Alt en offentlig aktør ser |
+| `admin` | `Beredt2026` | Administrator (har også rollen offentlig aktør) | Alt en offentlig aktør ser, pluss adminsiden for godkjenning og tildeling |
 
 Passordet kommer fra `TESTBRUKER_PASSORD` i `.env`. Se [Testbrukere i docs/drift.md](docs/drift.md#testbrukere).
 

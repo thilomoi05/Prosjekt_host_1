@@ -121,7 +121,7 @@ TESTBRUKER_PASSORD=Beredt2026
 |---|---|---|---|
 | `test` | `Beredt2026` | Offentlig aktør (f.eks. Heimevernet) | Oversikt, kart, behov, ressurser og hva som trengs |
 | `privat` | `Beredt2026` | Privat aktør (bedrift eller privatperson) | Egne ressurser, tilby ressurs og hva som trengs |
-| `admin` | `Beredt2026` | Administrator (har også rollen offentlig aktør) | Alt en offentlig aktør ser. Tildeling og godkjenning av offentlige aktører kommer senere |
+| `admin` | `Beredt2026` | Administrator (har også rollen offentlig aktør) | Alt en offentlig aktør ser, pluss adminsiden: godkjenne ressurser og offentlige aktører, og tildele ressurser til behov |
 
 Passordet må følge passordreglene: minst 8 tegn, med stor og liten bokstav og tall. Ellers stopper appen med en feilmelding ved oppstart.
 
@@ -132,12 +132,12 @@ Testbrukerne er bare for testing og skal fjernes før portalen tas i bruk.
 ### Nye brukere og godkjenning
 
 - **Privat aktør:** registrerer seg på `/Konto/Registrer` og logges inn med en gang.
-- **Offentlig aktør:** registrerer seg på samme side, men kan ikke logge inn før en administrator har godkjent kontoen (`VenterPaGodkjenning` i `AspNetUsers`). Siden der Admin godkjenner, kommer sammen med tildelingssiden.
+- **Offentlig aktør:** registrerer seg på samme side, men kan ikke logge inn før en administrator har godkjent kontoen på adminsiden (`/Admin`). Til da står `VenterPaGodkjenning` til `true` i `AspNetUsers`.
 - **Admin:** kan ikke velges ved registrering. Lages bare av `IdentitetOppsett`.
 
 ## Kjente begrensninger
 
-- **Offentlige aktører kan ikke godkjennes ennå.** Siden for Admin kommer sammen med tildelingssiden. Til da brukes testbrukeren `test`.
+- **Nye ressurser må godkjennes.** En ressurs som sendes inn, vises ikke på kartet før en administrator har godkjent den på `/Admin`. Logg inn som `admin` for å godkjenne.
 - **Innloggede brukere logges ut** når containeren startes på nytt. Nøklene som signerer innloggings-cookien lagres inne i containeren. Dette gir advarslene `DataProtection-Keys ... may not be persisted` og `No XML encryptor configured` ved oppstart.
 - **Bare http i Docker.** Advarselen `Failed to determine the https port for redirect` er forventet.
 - **Hver person har sin egen lokale database.** Data du registrerer vises bare hos deg.

@@ -1,8 +1,7 @@
 @model RessursDetaljerViewModel
 @{
     var ressurs = Model.Ressurs;
-    // "Ups" vises som "UPS (batteri)", samme som på kartet (KartController).
-    var typeNavn = ressurs.Type == RessursType.Ups ? "UPS (batteri)" : ressurs.Type.ToString();
+    var typeNavn = ressurs.VisningsNavn;   // f.eks. "UPS (batteri)"
     ViewData["Title"] = typeNavn;
 
     // Teksten for når ressursen er tilgjengelig. Tom fra-dato betyr "fra nå".
@@ -35,7 +34,15 @@
             <p>@ressurs.Adresse</p>
         </div>
         <div class="bp-detaljer-merker">
-            @if (Model.ErTildelt)
+            @if (ressurs.Status == RessursStatus.Venter)
+            {
+                <span class="bp-badge bp-badge-godkjenning">Venter på godkjenning</span>
+            }
+            else if (ressurs.Status == RessursStatus.Avvist)
+            {
+                <span class="bp-badge bp-badge-avvist">Avvist</span>
+            }
+            else if (Model.ErTildelt)
             {
                 <span class="bp-badge bp-badge-tildelt">Tildelt et behov</span>
             }
@@ -45,6 +52,12 @@
             }
         </div>
     </div>
+
+    @* Eieren og administratorer ser hvorfor ressursen ble avvist. *@
+    @if (ressurs.Status == RessursStatus.Avvist && Model.KanTrekkeTilbake)
+    {
+        <p class="bp-melding-avvist"><strong>Begrunnelse:</strong> @ressurs.Avvisningsgrunn</p>
+    }
 
     @* Bildene. Trykk på et bilde for å åpne det i full størrelse i en ny fane. *@
     @if (ressurs.Bilder.Count > 0)
@@ -108,6 +121,38 @@
                 </li>
             </ul>
         </section>
+    }
+
+    @* Offentlige aktører kan forespørre en ledig ressurs til et av sine behov. Admin godkjenner. *@
+    @if (Model.MineBehov.Count > 0)
+    {
+        <section class="bp-tabell-kort">
+            <h2 class="bp-detaljer-overskrift">Forespør til mitt behov</h2>
+            <form asp-controller="Foresporsel" asp-action="Foresporr" method="post" class="bp-foresporr-skjema">
+                <input type="hidden" name="ressursId" value="@ressurs.Id" />
+                <input type="hidden" name="fraRessurs" value="true" />
+                <label class="visually-hidden" for="behovId">Behov</label>
+                <select id="behovId" name="behovId" class="form-select form-select-sm">
+                    @foreach (var behov in Model.MineBehov)
+                    {
+                        <option value="@behov.Id">@behov.VisningsNavn, @behov.GeografiskOmrade (@behov.Dato.ToString("dd.MM"))</option>
+                    }
+                </select>
+                <label class="visually-hidden" for="kommentar">Kommentar</label>
+                <input id="kommentar" name="kommentar" class="form-control form-control-sm" maxlength="500" placeholder="Kommentar (valgfri)" />
+                <button type="submit" class="btn btn-bp-primær btn-sm">Forespør</button>
+            </form>
+        </section>
+    }
+
+    <partial name="_Historikk" model="Model.Historikk" />
+
+    @* Eieren og administratorer kan trekke ressursen tilbake. *@
+    @if (Model.KanTrekkeTilbake)
+    {
+        <div>
+            <a class="btn btn-bp-fare" asp-controller="Ressurs" asp-action="TrekkTilbake" asp-route-id="@ressurs.Id">Trekk tilbake ressursen</a>
+        </div>
     }
 </div>
 

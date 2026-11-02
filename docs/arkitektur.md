@@ -22,7 +22,10 @@ Hvem som ser hva:
 | Oversikt, tilby ressurs, hva trengs | Nei | Ja | Ja | Ja |
 | Behovsliste, kart | Nei | Nei | Ja | Ja |
 | Ressurser på kartet, med adresse, tilgangsbeskrivelse og bilder | Nei | Nei | Ja | Ja |
-| Tildele ressurser og godkjenne offentlige aktører (kommer) | Nei | Nei | Nei | Ja |
+| Adminsiden: godkjenne ressurser og offentlige aktører, tildele ressurser | Nei | Nei | Nei | Ja |
+| Forespørre ressurser til et behov | Nei | Nei | Sine egne | Alle |
+| Trekke tilbake et behov | Nei | Nei | Sine egne | Alle |
+| Trekke tilbake en ressurs | Nei | Sine egne | Sine egne | Alle |
 
 Ressurser er skjermet fordi feltet `Tilgangsbeskrivelse` kan inneholde ting som «står i garasjen, kodelås 1234».
 
@@ -114,6 +117,10 @@ Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view me
 | `Ressurs` | Innlogget | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Detaljer` (private ser bare sine egne), `Bilde` (offentlige aktører, eller eieren av ressursen) |
 | `Kart` | `OffentligAktor` | `Index` kartside, `Behov` og `Ressurser` som JSON til kart.js |
 | `Tildeling` | `OffentligAktor` | `Index` alle tildelinger med filter |
+| `Foresporsel` | `OffentligAktor` (bare egne behov) | `FinnRessurs` forslag til eget behov, `Foresporr` POST |
+| `Admin` | `Admin` | `Index` de fire køene, `GodkjennForesporsel`, `AvslaForesporsel`, `GodkjennRessurs`, `AvvisRessurs`, `Tildel` GET og POST, `FjernTildeling`, `GodkjennBruker`, `AvvisBruker` |
+
+`Behov` og `Ressurs` har også `TrekkTilbake`: en «Er du sikker?»-side (GET) og selve slettingen (POST).
 
 Admin har også rollen `OffentligAktor`, så alt som står `OffentligAktor` over, gjelder også for admin.
 
@@ -191,6 +198,36 @@ Detaljer om lagringen:
 - `AddScoped` betyr én databasetilkobling (`BeredskapsDbContext`) per forespørsel. Den lukkes når svaret er sendt.
 - InMemory-repositoriene bruker `lock` rundt listene, siden flere tester kan bruke dem samtidig.
 - Eksempeldata: 12 behov, 28 ressurser og 5 tildelinger, pluss testbrukerne `test` (offentlig aktør), `privat` (privat aktør) og `admin` (administrator). `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
+
+## 5b. Godkjenning, tildeling og historikk
+
+Alt som endrer behov og ressurser etter at de er meldt inn, ligger i `Services/TildelingTjeneste.cs`. Controllerne sjekker hvem som får gjøre noe, og tjenesten sørger for at det blir gjort riktig.
+
+**Godkjenning av ressurser.** En ny ressurs får status `Venter` (`RessursStatus`). Den vises ikke på kartet, i tellingene eller for offentlige aktører før en administrator har godkjent den på `/Admin`. Avviser administratoren den, lagres en begrunnelse som eieren ser. Ressurser fra en administrator godkjennes med en gang.
+
+```
+Sendt inn ──► Venter ──► Godkjent ──► Tildelt (finnes i Tildelinger)
+                    └──► Avvist (med begrunnelse)
+```
+
+**Tildeling.** Admin trykker «Tildel» på et behov og får forslag fra `Services/Tildelingsforslag.cs`:
+
+- bare ressurser som er godkjent og ikke tildelt
+- bare typer som passer til behovet (tabellen `PassendeTyper`, f.eks. Nødstrøm → Aggregat og UPS), med «Vis alle typer» for unntak
+- nærmeste først, regnet ut i luftlinje fra koordinatene med haversine-formelen
+
+En ressurs kan bare være tildelt ett behov om gangen. Det sjekkes i tjenesten, og databasen har en unik indeks på `RessursId` i `Tildelinger`. Et behov er `Tildelt` så lenge det har minst én ressurs, ellers `Venter`. Admin kan fjerne en tildeling, og ressursen blir ledig igjen.
+
+**Forespørsler.** Den som meldte et behov, kan selv finne ressurser («Finn ressurs» på behovet, med de samme forslagene som Admin får) eller forespørre en ledig ressurs fra detaljsiden til ressursen. Forespørselen (`Foresporsel`) havner i en egen kø på `/Admin`. **Godkjenn** tildeler ressursen med ett klikk gjennom den samme `Tildel`-metoden, og **Avslå** lagrer en begrunnelse den som spurte ser. Når en ressurs blir tildelt, lukkes andre ventende forespørsler om den automatisk. Det samme skjer når behovet eller ressursen trekkes tilbake.
+
+```
+Offentlig aktør: Forespør ──► Venter ──► Admin: Godkjenn ──► Tildelt
+                                    └──► Admin: Avslå (med begrunnelse)
+```
+
+**Trekke tilbake.** Den som meldte et behov, kan trekke det tilbake. Ressursene som var tildelt det, blir ledige. Eieren av en ressurs kan trekke den tilbake. Var den tildelt, fjernes tildelingen, og behovet venter igjen hvis det ikke har andre ressurser. Administratorer kan trekke tilbake alt.
+
+**Historikk.** Hver hendelse lagres i tabellen `Hendelser` med tidspunkt, hvem og hva, og vises på detaljsidene. Historikken til en ressurs sier ikke hvilket behov den ble tildelt, fordi eieren (en privat aktør) også ser den. Historikken blir liggende selv om behovet eller ressursen trekkes tilbake.
 
 ## 6. Innlogging, tilgang og sikkerhet
 

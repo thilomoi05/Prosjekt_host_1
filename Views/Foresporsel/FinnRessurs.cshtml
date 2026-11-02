@@ -1,0 +1,78 @@
+@model FinnRessursViewModel
+@{
+    var behov = Model.Behov;
+    ViewData["Title"] = "Finn ressurs";
+    var prioritetCss = PrioritetVisning.CssNavn(behov.Prioritet);
+}
+
+@* En offentlig aktør finner ressurser til sitt behov og sender forespørsler (ForesporselController.FinnRessurs).
+   Hver ressurs har sitt eget lille skjema, så man kan forespørre én og én. *@
+<div class="bp-side-innhold bp-detaljer">
+    <a class="bp-tilbake" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behov.Id">&larr; Tilbake til behovet</a>
+
+    <div class="bp-detaljer-hode">
+        <span class="bp-kartikon bp-ikon-@prioritetCss" data-ikon-type="@behov.Type" data-ikon-storrelse="48"></span>
+        <div class="bp-detaljer-tittel">
+            <h1>Finn ressurs</h1>
+            <p>@behov.VisningsNavn · @behov.GeografiskOmrade · @PrioritetVisning.Tekst(behov.Prioritet) prioritet</p>
+        </div>
+    </div>
+
+    <p class="bp-admin-ingress">Velg en ressurs og trykk «Forespør». En administrator godkjenner forespørselen, og da blir ressursen tildelt behovet.</p>
+
+    <section class="bp-tabell-kort">
+        <div class="bp-detaljer-seksjonshode">
+            <h2 class="bp-detaljer-overskrift">
+                @(Model.VisAlleTyper ? "Alle ledige ressurser" : "Ledige ressurser som passer")
+            </h2>
+            @* Bytter mellom bare passende typer og alle typer *@
+            <a asp-action="FinnRessurs" asp-route-id="@behov.Id" asp-route-visAlleTyper="@(!Model.VisAlleTyper)">
+                @(Model.VisAlleTyper ? "Vis bare passende typer" : "Vis alle typer")
+            </a>
+        </div>
+
+        @if (Model.Forslag.Count == 0)
+        {
+            <p class="bp-oversikt-tom">Ingen ledige ressurser passer akkurat nå. Prøv «Vis alle typer».</p>
+        }
+        else
+        {
+            <ul class="bp-admin-liste">
+                @foreach (var forslag in Model.Forslag)
+                {
+                    var ressurs = forslag.Ressurs;
+                    <li class="bp-forslag-rad">
+                        <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs"></span>
+                        <span class="bp-admin-ressurs-tekst">
+                            <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">@ressurs.VisningsNavn</a>
+                            <span>@ressurs.Adresse · @ressurs.BeskrivelseAvKapasitet</span>
+                        </span>
+                        @* Avstand i luftlinje, med komma som desimaltegn (f.eks. 1,2 km) *@
+                        <span class="bp-tildel-avstand">@forslag.AvstandKm.ToString("0.0").Replace('.', ',') km</span>
+
+                        @if (Model.AlleredeForespurt.Contains(ressurs.Id))
+                        {
+                            <span class="bp-badge bp-badge-godkjenning">Forespurt</span>
+                        }
+                        else
+                        {
+                            <form asp-action="Foresporr" method="post" class="bp-foresporr-skjema">
+                                <input type="hidden" name="behovId" value="@behov.Id" />
+                                <input type="hidden" name="ressursId" value="@ressurs.Id" />
+                                <label class="visually-hidden" for="kommentar-@ressurs.Id">Kommentar</label>
+                                <input id="kommentar-@ressurs.Id" name="kommentar" class="form-control form-control-sm"
+                                       maxlength="500" placeholder="Kommentar (valgfri)" />
+                                <button type="submit" class="btn btn-bp-primær btn-sm">Forespør</button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/ikoner.js" asp-append-version="true"></script>
+}

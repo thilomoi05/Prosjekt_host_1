@@ -8,8 +8,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace Beredskapsportal.Controllers;
 
 /// <summary>
-/// Håndterer registrering av ressurser som bedrifter, entreprenører og privatpersoner tilbyr,
-/// inkludert opplasting og visning av bilder av ressursen.
+/// Håndterer registrering, detaljsiden og tilbaketrekking av ressurser som bedrifter,
+/// entreprenører og privatpersoner tilbyr, inkludert opplasting og visning av bilder.
+///
+/// Hvem som ser en ressurs (KanSe under):
+///  - Administratorer ser alle ressurser, også de som venter på godkjenning.
+///  - Eieren ser alltid sine egne.
+///  - Offentlige aktører ser bare godkjente ressurser.
+/// Nye ressurser venter på godkjenning fra en administrator (se AdminController).
 /// </summary>
 [Authorize]
 public class RessursController : Controller
@@ -22,6 +28,7 @@ public class RessursController : Controller
     private readonly IRessursRepository _ressursRepository;
     private readonly IBehovRepository _behovRepository;
     private readonly ITildelingRepository _tildelingRepository;
+    private readonly TildelingTjeneste _tildelingTjeneste;
 
     // Mappen der bildene lagres. Den ligger bevisst UTENFOR wwwroot:
     // alt i wwwroot kan alle laste ned, men bildene skal bare autoriserte se.
@@ -29,11 +36,12 @@ public class RessursController : Controller
 
     // IWebHostEnvironment gir oss blant annet stien til prosjektmappen (ContentRootPath).
     public RessursController(IRessursRepository ressursRepository, IBehovRepository behovRepository,
-        ITildelingRepository tildelingRepository, IWebHostEnvironment miljo)
+        ITildelingRepository tildelingRepository, TildelingTjeneste tildelingTjeneste, IWebHostEnvironment miljo)
     {
         _ressursRepository = ressursRepository;
         _behovRepository = behovRepository;
         _tildelingRepository = tildelingRepository;
+        _tildelingTjeneste = tildelingTjeneste;
         _bildemappe = Path.Combine(miljo.ContentRootPath, "Opplastinger", "bilder");
     }
 
@@ -85,9 +93,14 @@ public class RessursController : Controller
             filnavn.Add(await LagreBilde(bilde));
         }
 
+        // Ressurser fra en administrator godkjennes med en gang. Alle andre venter på godkjenning,
+        // så falske innsendinger ikke vises før en administrator har sett dem.
+        var erAdmin = User?.IsInRole(Roller.Admin) == true;
+
         var nyRessurs = new Ressurs
         {
             Type = modell.Type!.Value,
+            Status = erAdmin ? RessursStatus.Godkjent : RessursStatus.Venter,
             BeskrivelseAvKapasitet = modell.BeskrivelseAvKapasitet,
             Adresse = modell.Adresse,
             Tilgangsbeskrivelse = modell.Tilgangsbeskrivelse,
@@ -105,20 +118,22 @@ public class RessursController : Controller
         };
 
         _ressursRepository.LeggTil(nyRessurs);
+        _tildelingTjeneste.Logg(erAdmin ? "Ressursen ble registrert og godkjent av en administrator" : "Ressursen ble sendt inn",
+            Brukernavn(), ressursId: nyRessurs.Id);
 
         // Meldingen vises øverst på neste side (se _Layout.cshtml). TempData husker den
         // akkurat så lenge at den overlever omdirigeringen til oversikten.
-        TempData["Melding"] = "Takk! Ressursen er registrert.";
+        TempData["Melding"] = erAdmin
+            ? "Ressursen er registrert."
+            : "Takk! Ressursen er sendt inn, og blir synlig når en administrator har godkjent den.";
 
         return RedirectToAction("Index", "Oversikt");
     }
 
     /// <summary>
     /// Detaljsiden for én ressurs, f.eks. /Ressurs/Detaljer/7.
-    /// Tilgang:
-    ///  - Offentlige aktører kan se alle ressurser.
-    ///  - Private aktører kan bare se sine egne. Prøver de å åpne en annen,
-    ///    sendes de til oversikten (Forbid() + AccessDeniedPath i Program.cs).
+    /// Hvem som får se den, står i KanSe. Andre sendes til oversikten
+    /// (Forbid() + AccessDeniedPath i Program.cs).
     /// </summary>
     [HttpGet]
     public IActionResult Detaljer(int id)
@@ -129,11 +144,12 @@ public class RessursController : Controller
             return NotFound();   // ukjent id: "Fant ikke siden"
         }
 
-        var erOffentligAktor = ErOffentligAktor();
-        if (!erOffentligAktor && ressurs.RegistrertAv != Brukernavn())
+        if (!KanSe(ressurs))
         {
             return Forbid();
         }
+
+        var erOffentligAktor = ErOffentligAktor();
 
         // Er ressursen satt inn på et behov? I så fall finnes det en Tildeling med denne ressursen.
         var tildeling = _tildelingRepository.HentAlle().FirstOrDefault(t => t.RessursId == id);
@@ -146,16 +162,81 @@ public class RessursController : Controller
             TildeltBehov = tildeling is not null && erOffentligAktor
                 ? _behovRepository.HentMedId(tildeling.BehovId)
                 : null,
-            ErOffentligAktor = erOffentligAktor
+            ErOffentligAktor = erOffentligAktor,
+            KanTrekkeTilbake = ErEierEllerAdmin(ressurs),
+            Historikk = _tildelingTjeneste.HistorikkForRessurs(id),
+            // En offentlig aktør kan forespørre en ledig, godkjent ressurs til et av sine egne behov.
+            MineBehov = erOffentligAktor && tildeling is null && ressurs.Status == RessursStatus.Godkjent
+                ? _behovRepository.HentAlle().Where(b => b.RegistrertAv == Brukernavn()).ToList()
+                : new List<Behov>()
         };
 
         return View(modell);
     }
 
     /// <summary>
+    /// "Er du sikker?"-siden før en ressurs trekkes tilbake, f.eks. /Ressurs/TrekkTilbake/7.
+    /// Bare eieren og administratorer.
+    /// </summary>
+    [HttpGet]
+    public IActionResult TrekkTilbake(int id)
+    {
+        var ressurs = _ressursRepository.HentMedId(id);
+        if (ressurs is null)
+        {
+            return NotFound();
+        }
+        if (!ErEierEllerAdmin(ressurs))
+        {
+            return Forbid();
+        }
+
+        var modell = new RessursDetaljerViewModel
+        {
+            Ressurs = ressurs,
+            ErTildelt = _tildelingRepository.HentAlle().Any(t => t.RessursId == id)
+        };
+        return View(modell);
+    }
+
+    /// <summary>
+    /// Trekker tilbake (sletter) ressursen og bildene av den. Var den tildelt et behov,
+    /// fjernes tildelingen (se TildelingTjeneste).
+    /// "ActionName" gjør at denne metoden svarer på POST til samme adresse som siden over.
+    /// </summary>
+    [HttpPost]
+    [ActionName(nameof(TrekkTilbake))]
+    public IActionResult TrekkTilbakeBekreftet(int id)
+    {
+        var ressurs = _ressursRepository.HentMedId(id);
+        if (ressurs is null)
+        {
+            return NotFound();
+        }
+        if (!ErEierEllerAdmin(ressurs))
+        {
+            return Forbid();
+        }
+
+        _tildelingTjeneste.TrekkTilbakeRessurs(id, Brukernavn());
+
+        // Bildene slettes også fra disken, siden ingen kan se dem lenger.
+        foreach (var filnavn in ressurs.Bilder)
+        {
+            var sti = Path.Combine(_bildemappe, Path.GetFileName(filnavn));
+            if (System.IO.File.Exists(sti))
+            {
+                System.IO.File.Delete(sti);
+            }
+        }
+
+        TempData["Melding"] = "Ressursen er trukket tilbake.";
+        return RedirectToAction("Index", "Oversikt");
+    }
+
+    /// <summary>
     /// Sender ett bilde til nettleseren, f.eks. /Ressurs/Bilde/3f2a...jpg.
-    /// Offentlige aktører får se alle bildene (samme regel som på kartet).
-    /// Private aktører får bare se bildene av sine egne ressurser (på detaljsiden).
+    /// Samme regel som for detaljsiden: den som får se ressursen, får se bildene (KanSe).
     /// </summary>
     [HttpGet]
     public IActionResult Bilde(string id)
@@ -170,10 +251,9 @@ public class RessursController : Controller
             return NotFound();
         }
 
-        // Tilgang: offentlig aktør, eller eieren av ressursen bildet hører til.
-        var erEgetBilde = _ressursRepository.HentAlle()
-            .Any(r => r.RegistrertAv == Brukernavn() && r.Bilder.Contains(filnavn));
-        if (!ErOffentligAktor() && !erEgetBilde)
+        // Finner ressursen bildet hører til, og sjekker at brukeren får se den.
+        var ressurs = _ressursRepository.HentAlle().FirstOrDefault(r => r.Bilder.Contains(filnavn));
+        if (ressurs is null || !KanSe(ressurs))
         {
             return Forbid();
         }
@@ -193,6 +273,17 @@ public class RessursController : Controller
     private bool ErOffentligAktor() => User?.IsInRole(Roller.OffentligAktor) == true;
 
     private string Brukernavn() => User?.Identity?.Name ?? string.Empty;
+
+    private bool ErEierEllerAdmin(Ressurs ressurs) =>
+        User?.IsInRole(Roller.Admin) == true
+        || (!string.IsNullOrEmpty(ressurs.RegistrertAv) && ressurs.RegistrertAv == Brukernavn());
+
+    /// <summary>
+    /// Hvem som får se en ressurs: administratorer og eieren alltid,
+    /// offentlige aktører bare når den er godkjent.
+    /// </summary>
+    private bool KanSe(Ressurs ressurs) =>
+        ErEierEllerAdmin(ressurs) || (ErOffentligAktor() && ressurs.Status == RessursStatus.Godkjent);
 
     /// <summary>
     /// Sjekker at brukeren har lastet opp 1-5 bilder, at de er bildefiler,

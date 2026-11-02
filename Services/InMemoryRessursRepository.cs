@@ -46,6 +46,27 @@ public class InMemoryRessursRepository : IRessursRepository
         }
     }
 
+    public void SettStatus(int id, RessursStatus status, string? avvisningsgrunn = null)
+    {
+        lock (_lasObjekt)
+        {
+            var ressurs = _ressurser.FirstOrDefault(r => r.Id == id);
+            if (ressurs is not null)
+            {
+                ressurs.Status = status;
+                ressurs.Avvisningsgrunn = avvisningsgrunn;
+            }
+        }
+    }
+
+    public void Slett(int id)
+    {
+        lock (_lasObjekt)
+        {
+            _ressurser.RemoveAll(r => r.Id == id);
+        }
+    }
+
     /// <summary>
     /// Genererer 28 eksempelressurser (matcher tallet fra Figma-skissen) fordelt
     /// jevnt på type og område, slik at kartet og oversikten viser noe
@@ -69,6 +90,7 @@ public class InMemoryRessursRepository : IRessursRepository
             {
                 Id = i,
                 Type = type,
+                Status = RessursStatus.Godkjent,   // eksempelressursene er allerede godkjent
                 BeskrivelseAvKapasitet = $"Tilbudt {type.ToString().ToLowerInvariant()} fra lokal aktør.",
                 Adresse = $"{adresse}, Kristiansand",
                 Tilgangsbeskrivelse = "Ring kontaktpersonen før henting.",

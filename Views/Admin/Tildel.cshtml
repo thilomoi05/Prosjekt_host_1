@@ -1,0 +1,82 @@
+@model TildelViewModel
+@{
+    var behov = Model.Behov;
+    ViewData["Title"] = "Tildel ressurs";
+    var prioritetCss = PrioritetVisning.CssNavn(behov.Prioritet);
+}
+
+@* Siden der Admin velger ressurser til ett behov (AdminController.Tildel).
+   Forslagene er ledige, godkjente ressurser, nærmeste først (Services/Tildelingsforslag.cs). *@
+<div class="bp-side-innhold bp-detaljer">
+    <a class="bp-tilbake" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behov.Id">&larr; Tilbake til behovet</a>
+
+    <div class="bp-detaljer-hode">
+        <span class="bp-kartikon bp-ikon-@prioritetCss" data-ikon-type="@behov.Type" data-ikon-storrelse="48"></span>
+        <div class="bp-detaljer-tittel">
+            <h1>Tildel ressurs</h1>
+            <p>@behov.VisningsNavn · @behov.GeografiskOmrade · @PrioritetVisning.Tekst(behov.Prioritet) prioritet</p>
+        </div>
+    </div>
+
+    @if (Model.TildelteRessurser.Count > 0)
+    {
+        <p class="bp-admin-ingress">
+            Allerede tildelt: @string.Join(", ", Model.TildelteRessurser.Select(r => r.VisningsNavn + " (" + r.Adresse + ")"))
+        </p>
+    }
+
+    <form asp-action="Tildel" asp-route-id="@behov.Id" method="post" class="bp-tabell-kort">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" name="visAlleTyper" value="@(Model.VisAlleTyper ? "true" : "false")" />
+
+        <div class="bp-detaljer-seksjonshode">
+            <h2 class="bp-detaljer-overskrift">
+                @(Model.VisAlleTyper ? "Alle ledige ressurser" : "Forslag som passer til behovet")
+            </h2>
+            @* Bytter mellom bare passende typer og alle typer *@
+            <a asp-action="Tildel" asp-route-id="@behov.Id" asp-route-visAlleTyper="@(!Model.VisAlleTyper)">
+                @(Model.VisAlleTyper ? "Vis bare passende typer" : "Vis alle typer")
+            </a>
+        </div>
+
+        @if (Model.Forslag.Count == 0)
+        {
+            <p class="bp-oversikt-tom">Ingen ledige ressurser passer akkurat nå. Prøv «Vis alle typer».</p>
+        }
+        else
+        {
+            <ul class="bp-admin-liste">
+                @foreach (var forslag in Model.Forslag)
+                {
+                    var ressurs = forslag.Ressurs;
+                    <li>
+                        @* Avkrysningsboksene sender id-ene som en liste (ressursIder) til AdminController.Tildel *@
+                        <label class="bp-tildel-valg">
+                            <input type="checkbox" name="ressursIder" value="@ressurs.Id" />
+                            <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs"></span>
+                            <span class="bp-admin-ressurs-tekst">
+                                <strong>@ressurs.VisningsNavn</strong>
+                                <span>@ressurs.Adresse · @ressurs.BeskrivelseAvKapasitet</span>
+                            </span>
+                            @* Avstand i luftlinje, med komma som desimaltegn (f.eks. 1,2 km) *@
+                            <span class="bp-tildel-avstand">@forslag.AvstandKm.ToString("0.0").Replace('.', ',') km</span>
+                        </label>
+                    </li>
+                }
+            </ul>
+
+            <div class="mb-3">
+                <label for="kommentar" class="form-label">Kommentar (valgfri)</label>
+                <input id="kommentar" name="kommentar" class="form-control" maxlength="500"
+                       placeholder="F.eks. «Hentes av Heimevernet kl. 14»" />
+            </div>
+
+            <button type="submit" class="btn btn-bp-primær">Tildel valgte</button>
+        }
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/ikoner.js" asp-append-version="true"></script>
+}

@@ -310,7 +310,16 @@
                                 <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@rad.Ressurs.Id">@rad.Ressurs.Type</a>
                                 <span>@rad.Ressurs.Adresse</span>
                             </span>
-                            @if (rad.ErTildelt)
+                            @* Status: venter på godkjenning, avvist, tildelt eller tilgjengelig *@
+                            @if (rad.Ressurs.Status == RessursStatus.Venter)
+                            {
+                                <span class="bp-badge bp-badge-godkjenning">Venter på godkjenning</span>
+                            }
+                            else if (rad.Ressurs.Status == RessursStatus.Avvist)
+                            {
+                                <span class="bp-badge bp-badge-avvist">Avvist</span>
+                            }
+                            else if (rad.ErTildelt)
                             {
                                 <span class="bp-badge bp-badge-tildelt">Tildelt et behov</span>
                             }
