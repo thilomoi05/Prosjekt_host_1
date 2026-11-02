@@ -2300,3 +2300,26 @@ a.bp-nokkeltall-kort:hover {
   color: var(--farge-primær);
   filter: none;
 }
+
+/* -------------------------------------------------------------------------
+   Erstatter style="..." som sto direkte i HTML-en. Content-Security-Policy
+   tillater bare stiler fra site.css og andre .css-filer.
+   ------------------------------------------------------------------------- */
+/* "+"-ikonet i knappen "Registrer nytt behov" */
+.bp-knapp-ikon {
+  vertical-align: -2px;
+  margin-right: 0.35rem;
+}
+
+/* Skjemaet for nytt behov er litt bredere enn de andre skjemaene */
+.bp-skjema-kort-bred {
+  max-width: 40rem;
+}
+
+/* Feilmeldingsboksen øverst i skjemaene (asp-validation-summary) er tom når det ikke er feil.
+   ASP.NET skjuler den tomme linjen med style="display:none", men Content-Security-Policy
+   blokkerer style="..." i HTML-en, så det ble stående en rød prikk. Her skjules boksen med CSS i stedet.
+   Når det kommer feil, bytter klassen til validation-summary-errors, og boksen vises. */
+.validation-summary-valid {
+  display: none;
+}

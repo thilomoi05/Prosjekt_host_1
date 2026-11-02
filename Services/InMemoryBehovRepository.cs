@@ -3,10 +3,9 @@ using Beredskapsportal.Models;
 namespace Beredskapsportal.Services;
 
 /// <summary>
-/// Midlertidig, minnebasert lagring av behov. Forhåndsfylt med noen
-/// eksempeldata slik at dashbordet ("Oversikt") viser noe fornuftig helt fra start.
-/// Registrert som Singleton i Program.cs - se InMemoryBrukerRepository for
-/// begrunnelsen bak dette valget.
+/// Minnebasert lagring av behov, med eksempeldata.
+/// Appen bruker MariaDB (EfBehovRepository). Denne klassen brukes av enhetstestene,
+/// og eksempeldataene (LagEksempelData) legges inn i databasen første gang (DatabaseOppsett).
 /// </summary>
 public class InMemoryBehovRepository : IBehovRepository
 {

@@ -8,7 +8,9 @@
 
     // Navn og rolle til innlogget bruker, vises i menyen.
     var brukerNavn = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
-    var rolleTekst = User.IsInRole("OffentligAktor") ? "Offentlig aktør" : "Privat aktør";
+    var rolleTekst = User.IsInRole(Roller.Admin) ? "Administrator"
+        : User.IsInRole(Roller.OffentligAktor) ? "Offentlig aktør"
+        : "Privat aktør";
 
     bool ErAktiv(string controller) => string.Equals(gjeldendeController, controller, StringComparison.OrdinalIgnoreCase);
 }

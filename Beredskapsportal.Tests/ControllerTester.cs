@@ -34,7 +34,8 @@ public class ControllerTester
     public void KontoRegistrer_ForhandsvelgerRollenFraLenken()
     {
         // Arrange
-        var controller = new KontoController(new InMemoryBrukerRepository());
+        var brukerManager = IdentitetHjelpere.LagBrukerManager();
+        var controller = new KontoController(brukerManager, IdentitetHjelpere.LagInnloggingManager(brukerManager));
 
         // Act: samme som å åpne /Konto/Registrer?rolle=PrivatAktor
         var resultat = controller.Registrer(BrukerRolle.PrivatAktor);

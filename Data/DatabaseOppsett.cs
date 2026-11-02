@@ -1,16 +1,16 @@
-using Beredskapsportal.Models;
 using Beredskapsportal.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Beredskapsportal.Data;
 
 /// <summary>
-/// Kjører migrations ved oppstart og fyller databasen med eksempeldata
-/// første gang, slik at appen viser det samme som den minnebaserte versjonen.
+/// Kjører migrations ved oppstart, lager roller og testbrukere (IdentitetOppsett)
+/// og fyller databasen med eksempeldata første gang.
+/// "async Task" fordi Identity sine metoder for roller og brukere er asynkrone.
 /// </summary>
 public static class DatabaseOppsett
 {
-    public static void Initialiser(IServiceProvider tjenester)
+    public static async Task InitialiserAsync(IServiceProvider tjenester)
     {
         using var scope = tjenester.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BeredskapsDbContext>();
@@ -28,32 +28,13 @@ public static class DatabaseOppsett
             catch (Exception feil) when (forsok < 10)
             {
                 logger.LogWarning("Får ikke kontakt med databasen (forsøk {Forsok}/10): {Melding}", forsok, feil.Message);
-                Thread.Sleep(TimeSpan.FromSeconds(3));
+                await Task.Delay(TimeSpan.FromSeconds(3));
             }
         }
 
-        // Testbrukerne er de samme som i InMemoryBrukerRepository.
-        if (!db.Brukere.Any())
-        {
-            db.Brukere.AddRange(
-                new Bruker
-                {
-                    FulltNavn = "Test Testesen",
-                    Epost = "test@example.com",
-                    Brukernavn = "test",
-                    Passord = "test",
-                    Rolle = BrukerRolle.OffentligAktor
-                },
-                new Bruker
-                {
-                    FulltNavn = "Privat Testesen",
-                    Epost = "privat@example.com",
-                    Brukernavn = "privat",
-                    Passord = "privat",
-                    Rolle = BrukerRolle.PrivatAktor
-                });
-            db.SaveChanges();
-        }
+        // Rollene og testbrukerne (ASP.NET Core Identity)
+        var innstillinger = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        await IdentitetOppsett.OpprettRollerOgTestbrukereAsync(scope.ServiceProvider, innstillinger, logger);
 
         // Eksempeldataene beholder sine Id-er (1, 2, 3 ...), fordi tildelingene
         // under peker på behov og ressurser med akkurat de Id-ene.

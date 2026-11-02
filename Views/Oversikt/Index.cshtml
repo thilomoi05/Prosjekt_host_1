@@ -327,16 +327,6 @@
 @section Scripts {
     @* kartikoner.js har funksjonen lagIkonSvg, som lager de samme ikonene som på kartet. *@
     <script src="~/js/kartikoner.js" asp-append-version="true"></script>
-    <script>
-        // Setter inn kartikonet foran hvert behov og hver ressurs i listene.
-        // Typen står i data-ikon-type. data-ikon-form="ressurs" gir firkant, ellers blir det nål (behov).
-        document.querySelectorAll('[data-ikon-type]').forEach(function (element) {
-            var form = element.dataset.ikonForm || 'behov';
-            element.innerHTML = lagIkonSvg(form, element.dataset.ikonType, 32);
-        });
-
-        // Viser klokkeslettet siden ble hentet, i brukerens egen tid (f.eks. 14:32).
-        document.getElementById('oppdatert-tid').textContent =
-            new Date().toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
-    </script>
+    @* Ikonene og klokkeslettet settes inn av oversikt.js (ikke skript i HTML-en, på grunn av Content-Security-Policy). *@
+    <script src="~/js/oversikt.js" asp-append-version="true"></script>
 }

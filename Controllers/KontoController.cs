@@ -1,38 +1,41 @@
-using System.Security.Claims;
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
-using Beredskapsportal.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Beredskapsportal.Controllers;
 
 /// <summary>
-/// Håndterer innlogging, registrering og utlogging av brukere.
-/// Selve autentiseringen er cookie-basert (satt opp i Program.cs).
+/// Håndterer innlogging, registrering, utlogging og profilsiden.
+///
+/// Bruker ASP.NET Core Identity (satt opp i Program.cs):
+///  - UserManager:   lager brukere, hasher passord og gir roller
+///  - SignInManager: sjekker passordet, teller feil forsøk og lager innloggingscookien
+/// Vi skriver altså ingen passord- eller cookie-kode selv.
+///
+/// Anti-forgery-tokenet sjekkes på alle POST-metodene av filteret i Program.cs.
 /// </summary>
 public class KontoController : Controller
 {
-    private readonly IBrukerRepository _brukerRepository;
+    private readonly UserManager<Bruker> _brukerManager;
+    private readonly SignInManager<Bruker> _innloggingManager;
 
-    // Repository-et injiseres av ASP.NET Core sin innebygde DI-container
-    // (registrert i Program.cs), i stedet for at Controller-en oppretter det selv.
-    // Dette gjør klassen enklere å teste og å bytte datalagring for.
-    public KontoController(IBrukerRepository brukerRepository)
+    public KontoController(UserManager<Bruker> brukerManager, SignInManager<Bruker> innloggingManager)
     {
-        _brukerRepository = brukerRepository;
+        _brukerManager = brukerManager;
+        _innloggingManager = innloggingManager;
     }
 
+    // returnUrl er siden brukeren prøvde å åpne før de ble sendt til innlogging,
+    // f.eks. /Kart. Den legges i skjemaet, så brukeren kommer tilbake dit etterpå.
     [HttpGet]
-    public IActionResult LoggInn()
+    public IActionResult LoggInn(string? returnUrl = null)
     {
-        return View(new LoggInnViewModel());
+        return View(new LoggInnViewModel { ReturnUrl = returnUrl });
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoggInn(LoggInnViewModel modell)
     {
         if (!ModelState.IsValid)
@@ -40,35 +43,58 @@ public class KontoController : Controller
             return View(modell);
         }
 
-        var bruker = _brukerRepository.FinnVedBrukernavn(modell.Brukernavn);
-        // MIDLERTIDIG: sammenligner passordet i klartekst. Erstattes av ASP.NET Core Identity.
-        var passordStemmer = bruker is not null && bruker.Passord == modell.Passord;
+        var bruker = await _brukerManager.FindByNameAsync(modell.Brukernavn);
 
-        if (!passordStemmer || bruker is null)
+        if (bruker is not null)
         {
-            ModelState.AddModelError(string.Empty, "Feil brukernavn eller passord.");
-            return View(modell);
+            // Sjekker passordet mot hashen i databasen. lockoutOnFailure: true teller feil
+            // forsøk, og låser kontoen i 5 minutter etter 5 feil på rad (se Program.cs).
+            var resultat = await _innloggingManager.CheckPasswordSignInAsync(bruker, modell.Passord, lockoutOnFailure: true);
+
+            if (resultat.IsLockedOut)
+            {
+                ModelState.AddModelError(string.Empty, "For mange feil forsøk. Kontoen er låst i 5 minutter.");
+                return View(modell);
+            }
+
+            if (resultat.Succeeded)
+            {
+                // Offentlige aktører som ikke er godkjent ennå, slipper ikke inn. Sjekkes etter
+                // passordet, så meldingen bare vises til den som faktisk eier kontoen.
+                if (bruker.VenterPaGodkjenning)
+                {
+                    ModelState.AddModelError(string.Empty, "Kontoen din venter på godkjenning fra en administrator.");
+                    return View(modell);
+                }
+
+                // Lager innloggingscookien. isPersistent: false betyr at den slettes når nettleseren lukkes.
+                await _innloggingManager.SignInAsync(bruker, isPersistent: false);
+                return TilSidenBrukerKomFra(modell.ReturnUrl);
+            }
         }
 
-        await LoggBrukerInn(bruker);
-        return RedirectToAction("Index", "Oversikt");
+        // Samme melding for ukjent brukernavn og feil passord, så ingen kan bruke
+        // innloggingen til å finne ut hvilke brukernavn som finnes.
+        ModelState.AddModelError(string.Empty, "Feil brukernavn eller passord.");
+        return View(modell);
     }
 
     [HttpGet]
     public IActionResult Registrer(BrukerRolle rolle = BrukerRolle.OffentligAktor)
     {
         // Rollen kan komme fra lenken, f.eks. /Konto/Registrer?rolle=PrivatAktor,
-        // slik at riktig rolle er forhåndsvalgt i skjemaet.
+        // så riktig rolle er valgt fra start (brukes av knappene på forsiden).
         return View(new RegistrerBrukerViewModel { Rolle = rolle });
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Registrer(RegistrerBrukerViewModel modell)
     {
-        if (_brukerRepository.BrukernavnErOpptatt(modell.Brukernavn))
+        // Sikkerhetsnett: bare de to rollene i BrukerRolle kan velges. Admin finnes ikke der,
+        // og et tall som ikke er en gyldig rolle (sendt inn med vilje) avvises her.
+        if (!Enum.IsDefined(modell.Rolle))
         {
-            ModelState.AddModelError(nameof(modell.Brukernavn), "Brukernavnet er allerede i bruk.");
+            ModelState.AddModelError(nameof(modell.Rolle), "Velg en gyldig rolle.");
         }
 
         if (!ModelState.IsValid)
@@ -76,26 +102,46 @@ public class KontoController : Controller
             return View(modell);
         }
 
+        var erOffentligAktor = modell.Rolle == BrukerRolle.OffentligAktor;
         var nyBruker = new Bruker
         {
+            UserName = modell.Brukernavn,
+            Email = modell.Epost,
             FulltNavn = modell.FulltNavn,
-            Epost = modell.Epost,
-            Brukernavn = modell.Brukernavn,
-            Passord = modell.Passord,
-            Rolle = modell.Rolle
+            // Offentlige aktører må godkjennes av en administrator før de kan logge inn.
+            VenterPaGodkjenning = erOffentligAktor
         };
 
-        _brukerRepository.LeggTil(nyBruker);
+        // CreateAsync sjekker passordreglene og om brukernavn/e-post er ledig,
+        // hasher passordet og lagrer brukeren.
+        var resultat = await _brukerManager.CreateAsync(nyBruker, modell.Passord);
+        if (!resultat.Succeeded)
+        {
+            // Feilmeldingene er på norsk (se Sikkerhet/NorskeIdentityFeilmeldinger.cs).
+            foreach (var feil in resultat.Errors)
+            {
+                ModelState.AddModelError(string.Empty, feil.Description);
+            }
+            return View(modell);
+        }
 
-        await LoggBrukerInn(nyBruker);
+        if (erOffentligAktor)
+        {
+            // Rollen OffentligAktor gis først når en administrator godkjenner kontoen
+            // (kommer sammen med siden for Admin). Brukeren logges derfor ikke inn nå.
+            TempData["Melding"] = "Takk! Kontoen er opprettet, men må godkjennes av en administrator før du kan logge inn.";
+            return RedirectToAction("Index", "Home");
+        }
+
+        await _brukerManager.AddToRoleAsync(nyBruker, Roller.PrivatAktor);
+        await _innloggingManager.SignInAsync(nyBruker, isPersistent: false);
         return RedirectToAction("Index", "Oversikt");
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> LoggUt()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await _innloggingManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }
 
@@ -103,45 +149,49 @@ public class KontoController : Controller
     [HttpGet]
     public async Task<IActionResult> Profil()
     {
-        // Brukernavnet ble lagt i Name-claimet da brukeren logget inn
-        var brukernavn = User.Identity?.Name;
-        var bruker = brukernavn is null ? null : _brukerRepository.FinnVedBrukernavn(brukernavn);
-
-        // Cookien kan leve lenger enn brukeren: InMemory-lagringen tømmes
-        // når appen restartes, men nettleseren har fortsatt innloggings-cookien.
+        // GetUserAsync finner brukeren som er logget inn, ut fra innloggingscookien.
+        var bruker = await _brukerManager.GetUserAsync(User);
         if (bruker is null)
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            // Brukeren er slettet fra databasen mens de var logget inn.
+            await _innloggingManager.SignOutAsync();
             return RedirectToAction(nameof(LoggInn));
         }
 
         var modell = new ProfilViewModel
         {
             FulltNavn = bruker.FulltNavn,
-            Epost = bruker.Epost,
-            Brukernavn = bruker.Brukernavn,
-            RolleTekst = bruker.Rolle == BrukerRolle.OffentligAktor ? "Offentlig aktør" : "Privat aktør"
+            Epost = bruker.Email ?? string.Empty,
+            Brukernavn = bruker.UserName ?? string.Empty,
+            RolleTekst = await RolleTekst(bruker)
         };
 
         return View(modell);
     }
 
+    /// <summary>Teksten for rollen som vises på profilsiden.</summary>
+    private async Task<string> RolleTekst(Bruker bruker)
+    {
+        var roller = await _brukerManager.GetRolesAsync(bruker);
+        if (roller.Contains(Roller.Admin))
+        {
+            return "Administrator";
+        }
+        return roller.Contains(Roller.OffentligAktor) ? "Offentlig aktør" : "Privat aktør";
+    }
 
     /// <summary>
-    /// Oppretter en signert innloggingscookie for den gitte brukeren.
-    /// Navn og rolle legges inn som "claims" slik at resten av applikasjonen
-    /// (f.eks. Layout-siden) kan lese dem via User.Identity uten et nytt oppslag.
+    /// Sender brukeren tilbake til siden de prøvde å åpne, men bare hvis den ligger på
+    /// vår egen side. Url.IsLocalUrl hindrer at en lenke som
+    /// /Konto/LoggInn?returnUrl=https://falsk-side.no sender brukeren videre til en annen side
+    /// etter innlogging ("open redirect").
     /// </summary>
-    private async Task LoggBrukerInn(Bruker bruker)
+    private IActionResult TilSidenBrukerKomFra(string? returnUrl)
     {
-        var claims = new List<Claim>
+        if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
-            new(ClaimTypes.Name, bruker.Brukernavn),
-            new(ClaimTypes.GivenName, bruker.FulltNavn),
-            new(ClaimTypes.Role, bruker.Rolle.ToString())
-        };
-
-        var identitet = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identitet));
+            return LocalRedirect(returnUrl);
+        }
+        return RedirectToAction("Index", "Oversikt");
     }
 }

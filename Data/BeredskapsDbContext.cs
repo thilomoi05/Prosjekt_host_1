@@ -1,4 +1,5 @@
 using Beredskapsportal.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -6,30 +7,31 @@ namespace Beredskapsportal.Data;
 
 /// <summary>
 /// Koblingen mellom C#-modellene og MariaDB-databasen (Entity Framework Core).
-/// Hver DbSet blir en tabell: Brukere, Behov, Ressurser og Tildelinger.
+/// Hver DbSet blir en tabell: Behov, Ressurser og Tildelinger.
+///
+/// Arver fra IdentityDbContext (ASP.NET Core Identity), som legger til tabellene for
+/// brukere og roller: AspNetUsers (våre Bruker-objekter), AspNetRoles, AspNetUserRoles
+/// og noen til som Identity bruker internt.
 /// </summary>
-public class BeredskapsDbContext : DbContext
+public class BeredskapsDbContext : IdentityDbContext<Bruker>
 {
     public BeredskapsDbContext(DbContextOptions<BeredskapsDbContext> options) : base(options)
     {
     }
 
-    public DbSet<Bruker> Brukere => Set<Bruker>();
     public DbSet<Behov> Behov => Set<Behov>();
     public DbSet<Ressurs> Ressurser => Set<Ressurs>();
     public DbSet<Tildeling> Tildelinger => Set<Tildeling>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Må kalles først: setter opp alle Identity-tabellene (brukere, roller osv.).
+        base.OnModelCreating(modelBuilder);
+
+        // Vårt eget felt på brukeren. Resten (brukernavn, e-post, passord-hash) kommer fra Identity.
         modelBuilder.Entity<Bruker>(bruker =>
         {
-            bruker.ToTable("Brukere");
             bruker.Property(b => b.FulltNavn).HasMaxLength(200);
-            bruker.Property(b => b.Epost).HasMaxLength(200);
-            bruker.Property(b => b.Brukernavn).HasMaxLength(100);
-            bruker.HasIndex(b => b.Brukernavn).IsUnique();
-            bruker.Property(b => b.Passord).HasMaxLength(200);
-            bruker.Property(b => b.Rolle).HasConversion<string>().HasMaxLength(40);
         });
 
         modelBuilder.Entity<Behov>(behov =>

@@ -12,15 +12,17 @@ BeredskapsPortalen samler behov og ressurser under en krise, i vårt scenario et
 - **Private aktører** (bedrifter, entreprenører, privatpersoner) registrerer **ressurser** de kan stille med: aggregat, drivstoff, UPS, transport, kommunikasjonsutstyr.
 - Alt vises på et **kart** over regionen, slik at behov og ressurser kan kobles.
 
-Rollen velges ved registrering og ligger i `BrukerRolle`: `OffentligAktor` eller `PrivatAktor`.
+Rollene står i `Models/Roller.cs`: `OffentligAktor`, `PrivatAktor` og `Admin`. Ved registrering kan man bare velge de to første (`BrukerRolle`). Offentlige aktører må godkjennes av en administrator før de kan logge inn. Admin har også rollen `OffentligAktor`.
 
 Hvem som ser hva:
 
-| Data | Uinnlogget | `PrivatAktor` | `OffentligAktor` |
-|---|---|---|---|
-| Forside | Ja | Ja | Ja |
-| Oversikt, behovsliste, kart | Nei | Ja | Ja |
-| Ressurser på kartet, med adresse, tilgangsbeskrivelse og bilder | Nei | Nei | Ja |
+| Data | Uinnlogget | `PrivatAktor` | `OffentligAktor` | `Admin` |
+|---|---|---|---|---|
+| Forside | Ja | Ja | Ja | Ja |
+| Oversikt, tilby ressurs, hva trengs | Nei | Ja | Ja | Ja |
+| Behovsliste, kart | Nei | Nei | Ja | Ja |
+| Ressurser på kartet, med adresse, tilgangsbeskrivelse og bilder | Nei | Nei | Ja | Ja |
+| Tildele ressurser og godkjenne offentlige aktører (kommer) | Nei | Nei | Nei | Ja |
 
 Ressurser er skjermet fordi feltet `Tilgangsbeskrivelse` kan inneholde ting som «står i garasjen, kodelås 1234».
 
@@ -55,13 +57,15 @@ To ting er verdt å merke seg. Serveren vår sender aldri kartfliser videre. Net
 ## 3. Mappestruktur
 
 ```text
-Program.cs                 oppstart, DI-registrering, cookie-innlogging, rutetabell
+Program.cs                 oppstart, DI-registrering, Identity, sikkerhet, rutetabell
 Models/                    domenemodeller: Behov, Ressurs, Bruker, Enums
 Models/ViewModeller/       skjemamodeller med validering
 Controllers/               Home, Konto, Oversikt, Behov, Ressurs, Kart
 Views/<Controller>/        én mappe per controller
 Views/Shared/_Layout.cshtml  felles ramme: header, meny, footer
-Services/                  repository-interface, InMemory-implementasjoner, PassordHasher
+Services/                  repository-interface, EF Core- og InMemory-implementasjoner
+Data/                      BeredskapsDbContext, DatabaseOppsett, IdentitetOppsett (roller og testbrukere)
+Sikkerhet/                 sikkerhetsheadere, norske Identity-feilmeldinger, navn i innloggingscookien
 wwwroot/js/                kart.js, kartverket.js, posisjonsvelger.js, site.js
 wwwroot/css/site.css       all egen styling
 Dockerfile                 bygger og kjører appen
@@ -151,7 +155,6 @@ classDiagram
 |---|---|---|
 | `IBehovRepository` | `HentAlle`, `HentSiste`, `LeggTil`, `TellAktive`, `TellUnderBehandling` | `InMemoryBehovRepository` |
 | `IRessursRepository` | `HentAlle`, `LeggTil`, `TellTilgjengelige` | `InMemoryRessursRepository` |
-| `IBrukerRepository` | `FinnVedBrukernavn`, `BrukernavnErOpptatt`, `LeggTil` | `InMemoryBrukerRepository` |
 
 Koblingen skjer i `Program.cs`:
 
@@ -173,39 +176,79 @@ To detaljer om dagens lagring:
 
 - `AddSingleton` er brukt fordi listene lever i minnet. Med `AddScoped` ville hver forespørsel fått sin egen tomme liste.
 - Repositoriene bruker `lock` rundt listene, siden flere forespørsler kan komme samtidig.
-- Eksempeldata: 12 behov, 28 ressurser og 5 tildelinger, pluss testbrukerne `test` (offentlig aktør) og `privat` (privat aktør). `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
+- Eksempeldata: 12 behov, 28 ressurser og 5 tildelinger, pluss testbrukerne `test` (offentlig aktør), `privat` (privat aktør) og `admin` (administrator). Brukerne lagres av ASP.NET Core Identity, ikke i et eget repository (se kapittel 6). `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
 
-## 6. Innlogging og tilgang
+## 6. Innlogging, tilgang og sikkerhet
 
-Innloggingen er cookie-basert og satt opp i `Program.cs`.
+### Innlogging med ASP.NET Core Identity
 
-**Midlertidig løsning:** passord lagres og sammenlignes i klartekst. Gruppa hadde først laget sin egen passord-hashing (`PassordHasher` med PBKDF2), men den er fjernet. Å lage sikkerhetskode selv gir stor risiko for feil, så innloggingen skal i stedet flyttes til **ASP.NET Core Identity**, som har trygg passord-hashing, låsing etter mange feil forsøk og bytte av passord innebygd. Det gjøres sammen med overgangen til MariaDB.
+Brukere, passord og roller håndteres av **ASP.NET Core Identity**, satt opp i `Program.cs` som i foreleserens eksempel (`espenlimi/UIA202_2026`).
+
+- `Bruker` arver fra `IdentityUser`. Derfra kommer brukernavn, e-post og passord-hash. Vi har bare lagt til `FulltNavn` og `VenterPaGodkjenning`.
+- `BeredskapsDbContext` arver fra `IdentityDbContext<Bruker>`, som lager tabellene `AspNetUsers`, `AspNetRoles`, `AspNetUserRoles` med flere.
+- Passordet lagres aldri. Identity lagrer en hash laget med PBKDF2 og et tilfeldig salt.
+- Passordregler: minst 8 tegn, med stor og liten bokstav og tall.
+- Etter 5 feil passord på rad låses kontoen i 5 minutter.
+- `KontoController` bruker `UserManager` (lage brukere, roller) og `SignInManager` (sjekke passord, lage cookie). Vi skriver ingen passordkode selv.
+- `Sikkerhet/BrukerClaimsFabrikk.cs` legger det fulle navnet i cookien, så menyen kan vise det.
+- `Sikkerhet/NorskeIdentityFeilmeldinger.cs` gir norske feilmeldinger.
+- `Data/IdentitetOppsett.cs` lager rollene og testbrukerne ved oppstart. Passordet hentes fra `.env`, ikke fra koden.
 
 ```mermaid
 sequenceDiagram
     participant N as Nettleser
     participant K as KontoController
-    participant R as IBrukerRepository
+    participant S as SignInManager
+    participant U as UserManager
+    participant D as MariaDB
 
-    N->>K: POST /Konto/LoggInn med brukernavn og passord
-    K->>R: FinnVedBrukernavn(brukernavn)
-    R-->>K: Bruker
-    K->>K: Sammenligner passordet
+    N->>K: POST /Konto/LoggInn (brukernavn, passord, anti-forgery-token)
+    K->>U: FindByNameAsync(brukernavn)
+    U->>D: Hent bruker
+    K->>S: CheckPasswordSignInAsync(bruker, passord, lockoutOnFailure: true)
+    S-->>K: Riktig / feil / låst
     K-->>N: Feil brukernavn eller passord, skjemaet på nytt
-    K-->>N: Signert cookie med navn og rolle, redirect til /Oversikt
+    K->>S: SignInAsync(bruker)
+    K-->>N: Cookie med navn og roller, redirect til /Oversikt
 ```
 
-Navn og rolle legges i cookien som claims. Derfor kan `_Layout` vise navnet, og `User.IsInRole` avgjøre hva som vises, uten et nytt oppslag.
+Meldingen er den samme for ukjent brukernavn og feil passord, så innloggingen ikke avslører hvilke brukernavn som finnes. Etter innlogging sendes brukeren bare videre til en adresse på vår egen side (`Url.IsLocalUrl`).
+
+Innloggingscookien er `HttpOnly` (JavaScript kan ikke lese den), `SameSite=Lax` og utløper etter 8 timer uten aktivitet.
+
+### Tilgang
 
 Tilgangen håndheves på serveren:
 
 - `[Authorize]` på controlleren sender uinnloggede til `/Konto/LoggInn`
-- `[Authorize(Roles = "OffentligAktor")]` på `Kart.Ressurser` og `Ressurs.Bilde` gir 403 til andre
+- `[Authorize(Roles = "OffentligAktor")]` på `Behov`, `Kart`, `Kart.Ressurser` og `Ressurs.Bilde`. Andre sendes til `/Oversikt`
 - Bildene ligger utenfor `wwwroot`, i `Opplastinger/bilder`, og sendes bare gjennom `Ressurs.Bilde`. Alt i `wwwroot` kan lastes ned av hvem som helst
 - Opplastede filer får et tilfeldig `Guid`-navn, maks 5 bilder à 5 MB, og bare jpg, jpeg, png eller webp
 - `Path.GetFileName` på id-en hindrer at noen ber om `../../Program.cs`
 
-Å skjule en knapp i nettleseren er ikke tilgangskontroll. Derfor gjøres sjekken begge steder: viewet skjuler tegnforklaringen, og serveren nekter kallet.
+Å skjule en knapp i nettleseren er ikke tilgangskontroll. Derfor gjøres sjekken begge steder: viewet skjuler lenken, og serveren nekter kallet.
+
+### Webapplikasjonssikkerhet (OWASP)
+
+| Angrep | Beskyttelse |
+|---|---|
+| CSRF | `AutoValidateAntiforgeryTokenAttribute` i `Program.cs` sjekker anti-forgery-tokenet på alle POST-forespørsler. Cookien har `SameSite=Lax` |
+| XSS | Razor gjør all tekst trygg (`@`), vi bruker ikke `@Html.Raw`. JavaScript setter tekst inn med `trygg()`. Content-Security-Policy tillater bare skript fra våre egne .js-filer |
+| SQL-injeksjon | All databasetilgang går gjennom EF Core, som sender verdier som parametere. Vi skriver ingen SQL selv |
+| Clickjacking | `X-Frame-Options: DENY` og `frame-ancestors 'none'` |
+
+`Sikkerhet/SikkerhetsheadereMiddleware.cs` legger disse headerne på alle svar:
+
+| Header | Verdi |
+|---|---|
+| `Content-Security-Policy` | Bare egne filer, pluss Google Fonts, kartbilder fra `cache.kartverket.no` og adressesøk på `ws.geonorge.no` |
+| `X-Frame-Options` | `DENY` |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Permissions-Policy` | Kamera, mikrofon og posisjon av |
+
+I tillegg er headeren `Server` fjernet (`AddServerHeader = false`), og `UseHsts()` brukes utenfor utvikling. Fordi CSP forbyr skript og `style="..."` skrevet rett i HTML-en, ligger all JavaScript i `wwwroot/js` og all styling i `site.css`.
 
 ## 7. Kartet
 

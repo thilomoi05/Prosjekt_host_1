@@ -30,7 +30,7 @@
 
             <div class="mb-3">
                 <label asp-for="Passord" class="form-label"></label>
-                <input asp-for="Passord" class="form-control" placeholder="Lag et sterkt passord" autocomplete="new-password" />
+                <input asp-for="Passord" class="form-control" placeholder="Minst 8 tegn, med stor og liten bokstav og tall" autocomplete="new-password" />
                 <span asp-validation-for="Passord" class="text-danger"></span>
             </div>
 
@@ -46,6 +46,8 @@
                     <option value="OffentligAktor">Offentlig aktør</option>
                     <option value="PrivatAktor">Privat aktør / bedrift</option>
                 </select>
+                @* Se KontoController.Registrer: offentlige aktører får ikke logge inn før de er godkjent. *@
+                <p class="bp-skjema-hjelp mt-2 mb-0">Offentlige aktører må godkjennes av en administrator før de kan logge inn.</p>
             </div>
 
             <button type="submit" class="btn btn-bp-primær w-100">Registrer</button>

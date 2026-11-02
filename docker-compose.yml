@@ -28,6 +28,8 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       ConnectionStrings__BeredskapsDb: "Server=db;Port=3306;Database=beredskapsportal;User=beredskap;Password=${DB_PASSWORD}"
+      # Passordet til testbrukerne test, privat og admin (Data/IdentitetOppsett.cs). Tomt = ingen testbrukere.
+      Testbrukere__Passord: "${TESTBRUKER_PASSORD}"
     volumes:
       - opplastinger:/app/Opplastinger
     depends_on:

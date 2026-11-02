@@ -3,8 +3,8 @@ using Beredskapsportal.Models;
 namespace Beredskapsportal.Services;
 
 /// <summary>
-/// Abstraksjon over lagring av behov, se IBrukerRepository for begrunnelsen
-/// bak å bruke et interface her.
+/// Abstraksjon over lagring av behov. Controllerne bruker interfacet, så lagringen kan
+/// byttes (MariaDB i appen, minnebasert i testene) uten å endre controllerne.
 /// </summary>
 public interface IBehovRepository
 {
