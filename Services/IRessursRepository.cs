@@ -12,5 +12,4 @@ public interface IRessursRepository
     // Én ressurs med gitt id, eller null hvis den ikke finnes (brukes av detaljsiden).
     Ressurs? HentMedId(int id);
     Ressurs LeggTil(Ressurs ressurs);
-    int TellTilgjengelige();
 }

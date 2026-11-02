@@ -46,17 +46,9 @@ public class InMemoryRessursRepository : IRessursRepository
         }
     }
 
-    public int TellTilgjengelige()
-    {
-        lock (_lasObjekt)
-        {
-            return _ressurser.Count;
-        }
-    }
-
     /// <summary>
     /// Genererer 28 eksempelressurser (matcher tallet fra Figma-skissen) fordelt
-    /// jevnt på type og område, slik at "Tilgjengelige ressurser" viser noe
+    /// jevnt på type og område, slik at kartet og oversikten viser noe
     /// realistisk helt fra start.
     /// </summary>
 

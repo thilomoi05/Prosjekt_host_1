@@ -3,7 +3,7 @@
     ViewData["Title"] = "Oversikt";
 
     // Offentlige aktører ser behov og tildelinger. Private aktører ser bare sine egne ressurser.
-    var erOffentligAktor = User.IsInRole("OffentligAktor");
+    var erOffentligAktor = User.IsInRole(Roller.OffentligAktor);
 
 }
 

@@ -12,7 +12,7 @@ namespace Beredskapsportal.Controllers;
 /// Private aktører skal bare tilby ressurser, og sendes til oversikten hvis de prøver
 /// å åpne disse sidene (se AccessDeniedPath i Program.cs).
 /// </summary>
-[Authorize(Roles = nameof(BrukerRolle.OffentligAktor))]
+[Authorize(Roles = Roller.OffentligAktor)]
 public class BehovController : Controller
 {
     private readonly IBehovRepository _behovRepository;
@@ -69,8 +69,8 @@ public class BehovController : Controller
         return View(new BehovViewModel());
     }
 
+    // Anti-forgery-tokenet sjekkes av filteret i Program.cs (gjelder alle POST-metoder).
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public IActionResult Registrer(BehovViewModel modell)
     {
         // Sikkerhetsnett: kartet setter alltid begge koordinatene samtidig, men

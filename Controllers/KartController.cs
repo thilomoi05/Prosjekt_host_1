@@ -15,21 +15,15 @@ namespace Beredskapsportal.Controllers;
 ///  3. Svaret er JSON, en tekstformat JavaScript leser direkte.
 ///
 /// Tilgang:
-///  - Hele kartet krever innlogging ([Authorize] på klassen).
-///  - Behov kan alle innloggede se.
-///  - Ressurser kan bare Heimevernet og andre autoriserte se. Foreløpig er det
-///    rollen "OffentligAktor". Sjekken skjer her på serveren, så det hjelper ikke
-///    å skjule knapper i nettleseren for å komme rundt den.
+///  - Hele kartet, både behov og ressurser, er bare for offentlige aktører
+///    ([Authorize(Roles = Roller.OffentligAktor)] på klassen). Admin har også den rollen.
+///  - Private aktører ser verken behov eller andres ressurser, så kartet er skjult for dem.
+///  - Sjekken skjer her på serveren, så det hjelper ikke å skjule knapper i nettleseren
+///    for å komme rundt den.
 /// </summary>
-// Bare offentlige aktører har tilgang til kartet. Private aktører ser verken
-// behov eller andres ressurser, så kartet er skjult for dem.
-[Authorize(Roles = RolleSomSerRessurser)]
+[Authorize(Roles = Roller.OffentligAktor)]
 public class KartController : Controller
 {
-    // Navnet på rollen som får se ressursene. Samlet ett sted, slik at det er
-    // enkelt å endre når vi lager egne roller (f.eks. "Heimevernet").
-    public const string RolleSomSerRessurser = nameof(BrukerRolle.OffentligAktor);
-
     private readonly IBehovRepository _behovRepository;
     private readonly IRessursRepository _ressursRepository;
     private readonly ITildelingRepository _tildelingRepository;
@@ -46,7 +40,7 @@ public class KartController : Controller
     {
         // Viewet trenger å vite om brukeren skal få se ressurser,
         // slik at det kan vise riktig tekst og tegnforklaring.
-        ViewData["KanSeRessurser"] = User.IsInRole(RolleSomSerRessurser);
+        ViewData["KanSeRessurser"] = User.IsInRole(Roller.OffentligAktor);
         return View();
     }
 
@@ -80,10 +74,9 @@ public class KartController : Controller
     /// <summary>
     /// Alle ressurser som en liste med JSON-objekter. Kalles av kart.js.
     /// Adresse: /Kart/Ressurser
-    /// Bare brukere med riktig rolle slipper inn. Andre får feilkode 403 (ingen tilgang).
+    /// Samme tilgang som resten av kartet: bare offentlige aktører (se [Authorize] på klassen).
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = RolleSomSerRessurser)]
     public IActionResult Ressurser()
     {
         // Id-ene til ressurser som allerede er tildelt et behov.

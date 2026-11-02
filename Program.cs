@@ -90,17 +90,19 @@ var app = builder.Build();
 // Lager tabellene, rollene, testbrukerne og eksempeldataene første gang appen kobler til databasen.
 await DatabaseOppsett.InitialiserAsync(app.Services);
 
-// Configure the HTTP request pipeline.
+// Rekkefølgen under er stegene hver forespørsel går gjennom (se docs/arkitektur.md, kapittel 6).
 // Sikkerhetsheadere først, så alle svar får dem (Content-Security-Policy, X-Frame-Options osv.).
 app.UseMiddleware<SikkerhetsheadereMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    // Feilside i stedet for tekniske detaljer når appen ikke kjører i utvikling.
+    // HSTS (Strict-Transport-Security) ber nettleseren alltid bruke HTTPS mot siden i 30 dager.
     app.UseHsts();
 }
 
+// Sender http-forespørsler videre til https når appen har https (ikke i Docker, der kjører den bare http).
 app.UseHttpsRedirection();
 
 // Bruker punktum som desimaltegn i hver forespørsel (58.14, ikke 58,14).
@@ -116,11 +118,15 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 
 app.UseRouting();
 
+// Først finner vi ut hvem brukeren er (innloggingscookien fra Identity),
+// deretter om rollen har tilgang til siden ([Authorize]).
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Filene i wwwroot (CSS, JavaScript, bilder).
 app.MapStaticAssets();
 
+// Adressen bestemmer controller og metode: /Behov/Detaljer/5 kaller BehovController.Detaljer(5).
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

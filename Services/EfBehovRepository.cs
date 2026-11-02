@@ -17,7 +17,7 @@ public class EfBehovRepository : IBehovRepository
         _db = db;
     }
 
-    // Nyeste først, som i den minnebaserte versjonen.
+    // Nyeste først (høyest dato, deretter høyest id).
     private IQueryable<Behov> NyesteForst() =>
         _db.Behov.AsNoTracking().OrderByDescending(b => b.Dato).ThenByDescending(b => b.Id);
 

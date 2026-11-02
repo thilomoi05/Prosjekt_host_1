@@ -16,7 +16,7 @@ public class EfRessursRepository : IRessursRepository
         _db = db;
     }
 
-    // Nyeste først, som i den minnebaserte versjonen.
+    // Nyeste først (høyest id).
     public IReadOnlyList<Ressurs> HentAlle() =>
         _db.Ressurser.AsNoTracking().OrderByDescending(r => r.Id).ToList();
 
@@ -30,5 +30,4 @@ public class EfRessursRepository : IRessursRepository
         return ressurs;
     }
 
-    public int TellTilgjengelige() => _db.Ressurser.Count();
 }

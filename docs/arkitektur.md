@@ -1,6 +1,6 @@
 # Arkitektur
 
-Denne siden forklarer hvordan BeredskapsPortalen er bygget opp. Den er skrevet for en som ikke kjenner prosjektet fra før. Alt som står her stemmer med koden i `main` per 26.09.2026.
+Denne siden forklarer hvordan BeredskapsPortalen er bygget opp. Den er skrevet for en som ikke kjenner prosjektet fra før. Alt som står her stemmer med koden per 02.11.2026 (branchen `feature/Identitetshandteringogwebsikkerhet`, som bygger på `main`).
 
 Se [drift.md](drift.md) for hvordan du starter appen.
 
@@ -38,21 +38,21 @@ flowchart TB
     subgraph app["ASP.NET Core 10, én container"]
         ctrl["Controllers"]
         svc["Services: repositories"]
-        minne[("Data i minnet: tre lister i Singleton-repositories")]
         disk[("Opplastinger/bilder på disk")]
     end
 
+    db[("MariaDB 11.4, egen container: behov, ressurser, tildelinger, brukere og roller")]
     kv["Kartverket: kartfliser og adressesøk"]
 
     sider -->|"GET og POST, HTML tilbake"| ctrl
     kartjs -->|"fetch, JSON tilbake"| ctrl
     kartjs -->|"kartfliser og adressesøk, direkte"| kv
     ctrl --> svc
-    svc --> minne
+    svc -->|"EF Core"| db
     ctrl --> disk
 ```
 
-To ting er verdt å merke seg. Serveren vår sender aldri kartfliser videre. Nettleseren snakker direkte med Kartverket. Og all data utenom bildene ligger i minnet, så den forsvinner når appen stoppes.
+To ting er verdt å merke seg. Serveren vår sender aldri kartfliser videre. Nettleseren snakker direkte med Kartverket. Og all data utenom bildene ligger i MariaDB, i Docker-volumet `dbdata`, så den blir liggende når appen stoppes. Bildene ligger i volumet `opplastinger`. Se [drift.md](drift.md).
 
 ## 3. Mappestruktur
 
@@ -60,16 +60,18 @@ To ting er verdt å merke seg. Serveren vår sender aldri kartfliser videre. Net
 Program.cs                 oppstart, DI-registrering, Identity, sikkerhet, rutetabell
 Models/                    domenemodeller: Behov, Ressurs, Bruker, Enums
 Models/ViewModeller/       skjemamodeller med validering
-Controllers/               Home, Konto, Oversikt, Behov, Ressurs, Kart
+Controllers/               Home, Konto, Oversikt, HvaTrengs, Behov, Ressurs, Kart, Tildeling
 Views/<Controller>/        én mappe per controller
 Views/Shared/_Layout.cshtml  felles ramme: header, meny, footer
 Services/                  repository-interface, EF Core- og InMemory-implementasjoner
 Data/                      BeredskapsDbContext, DatabaseOppsett, IdentitetOppsett (roller og testbrukere)
 Sikkerhet/                 sikkerhetsheadere, norske Identity-feilmeldinger, navn i innloggingscookien
-wwwroot/js/                kart.js, kartverket.js, posisjonsvelger.js, site.js
+wwwroot/js/                kart.js, kartikoner.js, kartverket.js, posisjonsvelger.js, ressursskjema.js,
+                           tabellfilter.js, detaljkart.js, oversikt.js, hvatrengs.js
 wwwroot/css/site.css       all egen styling
 Dockerfile                 bygger og kjører appen
-docs/                      drift.md, arkitektur.md
+Migrations/                tabellene i databasen, laget med dotnet ef
+docs/                      drift.md, arkitektur.md, ki-bruk.md, Identitet_og_sikkerhet.docx
 ```
 
 ## 4. MVC-lagene
@@ -82,8 +84,10 @@ Domenemodellene er det systemet faktisk handler om.
 |---|---|---|
 | `Behov` | Type, beskrivelse, område, prioritet, status, kontakt, dato, breddegrad, lengdegrad | `VisningsNavn` gir teksten som vises, samlet ett sted |
 | `Ressurs` | Type, kapasitet, adresse, tilgangsbeskrivelse, bilder, tilgjengelig fra og til, kontakt, koordinater | `Bilder` er filnavn, ikke selve filene |
-| `Bruker` | Navn, e-post, brukernavn, passord, rolle | Passordet lagres midlertidig i klartekst (se avsnitt 6) |
-| `Enums` | `Prioritet`, `BehovStatus`, `BehovType`, `RessursType`, `BrukerRolle` | Status: Ny, Venter, Tildelt, Fullfort |
+| `Tildeling` | Hvilken ressurs som er satt inn på hvilket behov, når og av hvem | Ett behov kan få flere ressurser |
+| `Bruker` | Arver fra `IdentityUser` (brukernavn, e-post, passord-hash). I tillegg `FulltNavn` og `VenterPaGodkjenning` | Passordet lagres aldri, bare en hash (se avsnitt 6) |
+| `Roller` | Rollenavnene `OffentligAktor`, `PrivatAktor` og `Admin` | Brukes i `[Authorize(Roles = ...)]` og `User.IsInRole(...)` |
+| `Enums` | `Prioritet`, `BehovStatus`, `BehovType`, `RessursType`, `BrukerRolle` | Status: Venter eller Tildelt. Prioritet: Lav, Moderat eller Høy |
 
 ### ViewModeller
 
@@ -93,9 +97,8 @@ Valideringen ligger som attributter på feltene, for eksempel:
 
 - `[Required]` med norsk feilmelding på alle obligatoriske felt
 - `[Phone]` på telefon, `[EmailAddress]` på e-post
-- `[Compare]` mellom passord og bekreft passord, `[MinLength(6)]` på passord
+- `[Compare]` mellom passord og bekreft passord, `[MinLength(8)]` på passord. Resten av passordreglene sjekkes av Identity
 - `[Required]` på `Breddegrad` og `Lengdegrad`, som tvinger brukeren til å klikke i kartet
-- `[Range(typeof(bool), "true", "true")]` på `PlasseringBekreftet` i ressursskjemaet, som krever avkryssing
 
 Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view med feilmeldingene, og brukeren beholder det de har skrevet.
 
@@ -104,15 +107,19 @@ Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view me
 | Controller | Tilgang | Handlinger |
 |---|---|---|
 | `Home` | Åpen | `Index` forside, `Error` |
-| `Konto` | Åpen | `LoggInn` GET og POST, `Registrer` GET og POST, `LoggUt` POST |
-| `Oversikt` | `[Authorize]` | `Index` dashbord med tre nøkkeltall og fem siste behov |
-| `Behov` | `[Authorize]` | `Index` liste, `Registrer` GET og POST |
-| `Ressurs` | `[Authorize]` | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Bilde` kun for `OffentligAktor` |
-| `Kart` | `[Authorize]` | `Index` kartside, `Behov` JSON, `Ressurser` JSON kun for `OffentligAktor` |
+| `Konto` | Åpen (`Profil` krever innlogging) | `LoggInn` GET og POST, `Registrer` GET og POST, `LoggUt` POST, `Profil` |
+| `Oversikt` | Innlogget | `Index` dashbord. Offentlige aktører ser nøkkeltall, behov og de fem siste tildelingene. Private ser sine egne ressurser |
+| `HvaTrengs` | Innlogget | `Index` utstyr som trengs og i hvilke områder, uten hvem som har meldt |
+| `Behov` | `OffentligAktor` | `Index` liste med filter, `Detaljer`, `Registrer` GET og POST |
+| `Ressurs` | Innlogget | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Detaljer` (private ser bare sine egne), `Bilde` (offentlige aktører, eller eieren av ressursen) |
+| `Kart` | `OffentligAktor` | `Index` kartside, `Behov` og `Ressurser` som JSON til kart.js |
+| `Tildeling` | `OffentligAktor` | `Index` alle tildelinger med filter |
+
+Admin har også rollen `OffentligAktor`, så alt som står `OffentligAktor` over, gjelder også for admin.
 
 Rutene følger standardmønsteret fra `Program.cs`: `{controller=Home}/{action=Index}/{id?}`. Adressen `/Behov/Registrer` treffer altså `BehovController.Registrer`.
 
-Alle POST-handlinger har `[ValidateAntiForgeryToken]`, som beskytter mot at andre nettsteder sender skjemaer på vegne av en innlogget bruker.
+Alle POST-handlinger sjekker anti-forgery-tokenet, som beskytter mot at andre nettsteder sender skjemaer på vegne av en innlogget bruker. Det gjøres for hele appen av `AutoValidateAntiforgeryTokenAttribute` i `Program.cs` (se avsnitt 6).
 
 ### Views
 
@@ -128,55 +135,62 @@ Controllerne snakker aldri direkte med datalageret. De snakker med et interface.
 classDiagram
     class BehovController {
         +Index()
+        +Detaljer(id)
         +Registrer()
     }
     class IBehovRepository {
         <<interface>>
         HentAlle()
+        HentMedId(id)
         HentSiste(antall)
         LeggTil(behov)
         TellAktive()
-        TellUnderBehandling()
+        TellTildelte()
+        TellVentende(prioritet)
+    }
+    class EfBehovRepository {
+        MariaDB via EF Core, brukes av appen
     }
     class InMemoryBehovRepository {
-        liste i minnet
-    }
-    class EfCoreBehovRepository {
-        MariaDB, ikke laget enda
+        liste i minnet, brukes av testene
     }
     BehovController --> IBehovRepository : får inn via DI
+    IBehovRepository <|.. EfBehovRepository
     IBehovRepository <|.. InMemoryBehovRepository
-    IBehovRepository <|.. EfCoreBehovRepository
 ```
 
-`EfCoreBehovRepository` finnes ikke ennå. Den er tegnet inn for å vise poenget: når databasen kommer, lager vi nye klasser som implementerer de samme interfacene. Behov, ressurser og brukere følger alle dette mønsteret:
+Behov, ressurser og tildelinger følger alle dette mønsteret. Appen bruker EF Core-versjonene, som lagrer i MariaDB. InMemory-versjonene brukes av enhetstestene, og eksempeldataene deres legges inn i databasen første gang appen starter (`Data/DatabaseOppsett.cs`).
 
-| Interface | Metoder | Implementasjon i dag |
-|---|---|---|
-| `IBehovRepository` | `HentAlle`, `HentSiste`, `LeggTil`, `TellAktive`, `TellUnderBehandling` | `InMemoryBehovRepository` |
-| `IRessursRepository` | `HentAlle`, `LeggTil`, `TellTilgjengelige` | `InMemoryRessursRepository` |
+| Interface | Metoder | I appen | I testene |
+|---|---|---|---|
+| `IBehovRepository` | `HentAlle`, `HentMedId`, `HentSiste`, `LeggTil`, `TellAktive`, `TellTildelte`, `TellVentende` | `EfBehovRepository` | `InMemoryBehovRepository` |
+| `IRessursRepository` | `HentAlle`, `HentMedId`, `LeggTil` | `EfRessursRepository` | `InMemoryRessursRepository` |
+| `ITildelingRepository` | `HentAlle`, `LeggTil` | `EfTildelingRepository` | `InMemoryTildelingRepository` |
+
+Brukerne har ikke eget repository. De håndteres av ASP.NET Core Identity (`UserManager`), se avsnitt 6.
 
 Koblingen skjer i `Program.cs`:
 
 ```csharp
-builder.Services.AddSingleton<IBrukerRepository, InMemoryBrukerRepository>();
-builder.Services.AddSingleton<IBehovRepository, InMemoryBehovRepository>();
-builder.Services.AddSingleton<IRessursRepository, InMemoryRessursRepository>();
+builder.Services.AddScoped<IBehovRepository, EfBehovRepository>();
+builder.Services.AddScoped<IRessursRepository, EfRessursRepository>();
+builder.Services.AddScoped<ITildelingRepository, EfTildelingRepository>();
 ```
 
 Controlleren ber om interfacet i konstruktøren, og ASP.NET Core sin DI-container leverer den registrerte implementasjonen:
 
 ```csharp
-public BehovController(IBehovRepository behovRepository)
+public BehovController(IBehovRepository behovRepository, IRessursRepository ressursRepository,
+    ITildelingRepository tildelingRepository)
 ```
 
-**Hvorfor dette er gjort slik.** Skal vi bytte til MariaDB, endrer vi tre linjer i `Program.cs`. Ingen controller, ingen view og ingen viewmodell trenger å røres. Det gjør også koden testbar: en test kan sende inn et falskt repository uten database.
+**Hvorfor dette er gjort slik.** Controllerne vet ikke om dataene kommer fra MariaDB eller fra en liste i minnet. Da byttet vi til MariaDB, ble bare `Program.cs` endret. Det gjør også koden testbar: testene sender inn InMemory-versjonen, så de trenger ingen database.
 
-To detaljer om dagens lagring:
+Detaljer om lagringen:
 
-- `AddSingleton` er brukt fordi listene lever i minnet. Med `AddScoped` ville hver forespørsel fått sin egen tomme liste.
-- Repositoriene bruker `lock` rundt listene, siden flere forespørsler kan komme samtidig.
-- Eksempeldata: 12 behov, 28 ressurser og 5 tildelinger, pluss testbrukerne `test` (offentlig aktør), `privat` (privat aktør) og `admin` (administrator). Brukerne lagres av ASP.NET Core Identity, ikke i et eget repository (se kapittel 6). `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
+- `AddScoped` betyr én databasetilkobling (`BeredskapsDbContext`) per forespørsel. Den lukkes når svaret er sendt.
+- InMemory-repositoriene bruker `lock` rundt listene, siden flere tester kan bruke dem samtidig.
+- Eksempeldata: 12 behov, 28 ressurser og 5 tildelinger, pluss testbrukerne `test` (offentlig aktør), `privat` (privat aktør) og `admin` (administrator). `EksempelPosisjoner` gir eksempeldataene koordinater i Kristiansand, og kan slettes når ekte data kommer.
 
 ## 6. Innlogging, tilgang og sikkerhet
 
@@ -221,7 +235,8 @@ Innloggingscookien er `HttpOnly` (JavaScript kan ikke lese den), `SameSite=Lax` 
 Tilgangen håndheves på serveren:
 
 - `[Authorize]` på controlleren sender uinnloggede til `/Konto/LoggInn`
-- `[Authorize(Roles = "OffentligAktor")]` på `Behov`, `Kart`, `Kart.Ressurser` og `Ressurs.Bilde`. Andre sendes til `/Oversikt`
+- `[Authorize(Roles = Roller.OffentligAktor)]` på `Behov`, `Kart` og `Tildeling`. Andre sendes til `/Oversikt`
+- `Ressurs.Detaljer` og `Ressurs.Bilde` sjekker selv: offentlige aktører ser alt, private bare sine egne ressurser
 - Bildene ligger utenfor `wwwroot`, i `Opplastinger/bilder`, og sendes bare gjennom `Ressurs.Bilde`. Alt i `wwwroot` kan lastes ned av hvem som helst
 - Opplastede filer får et tilfeldig `Guid`-navn, maks 5 bilder à 5 MB, og bare jpg, jpeg, png eller webp
 - `Path.GetFileName` på id-en hindrer at noen ber om `../../Program.cs`

@@ -3,7 +3,7 @@ using Beredskapsportal.Models;
 namespace Beredskapsportal.Services;
 
 /// <summary>
-/// Midlertidig, minnebasert lagring av tildelinger, med noen eksempeldata.
+/// Minnebasert lagring av tildelinger, med eksempeldata.
 /// Brukes av enhetstestene, og eksempeldataene legges inn i databasen første gang (DatabaseOppsett).
 /// </summary>
 public class InMemoryTildelingRepository : ITildelingRepository
