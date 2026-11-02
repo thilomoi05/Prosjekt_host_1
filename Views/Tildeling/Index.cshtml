@@ -1,0 +1,105 @@
+@model List<TildelingRad>
+@{
+    ViewData["Title"] = "Tildelte ressurser";
+
+    // "Ups" vises som "UPS (batteri)", samme som på kartet (KartController).
+    string RessursNavn(RessursType type) => type == RessursType.Ups ? "UPS (batteri)" : type.ToString();
+
+    // Valgene i filtermenyene lages ut fra radene som finnes, så nye typer og
+    // områder kommer med av seg selv. Samme oppbygning som på Behov-siden.
+    var behovtyper = Model
+        .GroupBy(r => r.Behov.Type)
+        .Select(g => (Verdi: g.Key.ToString(), Tekst: g.First().Behov.VisningsNavn))
+        .OrderBy(t => t.Tekst)
+        .ToList();
+
+    var omrader = Model
+        .Select(r => r.Behov.GeografiskOmrade)
+        .Distinct()
+        .OrderBy(o => o)
+        .Select(o => (Verdi: o, Tekst: o))
+        .ToList();
+
+    var prioriteter = new[] { Prioritet.Hoy, Prioritet.Moderat, Prioritet.Lav }
+        .Select(p => (Verdi: PrioritetVisning.CssNavn(p), Tekst: PrioritetVisning.Tekst(p)))
+        .ToList();
+
+    var ressurstyper = Model
+        .Select(r => r.Ressurs.Type)
+        .Distinct()
+        .Select(t => (Verdi: t.ToString(), Tekst: RessursNavn(t)))
+        .OrderBy(t => t.Tekst)
+        .ToList();
+}
+
+<div class="bp-side-innhold">
+    <div class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <div>
+                <h2>Alle tildelte ressurser</h2>
+                @* Teksten og "Nullstill filter" oppdateres av tabellfilter.js. *@
+                <p class="bp-filter-status">
+                    <span id="tabell-antall">Viser @Model.Count tildelinger</span>
+                    <button type="button" class="bp-filter-nullstill" id="tabell-nullstill" hidden>Nullstill filter</button>
+                </p>
+            </div>
+            <a class="bp-tilbake" asp-controller="Oversikt" asp-action="Index">&larr; Til oversikten</a>
+        </div>
+
+        <div class="table-responsive bp-tabell-med-filter">
+            @* data-enhet er ordet i "Viser 3 av 5 tildelinger" (tabellfilter.js). *@
+            <table class="bp-tabell bp-tabell-ikoner" id="filtertabell" data-enhet="tildelinger">
+                <thead>
+                    <tr>
+                        <th><partial name="_Filtermeny" model='("Behov", "behovtype", behovtyper)' /></th>
+                        <th><partial name="_Filtermeny" model='("Område", "omrade", omrader)' /></th>
+                        <th><partial name="_Filtermeny" model='("Prioritet", "prioritet", prioriteter)' /></th>
+                        <th><partial name="_Filtermeny" model='("Ressurs", "ressurstype", ressurstyper)' /></th>
+                        <th>Adresse</th>
+                        @* Tildelt: sortering i stedet for filter *@
+                        <th><partial name="_Datosortering" model='"Tildelt"' /></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rad in Model)
+                    {
+                        var prioritetCss = PrioritetVisning.CssNavn(rad.Behov.Prioritet);
+                        @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filteret og sorteringen bruker.
+                           data-dato har med klokkeslett, så to tildelinger samme dag sorteres riktig. *@
+                        <tr data-rad
+                            data-behovtype="@rad.Behov.Type"
+                            data-omrade="@rad.Behov.GeografiskOmrade"
+                            data-prioritet="@prioritetCss"
+                            data-ressurstype="@rad.Ressurs.Type"
+                            data-dato="@rad.Tildeling.Tidspunkt.ToString("yyyy-MM-dd HH:mm")">
+                            <td>
+                                @* Ikon og lenke til detaljsiden for behovet *@
+                                <span class="bp-kartikon bp-ikon-@prioritetCss" data-ikon-type="@rad.Behov.Type"></span>
+                                <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@rad.Behov.Id">@rad.Behov.VisningsNavn</a>
+                            </td>
+                            <td>@rad.Behov.GeografiskOmrade</td>
+                            <td class="bp-prioritet-@prioritetCss">@PrioritetVisning.Tekst(rad.Behov.Prioritet)</td>
+                            <td>
+                                @* Ikon og lenke til detaljsiden for ressursen *@
+                                <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@rad.Ressurs.Type" data-ikon-form="ressurs"></span>
+                                <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@rad.Ressurs.Id">@RessursNavn(rad.Ressurs.Type)</a>
+                            </td>
+                            <td>@rad.Ressurs.Adresse</td>
+                            <td>@rad.Tildeling.Tidspunkt.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                    }
+                    @* Vises av tabellfilter.js når ingen rader passer filteret. *@
+                    <tr id="tabell-tom" hidden>
+                        <td colspan="6" class="bp-oversikt-tom">Ingen tildelinger passer filteret. Trykk «Nullstill filter» for å se alle.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* kartikoner.js har funksjonen lagIkonSvg, som lager de samme ikonene som på kartet. *@
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/tabellfilter.js" asp-append-version="true"></script>
+}

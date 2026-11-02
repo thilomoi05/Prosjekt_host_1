@@ -10,6 +10,9 @@ public interface IBehovRepository
 {
     IReadOnlyList<Behov> HentAlle();
     IReadOnlyList<Behov> HentSiste(int antall);
+
+    // Ett behov med gitt id, eller null hvis det ikke finnes (brukes av detaljsiden).
+    Behov? HentMedId(int id);
     Behov LeggTil(Behov behov);
     int TellAktive();
     int TellTildelte();

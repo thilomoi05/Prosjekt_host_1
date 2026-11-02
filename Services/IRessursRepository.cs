@@ -8,6 +8,9 @@ namespace Beredskapsportal.Services;
 public interface IRessursRepository
 {
     IReadOnlyList<Ressurs> HentAlle();
+
+    // Én ressurs med gitt id, eller null hvis den ikke finnes (brukes av detaljsiden).
+    Ressurs? HentMedId(int id);
     Ressurs LeggTil(Ressurs ressurs);
     int TellTilgjengelige();
 }

@@ -26,7 +26,7 @@ public class OversiktViewModel
     // De nyeste behovene som venter på en ressurs.
     public List<Behov> SisteBehov { get; set; } = new();
 
-    // For offentlige aktører: hvert tildelt behov med ressursene som er satt inn på det.
+    // For offentlige aktører: de fem behovene som sist fikk ressurser, med ressursene som er satt inn på dem.
     public List<TildeltBehov> TildelteBehov { get; set; } = new();
 
     // For private aktører: alle ressursene brukeren har registrert, og om de er tildelt.

@@ -1,31 +1,40 @@
 // =========================================================================
-// behovsliste.js
-// Kjører på behovssiden (Views/Behov/Index.cshtml).
+// tabellfilter.js
+// Filter og datosortering for tabeller med filtermenyer i kolonneoverskriftene.
+// Brukes av Behov-siden (Views/Behov/Index.cshtml) og Tildelinger-siden
+// (Views/Tildeling/Index.cshtml), så filterlogikken bare finnes ett sted.
 //
 // Hva filen gjør:
-//  1. Filtrerer radene i tabellen ut fra avkrysningene i menyene i
-//     kolonneoverskriftene (type, område, prioritet, status).
-//  2. Sorterer på dato (nyeste eller eldste først).
+//  1. Filtrerer radene ut fra avkrysningene i menyene (Views/Shared/_Filtermeny.cshtml).
+//  2. Sorterer på dato, nyeste eller eldste først (Views/Shared/_Datosortering.cshtml).
 //  3. Viser "Viser 8 av 12 behov", tellere på kolonnene og "Nullstill filter".
 //  4. Leser filter fra adressen, f.eks. /Behov?status=Venter, så andre sider
 //     kan lenke rett til en filtrert liste.
-// Hver rad har verdiene sine i data-attributter, f.eks. data-prioritet="hoy".
+//  5. Setter inn kartikonene der det står data-ikon-type.
+//
+// Siden må ha:
+//  - en tabell med id="filtertabell" og data-enhet="behov" (ordet i "Viser 8 av 12 behov")
+//  - rader med data-rad og én data-* per filter, f.eks. data-prioritet="hoy", og data-dato
+//  - id="tabell-antall", id="tabell-nullstill" og en tom-rad med id="tabell-tom"
 // =========================================================================
 
-const tabellKropp = document.querySelector('#behov-tabell tbody');
-const rader = [...tabellKropp.querySelectorAll('tr[data-status]')];   // alle behovsradene
-const tomRad = document.getElementById('behov-tom');
+const filtertabell = document.getElementById('filtertabell');
+const tabellKropp = filtertabell.querySelector('tbody');
+const rader = [...tabellKropp.querySelectorAll('tr[data-rad]')];
+const tomRad = document.getElementById('tabell-tom');
 const menyer = [...document.querySelectorAll('.bp-kolonne-meny[data-filter]')];
-const nullstillKnapp = document.getElementById('behov-nullstill');
+const nullstillKnapp = document.getElementById('tabell-nullstill');
+const enhet = filtertabell.dataset.enhet;   // f.eks. "behov" eller "tildelinger"
 
-// Setter inn kartikonene (nål med symbol) i radene og i Type-menyen.
-// Typen står i data-ikon-type. Ikonene i menyen er mindre (data-ikon-storrelse="22").
+// Setter inn kartikonene. data-ikon-form="ressurs" gir firkant, ellers nål (behov).
+// Ikonene i menyene er mindre (data-ikon-storrelse="22").
 document.querySelectorAll('[data-ikon-type]').forEach(element => {
+    const form = element.dataset.ikonForm || 'behov';
     const storrelse = Number(element.dataset.ikonStorrelse || 28);
-    element.innerHTML = lagIkonSvg('behov', element.dataset.ikonType, storrelse);
+    element.innerHTML = lagIkonSvg(form, element.dataset.ikonType, storrelse);
 });
 
-// Husker den opprinnelige rekkefølgen, så sorteringen er stabil når to behov har samme dato.
+// Husker den opprinnelige rekkefølgen, så sorteringen er stabil når to rader har samme dato.
 rader.forEach((rad, indeks) => { rad.dataset.indeks = indeks; });
 
 /** Hvilke verdier som er krysset av i menyen for et filter, f.eks. ["hoy", "moderat"]. */
@@ -49,9 +58,9 @@ function filtrer() {
     tomRad.hidden = antallSynlige > 0;
 
     const erFiltrert = antallSynlige < rader.length;
-    document.getElementById('behov-antall').textContent = erFiltrert
-        ? 'Viser ' + antallSynlige + ' av ' + rader.length + ' behov'
-        : 'Viser alle ' + rader.length + ' behov';
+    document.getElementById('tabell-antall').textContent = erFiltrert
+        ? 'Viser ' + antallSynlige + ' av ' + rader.length + ' ' + enhet
+        : 'Viser alle ' + rader.length + ' ' + enhet;
     nullstillKnapp.hidden = !erFiltrert;
 
     // Kolonner med filter i bruk får uthevet knapp og antall valgte, f.eks. "Område (3)".
@@ -78,7 +87,7 @@ function sorter() {
 
     // appendChild flytter en rad som allerede finnes, så radene havner i ny rekkefølge.
     sorterte.forEach(rad => tabellKropp.appendChild(rad));
-    tabellKropp.appendChild(tomRad);   // "Ingen behov passer" står alltid nederst
+    tabellKropp.appendChild(tomRad);   // "Ingen passer filteret" står alltid nederst
 
     document.getElementById('dato-retning').textContent = nyestForst ? '(nyeste først)' : '(eldste først)';
 }

@@ -1,0 +1,119 @@
+@model RessursDetaljerViewModel
+@{
+    var ressurs = Model.Ressurs;
+    // "Ups" vises som "UPS (batteri)", samme som på kartet (KartController).
+    var typeNavn = ressurs.Type == RessursType.Ups ? "UPS (batteri)" : ressurs.Type.ToString();
+    ViewData["Title"] = typeNavn;
+
+    // Teksten for når ressursen er tilgjengelig. Tom fra-dato betyr "fra nå".
+    var fra = ressurs.TilgjengeligFra?.ToString("yyyy-MM-dd") ?? "nå";
+    var tilgjengelig = ressurs.TilgjengeligTil is null
+        ? $"Fra {fra}, ingen sluttdato"
+        : $"Fra {fra} til {ressurs.TilgjengeligTil.Value:yyyy-MM-dd}";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
+
+<div class="bp-side-innhold bp-detaljer">
+    @* "Tilbake" går til forrige side. href er reserve hvis siden ble åpnet direkte:
+       offentlige aktører til ressurslista under kartet, private til oversikten. *@
+    @if (Model.ErOffentligAktor)
+    {
+        <a class="bp-tilbake" href="@Url.Action("Index", "Kart", new { liste = "ressurser" })" data-tilbake>&larr; Tilbake</a>
+    }
+    else
+    {
+        <a class="bp-tilbake" asp-controller="Oversikt" asp-action="Index" data-tilbake>&larr; Tilbake</a>
+    }
+
+    <div class="bp-detaljer-hode">
+        <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs" data-ikon-storrelse="48"></span>
+        <div class="bp-detaljer-tittel">
+            <h1>@typeNavn</h1>
+            <p>@ressurs.Adresse</p>
+        </div>
+        <div class="bp-detaljer-merker">
+            @if (Model.ErTildelt)
+            {
+                <span class="bp-badge bp-badge-tildelt">Tildelt et behov</span>
+            }
+            else
+            {
+                <span class="bp-badge bp-badge-venter">Tilgjengelig</span>
+            }
+        </div>
+    </div>
+
+    @* Bildene. Trykk på et bilde for å åpne det i full størrelse i en ny fane. *@
+    @if (ressurs.Bilder.Count > 0)
+    {
+        <div class="bp-detaljer-bilder">
+            @foreach (var filnavn in ressurs.Bilder)
+            {
+                var adresse = Url.Action("Bilde", "Ressurs", new { id = filnavn });
+                <a href="@adresse" target="_blank" rel="noopener">
+                    <img src="@adresse" alt="Bilde av ressursen" loading="lazy" />
+                </a>
+            }
+        </div>
+    }
+
+    <div class="bp-detaljer-grid">
+        <section class="bp-tabell-kort">
+            <h2 class="bp-detaljer-overskrift">Kapasitet</h2>
+            <p class="bp-detaljer-tekst">@ressurs.BeskrivelseAvKapasitet</p>
+
+            <dl class="bp-detaljer-felter">
+                <dt>Adresse</dt>
+                <dd>@ressurs.Adresse</dd>
+
+                <dt>Tilgang</dt>
+                <dd>@ressurs.Tilgangsbeskrivelse</dd>
+
+                <dt>Tilgjengelig</dt>
+                <dd>@tilgjengelig</dd>
+
+                <dt>Kontaktperson</dt>
+                <dd>@ressurs.Kontaktperson</dd>
+
+                <dt>Telefon</dt>
+                <dd><a href="tel:@ressurs.Telefon">@ressurs.Telefon</a></dd>
+            </dl>
+        </section>
+
+        <section class="bp-tabell-kort">
+            <h2 class="bp-detaljer-overskrift">Plassering</h2>
+            <div id="detaljkart" class="bp-detaljkart"
+                 data-breddegrad="@ressurs.Breddegrad" data-lengdegrad="@ressurs.Lengdegrad"
+                 data-form="ressurs" data-type="@ressurs.Type" data-farge="bp-ikon-ressurs"></div>
+        </section>
+    </div>
+
+    @* Offentlige aktører ser hvilket behov ressursen er satt inn på.
+       Private aktører ser bare merket "Tildelt et behov" øverst. *@
+    @if (Model.TildeltBehov is not null)
+    {
+        var behov = Model.TildeltBehov;
+        <section class="bp-tabell-kort">
+            <h2 class="bp-detaljer-overskrift">Tildelt behov</h2>
+            <ul class="bp-oversikt-liste">
+                <li>
+                    <span class="bp-kartikon bp-ikon-@PrioritetVisning.CssNavn(behov.Prioritet)" data-ikon-type="@behov.Type"></span>
+                    <span class="bp-oversikt-liste-tekst">
+                        <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behov.Id">@behov.VisningsNavn</a>
+                        <span>@behov.GeografiskOmrade</span>
+                    </span>
+                </li>
+            </ul>
+        </section>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/detaljkart.js" asp-append-version="true"></script>
+}

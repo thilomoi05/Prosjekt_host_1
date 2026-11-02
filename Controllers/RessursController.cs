@@ -20,15 +20,20 @@ public class RessursController : Controller
     private static readonly string[] TillatteFiltyper = { ".jpg", ".jpeg", ".png", ".webp" };
 
     private readonly IRessursRepository _ressursRepository;
+    private readonly IBehovRepository _behovRepository;
+    private readonly ITildelingRepository _tildelingRepository;
 
     // Mappen der bildene lagres. Den ligger bevisst UTENFOR wwwroot:
     // alt i wwwroot kan alle laste ned, men bildene skal bare autoriserte se.
     private readonly string _bildemappe;
 
     // IWebHostEnvironment gir oss blant annet stien til prosjektmappen (ContentRootPath).
-    public RessursController(IRessursRepository ressursRepository, IWebHostEnvironment miljo)
+    public RessursController(IRessursRepository ressursRepository, IBehovRepository behovRepository,
+        ITildelingRepository tildelingRepository, IWebHostEnvironment miljo)
     {
         _ressursRepository = ressursRepository;
+        _behovRepository = behovRepository;
+        _tildelingRepository = tildelingRepository;
         _bildemappe = Path.Combine(miljo.ContentRootPath, "Opplastinger", "bilder");
     }
 
@@ -109,11 +114,50 @@ public class RessursController : Controller
     }
 
     /// <summary>
-    /// Sender ett bilde til nettleseren, f.eks. /Ressurs/Bilde/3f2a...jpg.
-    /// Bare Heimevernet og andre autoriserte får se bildene (samme regel som på kartet).
+    /// Detaljsiden for én ressurs, f.eks. /Ressurs/Detaljer/7.
+    /// Tilgang:
+    ///  - Offentlige aktører kan se alle ressurser.
+    ///  - Private aktører kan bare se sine egne. Prøver de å åpne en annen,
+    ///    sendes de til oversikten (Forbid() + AccessDeniedPath i Program.cs).
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = KartController.RolleSomSerRessurser)]
+    public IActionResult Detaljer(int id)
+    {
+        var ressurs = _ressursRepository.HentMedId(id);
+        if (ressurs is null)
+        {
+            return NotFound();   // ukjent id: "Fant ikke siden"
+        }
+
+        var erOffentligAktor = ErOffentligAktor();
+        if (!erOffentligAktor && ressurs.RegistrertAv != Brukernavn())
+        {
+            return Forbid();
+        }
+
+        // Er ressursen satt inn på et behov? I så fall finnes det en Tildeling med denne ressursen.
+        var tildeling = _tildelingRepository.HentAlle().FirstOrDefault(t => t.RessursId == id);
+
+        var modell = new RessursDetaljerViewModel
+        {
+            Ressurs = ressurs,
+            ErTildelt = tildeling is not null,
+            // Bare offentlige aktører får vite hvilket behov ressursen er tildelt.
+            TildeltBehov = tildeling is not null && erOffentligAktor
+                ? _behovRepository.HentMedId(tildeling.BehovId)
+                : null,
+            ErOffentligAktor = erOffentligAktor
+        };
+
+        return View(modell);
+    }
+
+    /// <summary>
+    /// Sender ett bilde til nettleseren, f.eks. /Ressurs/Bilde/3f2a...jpg.
+    /// Offentlige aktører får se alle bildene (samme regel som på kartet).
+    /// Private aktører får bare se bildene av sine egne ressurser (på detaljsiden).
+    /// </summary>
+    [HttpGet]
     public IActionResult Bilde(string id)
     {
         // Path.GetFileName fjerner eventuelle mappenavn fra id-en. Da kan ingen
@@ -126,6 +170,14 @@ public class RessursController : Controller
             return NotFound();
         }
 
+        // Tilgang: offentlig aktør, eller eieren av ressursen bildet hører til.
+        var erEgetBilde = _ressursRepository.HentAlle()
+            .Any(r => r.RegistrertAv == Brukernavn() && r.Bilder.Contains(filnavn));
+        if (!ErOffentligAktor() && !erEgetBilde)
+        {
+            return Forbid();
+        }
+
         // Finner riktig filtype, så nettleseren vet at det er et bilde.
         var filtype = Path.GetExtension(filnavn).ToLowerInvariant() switch
         {
@@ -136,6 +188,11 @@ public class RessursController : Controller
 
         return PhysicalFile(sti, filtype);
     }
+
+    // Hjelpere for tilgangssjekkene over. "?." gjør at de også virker i tester uten innlogget bruker.
+    private bool ErOffentligAktor() => User?.IsInRole(KartController.RolleSomSerRessurser) == true;
+
+    private string Brukernavn() => User?.Identity?.Name ?? string.Empty;
 
     /// <summary>
     /// Sjekker at brukeren har lastet opp 1-5 bilder, at de er bildefiler,
