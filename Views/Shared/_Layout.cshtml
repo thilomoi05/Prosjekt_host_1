@@ -107,6 +107,11 @@
                         <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Tilby ressurs</a></li>
                         @* Hva trengs: utstyr som trengs og hvor (uten hvem). Vises for alle innloggede. *@
                         <li><a class="bp-nav-link @(ErAktiv("HvaTrengs") ? "aktiv" : "")" asp-controller="HvaTrengs" asp-action="Index">Hva trengs</a></li>
+                        @* Admin: godkjenning og tildeling. Bare for administratorer (sjekkes også i AdminController). *@
+                        @if (User.IsInRole(Roller.Admin))
+                        {
+                            <li><a class="bp-nav-link @(ErAktiv("Admin") ? "aktiv" : "")" asp-controller="Admin" asp-action="Index">Admin</a></li>
+                        }
                     </ul>
                 }
                 else
@@ -133,6 +138,11 @@
         @if (TempData["Melding"] is string melding)
         {
             <div class="bp-melding" role="status">@melding</div>
+        }
+        @* Feilmelding etter en handling som ikke gikk, f.eks. "Ressursen er ikke ledig lenger." *@
+        @if (TempData["Feil"] is string feil)
+        {
+            <div class="bp-melding bp-melding-feil" role="alert">@feil</div>
         }
         @RenderBody()
     </main>

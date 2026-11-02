@@ -66,9 +66,20 @@
         </section>
     </div>
 
-    @* Ressursene som er satt inn på behovet *@
+    @* Ressursene som er satt inn på behovet. Admin kan tildele flere og fjerne tildelinger. *@
     <section class="bp-tabell-kort">
-        <h2 class="bp-detaljer-overskrift">Tildelte ressurser</h2>
+        <div class="bp-detaljer-seksjonshode">
+            <h2 class="bp-detaljer-overskrift">Tildelte ressurser</h2>
+            @* Admin tildeler direkte. Den som meldte behovet, kan finne og forespørre ressurser. *@
+            @if (Model.ErAdmin)
+            {
+                <a class="btn btn-bp-primær btn-sm" asp-controller="Admin" asp-action="Tildel" asp-route-id="@behov.Id">Tildel ressurs</a>
+            }
+            else if (Model.KanTrekkeTilbake)
+            {
+                <a class="btn btn-bp-primær btn-sm" asp-controller="Foresporsel" asp-action="FinnRessurs" asp-route-id="@behov.Id">Finn ressurs</a>
+            }
+        </div>
         @if (Model.TildelteRessurser.Count == 0)
         {
             <p class="bp-oversikt-tom">Ingen ressurser er tildelt dette behovet ennå.</p>
@@ -81,14 +92,38 @@
                     <li>
                         <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs"></span>
                         <span class="bp-oversikt-liste-tekst">
-                            <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">@ressurs.Type</a>
+                            <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">@ressurs.VisningsNavn</a>
                             <span>@ressurs.Adresse</span>
                         </span>
+                        @if (Model.ErAdmin)
+                        {
+                            @* Fjerner tildelingen. Ressursen blir ledig og kan tildeles et annet behov. *@
+                            <form asp-controller="Admin" asp-action="FjernTildeling" method="post" class="bp-skjema-inline">
+                                <input type="hidden" name="behovId" value="@behov.Id" />
+                                <input type="hidden" name="ressursId" value="@ressurs.Id" />
+                                <button type="submit" class="btn btn-bp-fare btn-sm">Fjern</button>
+                            </form>
+                        }
                     </li>
                 }
             </ul>
         }
     </section>
+
+    @if (Model.Foresporsler.Count > 0)
+    {
+        <partial name="_Foresporsler" model="Model.Foresporsler" />
+    }
+
+    <partial name="_Historikk" model="Model.Historikk" />
+
+    @* Den som meldte behovet, og administratorer, kan trekke det tilbake. *@
+    @if (Model.KanTrekkeTilbake)
+    {
+        <div>
+            <a class="btn btn-bp-fare" asp-controller="Behov" asp-action="TrekkTilbake" asp-route-id="@behov.Id">Trekk tilbake behovet</a>
+        </div>
+    }
 </div>
 
 @section Scripts {

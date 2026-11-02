@@ -57,6 +57,26 @@ public class InMemoryBehovRepository : IBehovRepository
         }
     }
 
+    public void SettStatus(int id, BehovStatus status)
+    {
+        lock (_lasObjekt)
+        {
+            var behov = _behov.FirstOrDefault(b => b.Id == id);
+            if (behov is not null)
+            {
+                behov.Status = status;
+            }
+        }
+    }
+
+    public void Slett(int id)
+    {
+        lock (_lasObjekt)
+        {
+            _behov.RemoveAll(b => b.Id == id);
+        }
+    }
+
     /// <summary>
     /// Behov som venter på en ressurs. Tildelte behov regnes som løst og telles ikke.
     /// </summary>
@@ -112,8 +132,10 @@ public class InMemoryBehovRepository : IBehovRepository
         };
 
         // Gir hvert eksempelbehov en plassering på kartet ut fra området det gjelder.
+        // Alle eksempelbehovene er meldt av testbrukeren "test" (offentlig aktør).
         foreach (var behov in data)
         {
+            behov.RegistrertAv = "test";
             // Behov har ingen adresse, bare et område, så adresseteksten (_) brukes ikke her.
             (_, behov.Breddegrad, behov.Lengdegrad) = EksempelPosisjoner.For(behov.GeografiskOmrade);
         }

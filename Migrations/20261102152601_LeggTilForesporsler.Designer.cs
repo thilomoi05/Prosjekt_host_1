@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Beredskapsportal.Migrations
 {
     [DbContext(typeof(BeredskapsDbContext))]
-    [Migration("20261102140652_Opprett")]
-    partial class Opprett
+    [Migration("20261102152601_LeggTilForesporsler")]
+    partial class LeggTilForesporsler
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -60,6 +60,11 @@ namespace Beredskapsportal.Migrations
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("varchar(40)");
+
+                    b.Property<string>("RegistrertAv")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -153,6 +158,90 @@ namespace Beredskapsportal.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Beredskapsportal.Models.Foresporsel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Begrunnelse")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("BehandletAv")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("BehovId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ForespurtAv")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Kommentar")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("RessursId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("Tidspunkt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BehovId");
+
+                    b.HasIndex("RessursId");
+
+                    b.ToTable("Foresporsler", (string)null);
+                });
+
+            modelBuilder.Entity("Beredskapsportal.Models.Hendelse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BehovId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Beskrivelse")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int?>("RessursId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Tidspunkt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("UtfortAv")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BehovId");
+
+                    b.HasIndex("RessursId");
+
+                    b.ToTable("Hendelser", (string)null);
+                });
+
             modelBuilder.Entity("Beredskapsportal.Models.Ressurs", b =>
                 {
                     b.Property<int>("Id")
@@ -165,6 +254,10 @@ namespace Beredskapsportal.Migrations
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Avvisningsgrunn")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<string>("BeskrivelseAvKapasitet")
                         .IsRequired()
@@ -190,6 +283,11 @@ namespace Beredskapsportal.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
 
                     b.Property<string>("Telefon")
                         .IsRequired()
@@ -238,7 +336,8 @@ namespace Beredskapsportal.Migrations
 
                     b.HasKey("BehovId", "RessursId");
 
-                    b.HasIndex("RessursId");
+                    b.HasIndex("RessursId")
+                        .IsUnique();
 
                     b.ToTable("Tildelinger", (string)null);
                 });
@@ -373,6 +472,21 @@ namespace Beredskapsportal.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Beredskapsportal.Models.Foresporsel", b =>
+                {
+                    b.HasOne("Beredskapsportal.Models.Behov", null)
+                        .WithMany()
+                        .HasForeignKey("BehovId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Beredskapsportal.Models.Ressurs", null)
+                        .WithMany()
+                        .HasForeignKey("RessursId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Beredskapsportal.Models.Tildeling", b =>

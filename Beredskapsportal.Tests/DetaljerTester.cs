@@ -18,12 +18,14 @@ public class DetaljerTester
     private readonly InMemoryTildelingRepository _tildelingRepository = new();
 
     private BehovController LagBehovController() =>
-        new(_behovRepository, _ressursRepository, _tildelingRepository);
+        new(_behovRepository, _ressursRepository, _tildelingRepository,
+            TestHjelpere.LagTildelingTjeneste(_behovRepository, _ressursRepository, _tildelingRepository));
 
     /// <summary>Lager en RessursController der en bruker med gitt navn og rolle er logget inn.</summary>
     private RessursController LagRessursController(string brukernavn, BrukerRolle rolle)
     {
         var controller = new RessursController(_ressursRepository, _behovRepository, _tildelingRepository,
+            TestHjelpere.LagTildelingTjeneste(_behovRepository, _ressursRepository, _tildelingRepository),
             new FalsktMiljo(Path.GetTempPath()));
         TestHjelpere.GiControllerInnlogging(controller);
 
@@ -39,9 +41,10 @@ public class DetaljerTester
     }
 
     /// <summary>Legger til en ressurs registrert av en gitt bruker, og returnerer den.</summary>
-    private Ressurs LeggTilRessurs(string registrertAv) => _ressursRepository.LeggTil(new Ressurs
+    private Ressurs LeggTilRessurs(string registrertAv, RessursStatus status = RessursStatus.Godkjent) => _ressursRepository.LeggTil(new Ressurs
     {
         Type = RessursType.Aggregat,
+        Status = status,
         BeskrivelseAvKapasitet = "20 kVA",
         Adresse = "Kirkegata 5, 4610 Kristiansand",
         RegistrertAv = registrertAv,
@@ -94,7 +97,18 @@ public class DetaljerTester
     }
 
     [Fact]
-    public void RessursDetaljer_OffentligAktorSerAlleRessurser()
+    public void RessursDetaljer_OffentligAktorSerIkkeRessursSomVenterPaGodkjenning()
+    {
+        var ressurs = LeggTilRessurs("noen-andre", RessursStatus.Venter);
+        var controller = LagRessursController("test", BrukerRolle.OffentligAktor);
+
+        var resultat = controller.Detaljer(ressurs.Id);
+
+        Assert.IsType<ForbidResult>(resultat);
+    }
+
+    [Fact]
+    public void RessursDetaljer_OffentligAktorSerGodkjenteRessurser()
     {
         var ressurs = LeggTilRessurs("noen-andre");
         var controller = LagRessursController("test", BrukerRolle.OffentligAktor);

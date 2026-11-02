@@ -50,8 +50,8 @@ public class OversiktController : Controller
             AntallLav = _behovRepository.TellVentende(Prioritet.Lav),
             AntallTildelteBehov = _behovRepository.TellTildelte(),
 
-            // En ressurs som er tildelt et behov, er ikke lenger tilgjengelig.
-            AntallTilgjengeligeRessurser = alleRessurser.Count(r => !tildelteRessursIder.Contains(r.Id)),
+            // Tilgjengelig = godkjent og ikke tildelt et behov.
+            AntallTilgjengeligeRessurser = alleRessurser.Count(r => r.Status == RessursStatus.Godkjent && !tildelteRessursIder.Contains(r.Id)),
 
             KreverOppmerksomhet = ventende.Where(b => b.Prioritet == Prioritet.Hoy).Take(5).ToList(),
             SisteBehov = ventende.Take(5).ToList()

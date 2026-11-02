@@ -10,6 +10,18 @@ public class BehovDetaljerViewModel
 
     // Ressursene som er satt inn på behovet. Tom liste hvis behovet venter.
     public List<Ressurs> TildelteRessurser { get; set; } = new();
+
+    // Hva som har skjedd med behovet, nyeste først.
+    public IReadOnlyList<Hendelse> Historikk { get; set; } = new List<Hendelse>();
+
+    // True for den som meldte behovet og for administratorer.
+    public bool KanTrekkeTilbake { get; set; }
+
+    // True for administratorer: viser knappene "Tildel ressurs" og "Fjern".
+    public bool ErAdmin { get; set; }
+
+    // Forespørsler om ressurser til behovet, nyeste først.
+    public List<ForesporselRad> Foresporsler { get; set; } = new();
 }
 
 /// <summary>
@@ -28,4 +40,15 @@ public class RessursDetaljerViewModel
 
     // True for offentlige aktører. Styrer lenker og tekst på siden.
     public bool ErOffentligAktor { get; set; }
+
+    // True for eieren av ressursen og for administratorer. Viser "Trekk tilbake"
+    // og eventuell avvisningsgrunn.
+    public bool KanTrekkeTilbake { get; set; }
+
+    // Hva som har skjedd med ressursen, nyeste først.
+    public IReadOnlyList<Hendelse> Historikk { get; set; } = new List<Hendelse>();
+
+    // Brukerens egne behov, som ressursen kan forespørres til. Tom liste hvis ressursen
+    // ikke er ledig, eller brukeren ikke er en offentlig aktør med egne behov.
+    public List<Behov> MineBehov { get; set; } = new();
 }

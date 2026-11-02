@@ -1,0 +1,26 @@
+@model IReadOnlyList<Hendelse>
+@* =========================================================================
+   Historikken til et behov eller en ressurs: hva som har skjedd, når og av hvem.
+   Brukes på detaljsidene: <partial name="_Historikk" model="Model.Historikk" />
+   Hendelsene skrives av TildelingTjeneste.
+   ========================================================================= *@
+<section class="bp-tabell-kort">
+    <h2 class="bp-detaljer-overskrift">Historikk</h2>
+    @if (Model.Count == 0)
+    {
+        <p class="bp-oversikt-tom">Ingen hendelser er registrert ennå.</p>
+    }
+    else
+    {
+        <ol class="bp-historikk">
+            @foreach (var hendelse in Model)
+            {
+                <li>
+                    <time datetime="@hendelse.Tidspunkt.ToString("yyyy-MM-ddTHH:mm")">@hendelse.Tidspunkt.ToString("dd.MM.yyyy HH:mm")</time>
+                    <span>@hendelse.Beskrivelse</span>
+                    <span class="bp-historikk-hvem">av @hendelse.UtfortAv</span>
+                </li>
+            }
+        </ol>
+    }
+</section>

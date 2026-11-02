@@ -1,3 +1,4 @@
+using Beredskapsportal.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
@@ -50,6 +51,13 @@ public static class TestHjelpere
 
         return innlogging;
     }
+
+    /// <summary>
+    /// Lager en TildelingTjeneste med de gitte repositoriene og en tom historikk.
+    /// </summary>
+    public static TildelingTjeneste LagTildelingTjeneste(IBehovRepository behov, IRessursRepository ressurser,
+        ITildelingRepository tildelinger) =>
+        new(behov, ressurser, tildelinger, new InMemoryHendelseRepository(), new InMemoryForesporselRepository());
 
     /// <summary>
     /// Lager en opplastet fil (IFormFile) i minnet, slik nettleseren ville sendt den.

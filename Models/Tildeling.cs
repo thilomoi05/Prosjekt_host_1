@@ -14,7 +14,7 @@ public class Tildeling
     // Når ressursen ble tildelt.
     public DateTime Tidspunkt { get; set; }
 
-    // Brukernavnet til den som tildelte ressursen (en offentlig aktør).
+    // Brukernavnet til den som tildelte ressursen (en administrator).
     public string TildeltAv { get; set; } = string.Empty;
 
     // Valgfri kommentar, f.eks. "Hentes av Heimevernet kl. 14".

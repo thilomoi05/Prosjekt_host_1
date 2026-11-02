@@ -82,12 +82,12 @@ public class KartController : Controller
         // Id-ene til ressurser som allerede er tildelt et behov.
         var tildelteIder = _tildelingRepository.HentAlle().Select(t => t.RessursId).ToHashSet();
 
-        var punkter = _ressursRepository.HentAlle().Select(ressurs => new
+        // Bare godkjente ressurser vises på kartet. Nye ressurser venter på en administrator.
+        var punkter = _ressursRepository.HentAlle().Where(ressurs => ressurs.Status == RessursStatus.Godkjent).Select(ressurs => new
         {
             id = ressurs.Id,
             typeKode = ressurs.Type.ToString(),       // f.eks. "Aggregat", velger ikon i kartikoner.js
-            // "Ups" vises som "UPS (batteri)", så det er lettere å forstå. Resten vises som enum-navnet.
-            type = ressurs.Type == RessursType.Ups ? "UPS (batteri)" : ressurs.Type.ToString(),
+            type = ressurs.VisningsNavn,               // f.eks. "UPS (batteri)" (se Ressurs.VisningsNavn)
             beskrivelse = ressurs.BeskrivelseAvKapasitet,
             adresse = ressurs.Adresse,
             tilgang = ressurs.Tilgangsbeskrivelse,

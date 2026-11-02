@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace Beredskapsportal.Controllers;
 
 /// <summary>
-/// Håndterer listevisning og registrering av behov.
+/// Håndterer listevisning, registrering, detaljsiden og tilbaketrekking av behov.
 /// Bare offentlige aktører (Heimevernet, kommuner osv.) kan se og melde behov.
+/// Tildeling av ressurser gjøres av Admin (AdminController).
 /// Private aktører skal bare tilby ressurser, og sendes til oversikten hvis de prøver
 /// å åpne disse sidene (se AccessDeniedPath i Program.cs).
 /// </summary>
@@ -18,13 +19,15 @@ public class BehovController : Controller
     private readonly IBehovRepository _behovRepository;
     private readonly IRessursRepository _ressursRepository;
     private readonly ITildelingRepository _tildelingRepository;
+    private readonly TildelingTjeneste _tildelingTjeneste;
 
     public BehovController(IBehovRepository behovRepository, IRessursRepository ressursRepository,
-        ITildelingRepository tildelingRepository)
+        ITildelingRepository tildelingRepository, TildelingTjeneste tildelingTjeneste)
     {
         _behovRepository = behovRepository;
         _ressursRepository = ressursRepository;
         _tildelingRepository = tildelingRepository;
+        _tildelingTjeneste = tildelingTjeneste;
     }
 
     public IActionResult Index()
@@ -57,10 +60,65 @@ public class BehovController : Controller
             Behov = behov,
             TildelteRessurser = _ressursRepository.HentAlle()
                 .Where(r => ressursIder.Contains(r.Id))
+                .ToList(),
+            Historikk = _tildelingTjeneste.HistorikkForBehov(id),
+            KanTrekkeTilbake = KanTrekkeTilbake(behov),
+            ErAdmin = User?.IsInRole(Roller.Admin) == true,
+            Foresporsler = _tildelingTjeneste.ForesporslerForBehov(id)
+                .Select(f => new ForesporselRad { Foresporsel = f, Ressurs = _ressursRepository.HentMedId(f.RessursId) })
                 .ToList()
         };
 
         return View(modell);
+    }
+
+    /// <summary>
+    /// "Er du sikker?"-siden før et behov trekkes tilbake, f.eks. /Behov/TrekkTilbake/5.
+    /// Viser hvilke ressurser som blir ledige igjen.
+    /// </summary>
+    [HttpGet]
+    public IActionResult TrekkTilbake(int id)
+    {
+        var behov = _behovRepository.HentMedId(id);
+        if (behov is null)
+        {
+            return NotFound();
+        }
+        if (!KanTrekkeTilbake(behov))
+        {
+            return Forbid();
+        }
+
+        var ressursIder = _tildelingRepository.HentAlle().Where(t => t.BehovId == id).Select(t => t.RessursId).ToList();
+        var modell = new BehovDetaljerViewModel
+        {
+            Behov = behov,
+            TildelteRessurser = _ressursRepository.HentAlle().Where(r => ressursIder.Contains(r.Id)).ToList()
+        };
+        return View(modell);
+    }
+
+    /// <summary>
+    /// Trekker tilbake (sletter) behovet. Tildelte ressurser blir ledige igjen (se TildelingTjeneste).
+    /// "ActionName" gjør at denne metoden svarer på POST til samme adresse som siden over.
+    /// </summary>
+    [HttpPost]
+    [ActionName(nameof(TrekkTilbake))]
+    public IActionResult TrekkTilbakeBekreftet(int id)
+    {
+        var behov = _behovRepository.HentMedId(id);
+        if (behov is null)
+        {
+            return NotFound();
+        }
+        if (!KanTrekkeTilbake(behov))
+        {
+            return Forbid();
+        }
+
+        _tildelingTjeneste.TrekkTilbakeBehov(id, Brukernavn());
+        TempData["Melding"] = "Behovet er trukket tilbake.";
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
@@ -96,6 +154,7 @@ public class BehovController : Controller
             Kontaktperson = modell.Kontaktperson,
             Telefon = modell.Telefon,
             Dato = DateOnly.FromDateTime(DateTime.Now),
+            RegistrertAv = Brukernavn(),
             // ".Value" henter tallet ut av double?. Det er trygt her, fordi
             // ModelState.IsValid over allerede har sjekket at feltene er fylt ut.
             Breddegrad = modell.Breddegrad!.Value,
@@ -103,7 +162,16 @@ public class BehovController : Controller
         };
 
         _behovRepository.LeggTil(nyttBehov);
+        _tildelingTjeneste.Logg("Behovet ble meldt inn", Brukernavn(), behovId: nyttBehov.Id);
 
         return RedirectToAction(nameof(Index));
     }
+
+    // Brukernavnet til den innloggede brukeren. "?." gjør at det også virker i tester uten innlogging.
+    private string Brukernavn() => User?.Identity?.Name ?? string.Empty;
+
+    // Den som meldte behovet, og administratorer, kan trekke det tilbake.
+    private bool KanTrekkeTilbake(Behov behov) =>
+        User?.IsInRole(Roller.Admin) == true
+        || (!string.IsNullOrEmpty(behov.RegistrertAv) && behov.RegistrertAv == Brukernavn());
 }

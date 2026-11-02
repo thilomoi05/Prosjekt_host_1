@@ -35,6 +35,29 @@ public class EfBehovRepository : IBehovRepository
         return behov;
     }
 
+    public void SettStatus(int id, BehovStatus status)
+    {
+        // Find henter behovet slik at EF følger med på endringer. SaveChanges lagrer endringen.
+        var behov = _db.Behov.Find(id);
+        if (behov is null)
+        {
+            return;
+        }
+        behov.Status = status;
+        _db.SaveChanges();
+    }
+
+    public void Slett(int id)
+    {
+        var behov = _db.Behov.Find(id);
+        if (behov is null)
+        {
+            return;
+        }
+        _db.Behov.Remove(behov);
+        _db.SaveChanges();
+    }
+
     // Behov som venter på en ressurs. Tildelte behov regnes som løst.
     public int TellAktive() => _db.Behov.Count(b => b.Status == BehovStatus.Venter);
 

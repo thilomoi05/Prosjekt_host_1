@@ -25,4 +25,16 @@ public class EfTildelingRepository : ITildelingRepository
         _db.SaveChanges();
         return tildeling;
     }
+
+    public void Fjern(int behovId, int ressursId)
+    {
+        // Nøkkelen er (BehovId, RessursId), i den rekkefølgen (se BeredskapsDbContext).
+        var tildeling = _db.Tildelinger.Find(behovId, ressursId);
+        if (tildeling is null)
+        {
+            return;
+        }
+        _db.Tildelinger.Remove(tildeling);
+        _db.SaveChanges();
+    }
 }

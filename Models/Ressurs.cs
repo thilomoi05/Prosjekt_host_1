@@ -11,6 +11,12 @@ public class Ressurs
 
     public RessursType Type { get; set; }
 
+    // Nye ressurser venter på godkjenning fra en administrator (se RessursStatus).
+    public RessursStatus Status { get; set; } = RessursStatus.Venter;
+
+    // Hvorfor administratoren avviste ressursen. Vises for eieren. Tom hvis den ikke er avvist.
+    public string? Avvisningsgrunn { get; set; }
+
     public string BeskrivelseAvKapasitet { get; set; } = string.Empty;
 
     // Adressen der ressursen står, f.eks. "Kirkegata 5, 4610 Kristiansand".
@@ -42,4 +48,10 @@ public class Ressurs
     public double Breddegrad { get; set; }
 
     public double Lengdegrad { get; set; }
+
+    /// <summary>
+    /// Teksten som vises for ressurstypen, f.eks. "UPS (batteri)" for Ups.
+    /// Samlet ett sted, som VisningsNavn på Behov. Lagres ikke i databasen.
+    /// </summary>
+    public string VisningsNavn => Type == RessursType.Ups ? "UPS (batteri)" : Type.ToString();
 }

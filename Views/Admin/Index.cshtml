@@ -1,0 +1,211 @@
+@model AdminViewModel
+@{
+    ViewData["Title"] = "Admin";
+}
+
+@* Adminsiden: fire køer Admin jobber med (AdminController.Index).
+   Knappene som endrer noe, er små skjemaer med POST. Anti-forgery-tokenet legges inn automatisk. *@
+<div class="bp-side-innhold bp-admin">
+    <div>
+        <h1 class="bp-admin-tittel">Admin</h1>
+        <p class="bp-admin-ingress">Behandle forespørsler, godkjenn nye ressurser og offentlige aktører, og tildel ressurser til behov som venter.</p>
+    </div>
+
+    @* 1. Forespørsler fra offentlige aktører. Godkjenn tildeler ressursen med en gang. *@
+    <section class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <h2>Forespørsler <span class="bp-admin-antall">@Model.Foresporsler.Count</span></h2>
+        </div>
+
+        @if (Model.Foresporsler.Count == 0)
+        {
+            <p class="bp-oversikt-tom">Ingen forespørsler venter.</p>
+        }
+        else
+        {
+            <ul class="bp-admin-liste">
+                @foreach (var rad in Model.Foresporsler)
+                {
+                    var f = rad.Foresporsel;
+                    <li class="bp-admin-ressurs">
+                        <div class="bp-admin-ressurs-tekst">
+                            @* Behovet ← ressursen det er spurt om *@
+                            <span>
+                                @if (rad.Behov is not null)
+                                {
+                                    <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@rad.Behov.Id">@rad.Behov.VisningsNavn</a>
+                                    @(" · " + rad.Behov.GeografiskOmrade + " · " + PrioritetVisning.Tekst(rad.Behov.Prioritet))
+                                }
+                            </span>
+                            <span>
+                                &larr;
+                                @if (rad.Ressurs is not null)
+                                {
+                                    <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@rad.Ressurs.Id">@rad.Ressurs.VisningsNavn</a>
+                                    @(" · " + rad.Ressurs.Adresse + " · " + rad.AvstandKm.ToString("0.0").Replace('.', ',') + " km")
+                                }
+                            </span>
+                            <span>Forespurt av @f.ForespurtAv @(f.Tidspunkt.ToString("dd.MM HH:mm"))@(string.IsNullOrEmpty(f.Kommentar) ? "" : " · «" + f.Kommentar + "»")</span>
+                        </div>
+                        <div class="bp-admin-handlinger">
+                            <form asp-action="GodkjennForesporsel" asp-route-id="@f.Id" method="post">
+                                <button type="submit" class="btn btn-bp-primær btn-sm">Godkjenn</button>
+                            </form>
+                            <form asp-action="AvslaForesporsel" asp-route-id="@f.Id" method="post" class="bp-admin-avvis">
+                                <label class="visually-hidden" for="avslag-@f.Id">Begrunnelse</label>
+                                <input id="avslag-@f.Id" name="begrunnelse" class="form-control form-control-sm"
+                                       placeholder="Begrunnelse for avslag" maxlength="500" />
+                                <button type="submit" class="btn btn-bp-fare btn-sm">Avslå</button>
+                            </form>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    @* 2. Ressurser til godkjenning *@
+    <section class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <h2>Ressurser til godkjenning <span class="bp-admin-antall">@Model.RessurserTilGodkjenning.Count</span></h2>
+        </div>
+
+        @if (Model.RessurserTilGodkjenning.Count == 0)
+        {
+            <p class="bp-oversikt-tom">Ingen nye ressurser venter på godkjenning.</p>
+        }
+        else
+        {
+            <ul class="bp-admin-liste">
+                @foreach (var ressurs in Model.RessurserTilGodkjenning)
+                {
+                    <li class="bp-admin-ressurs">
+                        @* Første bilde, så Admin raskt ser om ressursen ser ekte ut *@
+                        @if (ressurs.Bilder.Count > 0)
+                        {
+                            <img src="@Url.Action("Bilde", "Ressurs", new { id = ressurs.Bilder[0] })" alt="Bilde av ressursen" loading="lazy" />
+                        }
+                        <div class="bp-admin-ressurs-tekst">
+                            <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">@ressurs.VisningsNavn</a>
+                            <span>@ressurs.BeskrivelseAvKapasitet</span>
+                            <span>@ressurs.Adresse · sendt inn av @ressurs.RegistrertAv · @ressurs.Bilder.Count bilde(r)</span>
+                        </div>
+                        <div class="bp-admin-handlinger">
+                            <form asp-action="GodkjennRessurs" asp-route-id="@ressurs.Id" method="post">
+                                <button type="submit" class="btn btn-bp-primær btn-sm">Godkjenn</button>
+                            </form>
+                            @* Begrunnelsen vises for eieren av ressursen *@
+                            <form asp-action="AvvisRessurs" asp-route-id="@ressurs.Id" method="post" class="bp-admin-avvis">
+                                <label class="visually-hidden" for="begrunnelse-@ressurs.Id">Begrunnelse</label>
+                                <input id="begrunnelse-@ressurs.Id" name="begrunnelse" class="form-control form-control-sm"
+                                       placeholder="Begrunnelse for avvisning" maxlength="500" />
+                                <button type="submit" class="btn btn-bp-fare btn-sm">Avvis</button>
+                            </form>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    @* 3. Behov som venter på en ressurs *@
+    <section class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <h2>Behov som venter <span class="bp-admin-antall">@Model.BehovSomVenter.Count</span></h2>
+        </div>
+
+        @if (Model.BehovSomVenter.Count == 0)
+        {
+            <p class="bp-oversikt-tom">Alle behov har fått ressurser.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="bp-tabell bp-tabell-ikoner">
+                    <thead>
+                        <tr>
+                            <th>Behov</th>
+                            <th>Område</th>
+                            <th>Prioritet</th>
+                            <th>Meldt</th>
+                            <th>Passende ressurser</th>
+                            <th><span class="visually-hidden">Tildel</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rad in Model.BehovSomVenter)
+                        {
+                            var prioritetCss = PrioritetVisning.CssNavn(rad.Behov.Prioritet);
+                            <tr>
+                                <td>
+                                    <span class="bp-kartikon bp-ikon-@prioritetCss" data-ikon-type="@rad.Behov.Type"></span>
+                                    <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@rad.Behov.Id">@rad.Behov.VisningsNavn</a>
+                                </td>
+                                <td>@rad.Behov.GeografiskOmrade</td>
+                                <td class="bp-prioritet-@prioritetCss">@PrioritetVisning.Tekst(rad.Behov.Prioritet)</td>
+                                <td>@rad.Behov.Dato.ToString("yyyy-MM-dd")</td>
+                                <td>@(rad.AntallForslag == 0 ? "Ingen ledige" : rad.AntallForslag + " ledige")</td>
+                                <td class="text-end">
+                                    <a class="btn btn-bp-primær btn-sm" asp-action="Tildel" asp-route-id="@rad.Behov.Id">Tildel</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
+    @* 4. Offentlige aktører som venter på godkjenning *@
+    <section class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <h2>Brukere til godkjenning <span class="bp-admin-antall">@Model.BrukereTilGodkjenning.Count</span></h2>
+        </div>
+
+        @if (Model.BrukereTilGodkjenning.Count == 0)
+        {
+            <p class="bp-oversikt-tom">Ingen offentlige aktører venter på godkjenning.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="bp-tabell">
+                    <thead>
+                        <tr>
+                            <th>Navn</th>
+                            <th>Brukernavn</th>
+                            <th>E-post</th>
+                            <th><span class="visually-hidden">Handlinger</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var bruker in Model.BrukereTilGodkjenning)
+                        {
+                            <tr>
+                                <td>@bruker.FulltNavn</td>
+                                <td>@bruker.UserName</td>
+                                <td>@bruker.Email</td>
+                                <td class="text-end">
+                                    <div class="bp-admin-handlinger bp-admin-handlinger-rad">
+                                        <form asp-action="GodkjennBruker" asp-route-id="@bruker.Id" method="post">
+                                            <button type="submit" class="btn btn-bp-primær btn-sm">Godkjenn</button>
+                                        </form>
+                                        <form asp-action="AvvisBruker" asp-route-id="@bruker.Id" method="post">
+                                            <button type="submit" class="btn btn-bp-fare btn-sm">Avvis</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    @* Kartikonene foran behovene. Samme skript som på Oversikt. *@
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/ikoner.js" asp-append-version="true"></script>
+}

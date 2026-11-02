@@ -93,6 +93,8 @@ namespace Beredskapsportal.Migrations
                     Telefon = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Dato = table.Column<DateOnly>(type: "date", nullable: false),
+                    RegistrertAv = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     Breddegrad = table.Column<double>(type: "double", nullable: false),
                     Lengdegrad = table.Column<double>(type: "double", nullable: false)
                 },
@@ -103,12 +105,36 @@ namespace Beredskapsportal.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Hendelser",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Tidspunkt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UtfortAv = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    BehovId = table.Column<int>(type: "int", nullable: true),
+                    RessursId = table.Column<int>(type: "int", nullable: true),
+                    Beskrivelse = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Hendelser", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "Ressurser",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Type = table.Column<string>(type: "varchar(40)", maxLength: 40, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Status = table.Column<string>(type: "varchar(40)", maxLength: 40, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Avvisningsgrunn = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     BeskrivelseAvKapasitet = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -330,9 +356,20 @@ namespace Beredskapsportal.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Hendelser_BehovId",
+                table: "Hendelser",
+                column: "BehovId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Hendelser_RessursId",
+                table: "Hendelser",
+                column: "RessursId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tildelinger_RessursId",
                 table: "Tildelinger",
-                column: "RessursId");
+                column: "RessursId",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -352,6 +389,9 @@ namespace Beredskapsportal.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Hendelser");
 
             migrationBuilder.DropTable(
                 name: "Tildelinger");

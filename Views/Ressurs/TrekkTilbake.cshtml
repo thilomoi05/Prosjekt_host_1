@@ -1,0 +1,26 @@
+@model RessursDetaljerViewModel
+@{
+    var ressurs = Model.Ressurs;
+    ViewData["Title"] = "Trekk tilbake ressurs";
+}
+
+@* "Er du sikker?"-siden før en ressurs trekkes tilbake (RessursController.TrekkTilbake).
+   Ressursen slettes først når brukeren trykker på knappen (POST). *@
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort">
+        <h1>Trekk tilbake ressursen?</h1>
+        <p><strong>@ressurs.VisningsNavn</strong>, @ressurs.Adresse</p>
+
+        <p>Ressursen og bildene fjernes fra portalen. Det kan ikke angres.</p>
+
+        @if (Model.ErTildelt)
+        {
+            <p>Ressursen er tildelt et behov. Tildelingen fjernes, så behovet kan få en annen ressurs.</p>
+        }
+
+        <form asp-controller="Ressurs" asp-action="TrekkTilbake" asp-route-id="@ressurs.Id" method="post" class="bp-bekreft-knapper">
+            <button type="submit" class="btn btn-bp-fare">Ja, trekk tilbake</button>
+            <a class="btn btn-bp-sekundær" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">Avbryt</a>
+        </form>
+    </div>
+</div>

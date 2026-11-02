@@ -2478,3 +2478,252 @@ a.bp-nokkeltall-kort:hover {
 .bp-kart-liste-panel .bp-filter-status {
   margin: 0.15rem 0 0;
 }
+
+/* -------------------------------------------------------------------------
+   Godkjenning, tildeling og tilbaketrekking (Views/Admin, detaljsidene)
+   ------------------------------------------------------------------------- */
+/* Statusmerker for ressurser: venter på godkjenning (oransje) og avvist (rød) */
+.bp-badge-godkjenning { background-color: #ffedd5; color: #9a3412; }
+.bp-badge-avvist { background-color: var(--farge-badge-ny-bg); color: var(--farge-badge-ny-tekst); }
+
+/* Rød knapp for handlinger som fjerner noe (avvis, fjern, trekk tilbake) */
+.btn-bp-fare {
+  border: 1px solid var(--farge-akutt);
+  color: var(--farge-akutt);
+  background-color: transparent;
+  border-radius: 0;
+  font-weight: 500;
+}
+
+.btn-bp-fare:hover {
+  background-color: var(--farge-akutt);
+  border-color: var(--farge-akutt);
+  color: #ffffff;
+}
+
+/* Begrunnelsen når en ressurs er avvist */
+.bp-melding-avvist {
+  border-left: 4px solid var(--farge-akutt);
+  background-color: var(--farge-flate);
+  padding: 0.75rem 1rem;
+  margin: 0;
+}
+
+/* Overskrift med knapp eller lenke til høyre, f.eks. "Tildelte ressurser   [Tildel ressurs]" */
+.bp-detaljer-seksjonshode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.bp-detaljer-seksjonshode .bp-detaljer-overskrift {
+  margin-bottom: 0;
+}
+
+/* Små skjemaer som bare er én knapp, på samme linje som teksten */
+.bp-skjema-inline {
+  margin: 0 0 0 auto;
+}
+
+/* "Ja, trekk tilbake" og "Avbryt" ved siden av hverandre */
+.bp-bekreft-knapper {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+/* Historikken på detaljsidene */
+.bp-historikk {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bp-historikk li {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--farge-kant);
+}
+
+.bp-historikk li:last-child {
+  border-bottom: none;
+}
+
+.bp-historikk time {
+  color: var(--farge-tekst-svak);
+  font-variant-numeric: tabular-nums;
+  min-width: 8.5rem;
+}
+
+.bp-historikk-hvem {
+  color: var(--farge-tekst-svak);
+}
+
+/* Adminsiden */
+.bp-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.bp-admin-tittel {
+  font-size: 2rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.bp-admin-ingress {
+  color: var(--farge-tekst-svak);
+  margin: 0.25rem 0 0;
+}
+
+/* Antallet bak overskriftene, f.eks. "Ressurser til godkjenning  3" */
+.bp-admin-antall {
+  display: inline-block;
+  min-width: 1.6rem;
+  padding: 0 0.4rem;
+  margin-left: 0.4rem;
+  background-color: var(--farge-flate-mork);
+  font-size: 0.9rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.bp-admin-liste {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.bp-admin-liste > li {
+  border-bottom: 1px solid var(--farge-kant);
+  padding: 0.85rem 0;
+}
+
+.bp-admin-liste > li:last-child {
+  border-bottom: none;
+}
+
+/* Én ressurs til godkjenning: bilde, tekst og knapper på én linje (brytes på smal skjerm) */
+.bp-admin-ressurs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.bp-admin-ressurs img {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border: 1px solid var(--farge-kant);
+}
+
+.bp-admin-ressurs-tekst {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 14rem;
+}
+
+.bp-admin-ressurs-tekst span {
+  font-size: 0.9rem;
+  color: var(--farge-tekst-svak);
+}
+
+.bp-admin-handlinger {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 16rem;
+}
+
+.bp-admin-handlinger-rad {
+  flex-direction: row;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.bp-admin-avvis {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Ett forslag på tildelingssiden: avkrysning, ikon, tekst og avstand */
+.bp-tildel-valg {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  cursor: pointer;
+}
+
+.bp-tildel-valg input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--farge-primær);
+}
+
+.bp-tildel-avstand {
+  font-variant-numeric: tabular-nums;
+  color: var(--farge-tekst-svak);
+  white-space: nowrap;
+}
+
+/* Små knapper (btn-sm) i lister og tabeller, så de ikke blir like store som hovedknappene */
+.btn-bp-primær.btn-sm,
+.btn-bp-fare.btn-sm {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.875rem;
+}
+
+.bp-admin-handlinger > form:first-child {
+  align-self: flex-start;
+}
+
+/* -------------------------------------------------------------------------
+   Forespørsler om ressurser
+   ------------------------------------------------------------------------- */
+/* Rød variant av meldingen øverst på siden, når en handling ikke gikk */
+.bp-melding-feil {
+  background-color: var(--farge-badge-ny-bg);
+  border-color: #f5b5b5;
+  color: var(--farge-badge-ny-tekst);
+}
+
+/* Liten kommentar og knapp på samme linje, f.eks. "[Kommentar] [Forespør]" */
+.bp-foresporr-skjema {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.bp-foresporr-skjema .form-control,
+.bp-foresporr-skjema .form-select {
+  max-width: 18rem;
+}
+
+/* Ett forslag på "Finn ressurs": ikon, tekst og avstand til venstre, skjemaet til høyre */
+.bp-forslag-rad {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.bp-forslag-rad .bp-admin-ressurs-tekst {
+  min-width: 12rem;
+}
+
+/* Grå tekst for begrunnelse og kommentar under en forespørsel */
+.bp-foresporsel-detalj {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--farge-tekst-svak);
+}
