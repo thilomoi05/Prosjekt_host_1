@@ -20,6 +20,9 @@ public class EfRessursRepository : IRessursRepository
     public IReadOnlyList<Ressurs> HentAlle() =>
         _db.Ressurser.AsNoTracking().OrderByDescending(r => r.Id).ToList();
 
+    // FirstOrDefault gir null hvis ingen ressurs har denne id-en.
+    public Ressurs? HentMedId(int id) => _db.Ressurser.AsNoTracking().FirstOrDefault(r => r.Id == id);
+
     public Ressurs LeggTil(Ressurs ressurs)
     {
         _db.Ressurser.Add(ressurs);

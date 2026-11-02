@@ -23,6 +23,9 @@ public class EfBehovRepository : IBehovRepository
 
     public IReadOnlyList<Behov> HentAlle() => NyesteForst().ToList();
 
+    // FirstOrDefault gir null hvis ingen behov har denne id-en.
+    public Behov? HentMedId(int id) => _db.Behov.AsNoTracking().FirstOrDefault(b => b.Id == id);
+
     public IReadOnlyList<Behov> HentSiste(int antall) => NyesteForst().Take(antall).ToList();
 
     public Behov LeggTil(Behov behov)

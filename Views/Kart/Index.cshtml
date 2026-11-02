@@ -62,11 +62,17 @@
 <div class="offcanvas offcanvas-bottom bp-kart-liste-panel" id="kart-liste-panel"
      data-bs-backdrop="false" data-bs-scroll="true" tabindex="-1" aria-labelledby="kart-liste-tittel">
     <div class="offcanvas-header">
-        <h2 class="h5 mb-0" id="kart-liste-tittel">
-            @* Teksten byttes til "Tilgjengelige ressurser" av kart.js når adressen er /Kart?liste=ressurser. *@
-            <span id="kart-liste-tittel-tekst">Punkter på kartet</span>
-            <span id="kart-antall" class="badge rounded-pill bg-light text-dark"></span>
-        </h2>
+        <div>
+            <h2 class="h5 mb-0" id="kart-liste-tittel">
+                @* Teksten byttes til "Tilgjengelige ressurser" av kart.js når adressen er /Kart?liste=ressurser. *@
+                <span id="kart-liste-tittel-tekst">Punkter på kartet</span>
+            </h2>
+            @* "Viser 9 av 40" og "Nullstill filter" oppdateres av kart.js (visTabell). *@
+            <p class="bp-filter-status">
+                <span id="kart-antall"></span>
+                <button type="button" class="bp-filter-nullstill" id="liste-nullstill" hidden>Nullstill filter</button>
+            </p>
+        </div>
         @* Listen dekker hele skjermen. Knappen øverst i midten tar kartet frem igjen.
            data-bs-dismiss="offcanvas" gjør at Bootstrap lukker panelet. *@
         <button type="button" class="btn btn-bp-primær bp-kart-skjulknapp" data-bs-dismiss="offcanvas">
@@ -75,19 +81,22 @@
     </div>
     <div class="offcanvas-body">
         <table class="bp-tabell">
-            <thead>
+            @* Filtermenyene i overskriftene (Hva, Type, Prioritet, Status) lages av kart.js
+               (byggListemenyer). De er koblet til filterpanelet, så kartet og listen viser det samme. *@
+            <thead id="kart-liste-hode">
                 <tr>
-                    <th>Hva</th>
-                    <th>Type</th>
+                    <th id="liste-kolonne-hva">Hva</th>
+                    <th id="liste-kolonne-type">Type</th>
                     <th>Sted</th>
-                    <th>Beskrivelse</th>
-                    @* Kolonne for "Se detaljer"-knappen. Teksten er skjult, men leses av skjermlesere. *@
+                    <th id="liste-kolonne-prioritet">Prioritet</th>
+                    <th id="liste-kolonne-status">Status</th>
+                    @* Kolonne for "Se detaljer"-lenken. Teksten er skjult, men leses av skjermlesere. *@
                     <th><span class="visually-hidden">Detaljer</span></th>
                 </tr>
             </thead>
             @* Radene fylles inn av kart.js når dataene er hentet. *@
             <tbody id="kart-liste">
-                <tr><td colspan="5" class="text-muted">Laster ...</td></tr>
+                <tr><td colspan="6" class="text-muted">Laster ...</td></tr>
             </tbody>
         </table>
     </div>

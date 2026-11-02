@@ -34,7 +34,7 @@
     {
         @* ---------- Offentlige aktører ---------- *@
         <div class="bp-nokkeltall">
-            @* Åpner behovslisten filtrert på status Venter (se behovsliste.js). *@
+            @* Åpner behovslisten filtrert på status Venter (se tabellfilter.js). *@
             <a class="bp-nokkeltall-kort" asp-controller="Behov" asp-action="Index" asp-route-status="Venter">
                 <span class="bp-ikon-firkant bp-farge-behov" aria-hidden="true">
                     @* Kartnål = behov, som på kartet *@
@@ -70,8 +70,8 @@
                 </span>
             </a>
 
-            @* Hopper ned til listen "Tildelte ressurser" lenger ned på samme side. *@
-            <a class="bp-nokkeltall-kort" href="#tildelte">
+            @* Åpner siden med alle tildelte ressurser (TildelingController). *@
+            <a class="bp-nokkeltall-kort" asp-controller="Tildeling" asp-action="Index">
                 <span class="bp-ikon-firkant bp-farge-ressurs" aria-hidden="true">
                     @* Hake = tildelt *@
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -161,14 +161,15 @@
         </div>
 
 
-        @* Tildelte ressurser: hvert behov som har fått ressurser, og hvilke ressurser det er.
-           id="tildelte" gjør at kortet "Tildelte behov" øverst kan hoppe hit. *@
+        @* Tildelte ressurser: de fem behovene som sist fikk ressurser, og hvilke ressurser det er.
+           Alle tildelingene finnes på /Tildeling ("Se alle tildelinger"). *@
         <section class="bp-oversikt-panel bp-oversikt-blokk" id="tildelte">
             <div class="bp-oversikt-panel-hode">
                 <div>
                     <h2>Tildelte ressurser</h2>
-                    <p>Behov som har fått ressurser, og hvilke ressurser som er satt inn.</p>
+                    <p>De fem behovene som sist fikk ressurser, og hvilke ressurser som er satt inn.</p>
                 </div>
+                <a asp-controller="Tildeling" asp-action="Index">Se alle tildelinger</a>
             </div>
 
             @if (Model.TildelteBehov.Count == 0)
@@ -195,7 +196,7 @@
                                     <li>
                                         <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs"></span>
                                         <span class="bp-oversikt-liste-tekst">
-                                            <strong>@ressurs.Type</strong>
+                                            <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">@ressurs.Type</a>
                                             <span>@ressurs.Adresse</span>
                                         </span>
                                     </li>
@@ -305,7 +306,8 @@
                         <li>
                             <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@rad.Ressurs.Type" data-ikon-form="ressurs"></span>
                             <span class="bp-oversikt-liste-tekst">
-                                <strong>@rad.Ressurs.Type</strong>
+                                @* Navnet er en lenke til detaljsiden for ressursen (Ressurs/Detaljer/id). *@
+                                <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@rad.Ressurs.Id">@rad.Ressurs.Type</a>
                                 <span>@rad.Ressurs.Adresse</span>
                             </span>
                             @if (rad.ErTildelt)

@@ -21,7 +21,8 @@ public class RessursControllerTester : IDisposable
     {
         _testmappe = Path.Combine(Path.GetTempPath(), "beredskapsportal-test-" + Guid.NewGuid());
         Directory.CreateDirectory(_testmappe);
-        _controller = new RessursController(new InMemoryRessursRepository(), new FalsktMiljo(_testmappe));
+        _controller = new RessursController(new InMemoryRessursRepository(), new InMemoryBehovRepository(),
+            new InMemoryTildelingRepository(), new FalsktMiljo(_testmappe));
     }
 
     public void Dispose()

@@ -26,6 +26,15 @@ public class InMemoryRessursRepository : IRessursRepository
         }
     }
 
+    public Ressurs? HentMedId(int id)
+    {
+        lock (_lasObjekt)
+        {
+            // FirstOrDefault gir null hvis ingen ressurs har denne id-en.
+            return _ressurser.FirstOrDefault(r => r.Id == id);
+        }
+    }
+
     public Ressurs LeggTil(Ressurs ressurs)
     {
         lock (_lasObjekt)
