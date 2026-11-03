@@ -48,7 +48,10 @@ public class RessursDetaljerViewModel
     // Hva som har skjedd med ressursen, nyeste først.
     public IReadOnlyList<Hendelse> Historikk { get; set; } = new List<Hendelse>();
 
-    // Brukerens egne behov, som ressursen kan forespørres til. Tom liste hvis ressursen
-    // ikke er ledig, eller brukeren ikke er en offentlig aktør med egne behov.
+    // True når ressursen er godkjent og ledig, og brukeren er en offentlig aktør.
+    // Da vises delen "Forespør til mitt behov" (med en melding hvis brukeren ikke har behov).
+    public bool KanForesporres { get; set; }
+
+    // Brukerens egne behov, som ressursen kan forespørres til.
     public List<Behov> MineBehov { get; set; } = new();
 }

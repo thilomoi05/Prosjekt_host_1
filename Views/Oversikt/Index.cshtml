@@ -161,6 +161,54 @@
         </div>
 
 
+        @* Mine meldte behov: de fem nyeste behovene brukeren selv har meldt.
+           "Se alle mine behov" åpner behovslista filtrert på "Meldt av: Meg" (se tabellfilter.js). *@
+        <section class="bp-oversikt-panel bp-oversikt-blokk">
+            <div class="bp-oversikt-panel-hode">
+                <div>
+                    <h2>Mine meldte behov</h2>
+                    <p>De fem nyeste behovene du har meldt, og status på dem.</p>
+                </div>
+                <a asp-controller="Behov" asp-action="Index" asp-route-meldtav="meg">Se alle mine behov</a>
+            </div>
+
+            @if (Model.MineMeldteBehov.Count == 0)
+            {
+                <p class="bp-oversikt-tom">Du har ikke meldt noen behov ennå. Trykk «Registrer nytt behov» for å melde det første.</p>
+            }
+            else
+            {
+                <ul class="bp-oversikt-liste">
+                    @foreach (var rad in Model.MineMeldteBehov)
+                    {
+                        var behov = rad.Behov;
+                        var prioritetCss = PrioritetVisning.CssNavn(behov.Prioritet);
+                        <li>
+                            <span class="bp-kartikon bp-ikon-@prioritetCss" data-ikon-type="@behov.Type"></span>
+                            <span class="bp-oversikt-liste-tekst">
+                                <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behov.Id">@behov.VisningsNavn</a>
+                                <span>@behov.GeografiskOmrade</span>
+                            </span>
+                            @* Forespørsler som venter på Admin, så man ser hva som er i gang *@
+                            @if (rad.VentendeForesporsler > 0)
+                            {
+                                <span class="bp-badge bp-badge-godkjenning">@rad.VentendeForesporsler @(rad.VentendeForesporsler == 1 ? "forespørsel venter" : "forespørsler venter")</span>
+                            }
+                            <span class="bp-badge bp-badge-@prioritetCss">@PrioritetVisning.Tekst(behov.Prioritet)</span>
+                            @if (behov.Status == BehovStatus.Tildelt)
+                            {
+                                <span class="bp-badge bp-badge-tildelt">Tildelt</span>
+                            }
+                            else
+                            {
+                                <span class="bp-badge bp-badge-venter">Venter</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
         @* Tildelte ressurser: de fem behovene som sist fikk ressurser, og hvilke ressurser det er.
            Alle tildelingene finnes på /Tildeling ("Se alle tildelinger"). *@
         <section class="bp-oversikt-panel bp-oversikt-blokk" id="tildelte">

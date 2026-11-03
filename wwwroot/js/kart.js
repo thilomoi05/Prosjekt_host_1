@@ -67,6 +67,8 @@ const BOBLE_VALG = { minWidth: 280, maxWidth: 320, className: 'bp-boble-popup' }
  * punkt er et objekt med:
  *   form, typeKode, fargeKlasse  ikonet øverst (samme som på kartet)
  *   merkelapp                    f.eks. "Høy prioritet" eller "Ressurs"
+ *   status                       "Venter", "Tildelt" eller "Tilgjengelig". Vises som et merke ved
+ *                                siden av merkelappen, i samme farger som på Behov-siden
  *   tittel, undertittel          typen og beskrivelsen
  *   rader                        liste med [etikett, verdi], f.eks. ['Område', 'Lund']
  *   ekstraHtml                   ferdig HTML under radene (bildene), kan være tom
@@ -86,6 +88,9 @@ function lagBoble(punkt) {
             '<div class="bp-boble-ikon">' + lagIkonSvg(punkt.form, punkt.typeKode, 40) + '</div>' +
             '<div>' +
                 '<span class="bp-boble-merkelapp">' + trygg(punkt.merkelapp) + '</span>' +
+                // Statusmerket: blått for tildelt, gult for venter/tilgjengelig (samme som i listene).
+                ' <span class="bp-badge ' + (punkt.status === 'Tildelt' ? 'bp-badge-tildelt' : 'bp-badge-venter') + '">' +
+                    trygg(punkt.status) + '</span>' +
                 '<div class="bp-boble-tittel">' + trygg(punkt.tittel) + '</div>' +
                 '<div class="bp-boble-undertittel">' + trygg(punkt.undertittel) + '</div>' +
             '</div>' +
@@ -116,12 +121,12 @@ async function visBehov() {
                 typeKode: behov.typeKode,
                 fargeKlasse: fargeKlasse,
                 merkelapp: merkelapp,
+                status: behov.status,            // "Venter" eller "Tildelt", vises som merke øverst
                 tittel: behov.type,
                 undertittel: behov.beskrivelse,
                 rader: [
                     ['Område', behov.omrade],
-                    ['Prioritet', behov.prioritetTekst],
-                    ['Status', behov.status]
+                    ['Prioritet', behov.prioritetTekst]
                 ],
                 id: behov.id
             }), BOBLE_VALG);
@@ -169,6 +174,7 @@ async function visRessurser() {
                 typeKode: ressurs.typeKode,
                 fargeKlasse: 'bp-ikon-ressurs',
                 merkelapp: 'Ressurs',
+                status: ressurs.tildelt ? 'Tildelt' : 'Tilgjengelig',
                 tittel: ressurs.type,
                 undertittel: ressurs.beskrivelse,
                 rader: [

@@ -23,6 +23,11 @@
         .ToList();
 
     var statuser = new List<(string Verdi, string Tekst)> { ("Venter", "Venter"), ("Tildelt", "Tildelt") };
+
+    // "Meldt av": egne behov eller andres. Lenken "Se alle mine behov" på Oversikt
+    // åpner siden som /Behov?meldtav=meg, så bare egne behov er krysset av.
+    var brukernavn = User.Identity?.Name ?? string.Empty;
+    var meldtAvValg = new List<(string Verdi, string Tekst)> { ("meg", "Meg"), ("andre", "Andre") };
 }
 
 <div class="bp-side-innhold">
@@ -54,6 +59,7 @@
                         <th><partial name="_Filtermeny" model='("Område", "omrade", omrader)' /></th>
                         <th><partial name="_Filtermeny" model='("Prioritet", "prioritet", prioriteter)' /></th>
                         <th><partial name="_Filtermeny" model='("Status", "status", statuser)' /></th>
+                        <th><partial name="_Filtermeny" model='("Meldt av", "meldtav", meldtAvValg)' /></th>
                         @* Dato: sortering i stedet for filter *@
                         <th><partial name="_Datosortering" model='"Dato"' /></th>
                     </tr>
@@ -62,7 +68,9 @@
                     @foreach (var behov in Model)
                     {
                         @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filteret og sorteringen bruker. *@
+                        var erMitt = behov.RegistrertAv == brukernavn;
                         <tr data-rad
+                            data-meldtav="@(erMitt ? "meg" : "andre")"
                             data-type="@behov.Type"
                             data-omrade="@behov.GeografiskOmrade"
                             data-prioritet="@PrioritetVisning.CssNavn(behov.Prioritet)"
@@ -89,12 +97,13 @@
                                 }
                                 <span class="bp-badge @cssKlasse">@tekst</span>
                             </td>
+                            <td>@(erMitt ? "Deg" : behov.RegistrertAv)</td>
                             <td>@behov.Dato.ToString("yyyy-MM-dd")</td>
                         </tr>
                     }
                     @* Vises av tabellfilter.js når ingen behov passer filteret. *@
                     <tr id="tabell-tom" hidden>
-                        <td colspan="5" class="bp-oversikt-tom">Ingen behov passer filteret. Trykk «Nullstill filter» for å se alle.</td>
+                        <td colspan="6" class="bp-oversikt-tom">Ingen behov passer filteret. Trykk «Nullstill filter» for å se alle.</td>
                     </tr>
                 </tbody>
             </table>
