@@ -13,14 +13,17 @@ public class RessursViewModel
 
     [Required(ErrorMessage = "Du må beskrive kapasiteten.")]
     [Display(Name = "Beskrivelse av kapasitet")]
+    [StringLength(2000, ErrorMessage = "Beskrivelsen kan være på maks 2000 tegn.")]
     public string BeskrivelseAvKapasitet { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Du må skrive inn adressen der ressursen er.")]
     [Display(Name = "Adresse")]
+    [StringLength(300, ErrorMessage = "Adressen kan være på maks 300 tegn.")]
     public string Adresse { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Du må beskrive hvordan man får tak i ressursen.")]
     [Display(Name = "Hvordan får man tak i ressursen?")]
+    [StringLength(1000, ErrorMessage = "Beskrivelsen av tilgang kan være på maks 1000 tegn.")]
     public string Tilgangsbeskrivelse { get; set; } = string.Empty;
 
     // IFormFile er ASP.NET Core sin type for en opplastet fil.
@@ -39,11 +42,13 @@ public class RessursViewModel
 
     [Required(ErrorMessage = "Du må oppgi en kontaktperson.")]
     [Display(Name = "Kontaktperson")]
+    [StringLength(200, ErrorMessage = "Kontaktpersonen kan være på maks 200 tegn.")]
     public string Kontaktperson { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Du må oppgi et telefonnummer.")]
     [Phone(ErrorMessage = "Telefonnummeret ser ikke gyldig ut.")]
     [Display(Name = "Telefon")]
+    [StringLength(30, ErrorMessage = "Telefonnummeret kan være på maks 30 tegn.")]
     public string Telefon { get; set; } = string.Empty;
 
     // Fylles ut av det lille kartet i skjemaet (se wwwroot/js/posisjonsvelger.js).

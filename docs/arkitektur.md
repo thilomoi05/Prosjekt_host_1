@@ -242,6 +242,7 @@ Brukere, passord og roller håndteres av **ASP.NET Core Identity**, satt opp i `
 - Passordet lagres aldri. Identity lagrer en hash laget med PBKDF2 og et tilfeldig salt.
 - Passordregler: minst 8 tegn, med stor og liten bokstav og tall.
 - Etter 5 feil passord på rad låses kontoen i 5 minutter.
+- **Rate limiting:** hver IP-adresse får maks 10 forsøk per minutt på `POST /Konto/LoggInn` og `POST /Konto/Registrer` til sammen (`Sikkerhet/Fartsgrenser.cs`, `[EnableRateLimiting]`). Forsøk over grensen får `429 Too Many Requests` uten at passordet sjekkes. Utestengingen beskytter én konto; fartsgrensen stopper også at noen prøver ett passord mot mange brukernavn, eller lager mange kontoer.
 - `KontoController` bruker `UserManager` (lage brukere, roller) og `SignInManager` (sjekke passord, lage cookie). Vi skriver ingen passordkode selv.
 - `Sikkerhet/BrukerClaimsFabrikk.cs` legger det fulle navnet i cookien, så menyen kan vise det.
 - `Sikkerhet/NorskeIdentityFeilmeldinger.cs` gir norske feilmeldinger.
@@ -278,6 +279,8 @@ Tilgangen håndheves på serveren:
 - `Ressurs.Detaljer` og `Ressurs.Bilde` sjekker selv: offentlige aktører ser alt, private bare sine egne ressurser
 - Bildene ligger utenfor `wwwroot`, i `Opplastinger/bilder`, og sendes bare gjennom `Ressurs.Bilde`. Alt i `wwwroot` kan lastes ned av hvem som helst
 - Opplastede filer får et tilfeldig `Guid`-navn, maks 5 bilder à 5 MB, og bare jpg, jpeg, png eller webp
+- Innholdet sjekkes også, ikke bare endelsen: `Sikkerhet/Bildesjekk.cs` leser de første bytene og sjekker at filen faktisk er et JPG-, PNG- eller WEBP-bilde. Et program som har fått navnet `bilde.jpg`, avvises. SVG er ikke tillatt, fordi det kan inneholde JavaScript
+- Hele skjemaet kan være maks 26 MB (`[RequestSizeLimit]`), så store forespørsler stoppes før de leses inn
 - `Path.GetFileName` på id-en hindrer at noen ber om `../../Program.cs`
 
 Å skjule en knapp i nettleseren er ikke tilgangskontroll. Derfor gjøres sjekken begge steder: viewet skjuler lenken, og serveren nekter kallet.
@@ -288,7 +291,10 @@ Tilgangen håndheves på serveren:
 |---|---|
 | CSRF | `AutoValidateAntiforgeryTokenAttribute` i `Program.cs` sjekker anti-forgery-tokenet på alle POST-forespørsler. Cookien har `SameSite=Lax` |
 | XSS | Razor gjør all tekst trygg (`@`), vi bruker ikke `@Html.Raw`. JavaScript setter tekst inn med `trygg()`. Content-Security-Policy tillater bare skript fra våre egne .js-filer |
-| SQL-injeksjon | All databasetilgang går gjennom EF Core, som sender verdier som parametere. Vi skriver ingen SQL selv |
+| SQL-injeksjon | All databasetilgang går gjennom EF Core, som sender verdier som parametere. Vi skriver ingen SQL selv (ingen `FromSqlRaw` eller `ExecuteSql` i koden) |
+| Passordgjetting (brute force) | Rate limiting per IP på innlogging og registrering, og utestenging av kontoen etter 5 feil |
+| Skadelige filer | Endelse, innhold (magiske bytes) og størrelse sjekkes. Filene lagres utenfor `wwwroot` med tilfeldig navn og sendes bare til den som har tilgang |
+| For lang input | `[StringLength]` på skjemafeltene, samme lengde som kolonnene i databasen, så brukeren får en melding i stedet for en feil fra databasen |
 | Clickjacking | `X-Frame-Options: DENY` og `frame-ancestors 'none'` |
 
 `Sikkerhet/SikkerhetsheadereMiddleware.cs` legger disse headerne på alle svar:
