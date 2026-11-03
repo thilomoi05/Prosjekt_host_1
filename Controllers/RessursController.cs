@@ -78,6 +78,7 @@ public class RessursController : Controller
     public async Task<IActionResult> Registrer(RessursViewModel modell)
     {
         // Sjekker bildene i tillegg til de vanlige [Required]-reglene i view-modellen.
+        modell.Bilder ??= new List<IFormFile>();
         SjekkBilder(modell.Bilder);
 
         // Sikkerhetsnett: kartet setter alltid begge koordinatene samtidig, men
@@ -249,6 +250,7 @@ public class RessursController : Controller
         modell.Status = ressurs.Status;
 
         // Nye bilder er frivillig ved endring. Sjekkes bare hvis brukeren har valgt noen.
+        modell.Bilder ??= new List<IFormFile>();
         if (modell.Bilder.Count > 0)
         {
             SjekkBilder(modell.Bilder);

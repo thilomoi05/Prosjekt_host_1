@@ -28,9 +28,13 @@ public class RessursViewModel
 
     // IFormFile er ASP.NET Core sin type for en opplastet fil.
     // En liste, fordi brukeren kan laste opp flere bilder samtidig.
-    // Sjekken av bildene (antall, type og størrelse) skjer i RessursController.
+    // Sjekken av bildene (antall, type, innhold og størrelse) skjer i RessursController.
+    //
+    // Spørsmålstegnet (List<IFormFile>?) er med vilje: uten det legger ASP.NET til en skjult
+    // [Required]-regel med engelsk melding, også i nettleseren. Da kunne man ikke lagre
+    // "Endre ressurs" uten å velge nye bilder (funnet i systemtesten 03.11.2026).
     [Display(Name = "Bilder av ressursen")]
-    public List<IFormFile> Bilder { get; set; } = new();
+    public List<IFormFile>? Bilder { get; set; } = new();
 
     [Display(Name = "Tilgjengelig fra")]
     [DataType(DataType.Date)]
