@@ -41,7 +41,7 @@ public class RessursDetaljerViewModel
     // True for offentlige aktører. Styrer lenker og tekst på siden.
     public bool ErOffentligAktor { get; set; }
 
-    // True for eieren av ressursen og for administratorer. Viser "Trekk tilbake"
+    // True for eieren av ressursen og for administratorer. Viser "Endre", "Trekk tilbake"
     // og eventuell avvisningsgrunn.
     public bool KanTrekkeTilbake { get; set; }
 

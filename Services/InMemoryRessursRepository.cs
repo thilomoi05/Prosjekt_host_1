@@ -59,6 +59,19 @@ public class InMemoryRessursRepository : IRessursRepository
         }
     }
 
+    public void Oppdater(Ressurs endret)
+    {
+        lock (_lasObjekt)
+        {
+            var ressurs = _ressurser.FirstOrDefault(r => r.Id == endret.Id);
+            if (ressurs is not null)
+            {
+                // Samme felt som i databaselagringen (EfRessursRepository.KopierEndringer).
+                EfRessursRepository.KopierEndringer(endret, ressurs);
+            }
+        }
+    }
+
     public void Slett(int id)
     {
         lock (_lasObjekt)

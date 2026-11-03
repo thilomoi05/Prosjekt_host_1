@@ -114,13 +114,15 @@ Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view me
 | `Oversikt` | Innlogget | `Index` dashbord. Offentlige aktører ser nøkkeltall, behov og de fem siste tildelingene. Private ser sine egne ressurser |
 | `HvaTrengs` | Innlogget | `Index` utstyr som trengs og i hvilke områder, uten hvem som har meldt |
 | `Behov` | `OffentligAktor` | `Index` liste med filter, `Detaljer`, `Registrer` GET og POST |
-| `Ressurs` | Innlogget | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Detaljer` (private ser bare sine egne), `Bilde` (offentlige aktører, eller eieren av ressursen) |
+| `Ressurs` | Innlogget | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Detaljer` (private ser bare sine egne), `Rediger` GET og POST (eier og admin), `TrekkTilbake`, `Bilde` (offentlige aktører, eller eieren av ressursen) |
 | `Kart` | `OffentligAktor` | `Index` kartside, `Behov` og `Ressurser` som JSON til kart.js |
 | `Tildeling` | `OffentligAktor` | `Index` alle tildelinger med filter |
 | `Foresporsel` | `OffentligAktor` (bare egne behov) | `FinnRessurs` forslag til eget behov, `Foresporr` POST |
 | `Admin` | `Admin` | `Index` de fire køene, `GodkjennForesporsel`, `AvslaForesporsel`, `GodkjennRessurs`, `AvvisRessurs`, `Tildel` GET og POST, `FjernTildeling`, `GodkjennBruker`, `AvvisBruker` |
 
 `Behov` og `Ressurs` har også `TrekkTilbake`: en «Er du sikker?»-side (GET) og selve slettingen (POST).
+
+`Ressurs` har `Rediger` (GET og POST) for å endre en ressurs. Bare eieren og admin slipper til, og tilgangen sjekkes i både GET og POST. Endrer eieren en ressurs som ikke er tildelt, settes den til `Venter` og må godkjennes på nytt, så ingen kan bytte ut innholdet i en godkjent ressurs uten at admin ser det. Nye bilder erstatter de gamle, og endringen skrives i historikken.
 
 Admin har også rollen `OffentligAktor`, så alt som står `OffentligAktor` over, gjelder også for admin.
 
