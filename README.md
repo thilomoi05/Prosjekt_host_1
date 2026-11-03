@@ -2,7 +2,7 @@
 
 En nettportal for krisesituasjoner der **offentlige aktører** (Heimevernet, kommuner) melder inn behov, og **private aktører** (bedrifter, entreprenører, privatpersoner) tilbyr ressurser som aggregater, drivstoff og transport. Behov og ressurser vises på et kart, slik at det blir lett å se hvor hjelpen trengs og hva som finnes i nærheten.
 
-Prosjektet er laget som gruppeoppgave (Oppgave 1) og er en **ASP.NET Core MVC-applikasjon som kjøres i Docker**.
+Prosjektet er laget som gruppeoppgave i IS-200 (Oppgave 1 og Oppgave 2) og er en **ASP.NET Core MVC-applikasjon som kjøres sammen med en MariaDB-database i Docker**.
 
 ## Gruppemedlemmer
 
@@ -22,10 +22,11 @@ Prosjektet er laget som gruppeoppgave (Oppgave 1) og er en **ASP.NET Core MVC-ap
 ```bash
 git clone https://github.com/thilomoi05/Prosjekt_host_1.git
 cd Prosjekt_host_1
-cp .env.example .env
+cp .env.example .env      # sett egne passord i .env før du starter
 docker compose up --build
-Sett egne passord i `.env` før du starter. Se [docs/drift.md](docs/drift.md).
 ```
+
+Se [docs/drift.md](docs/drift.md) for hva som må stå i `.env`.
 
 Åpne **http://localhost:8080** og logg inn med en av testbrukerne:
 
@@ -43,23 +44,33 @@ Mer om kjøring, begrensninger og feilsøking: **[docs/drift.md](docs/drift.md)*
 
 ## Funksjoner
 
-- **Registrering og innlogging** med rollene *Offentlig aktør* og *Privat aktør*
-- **Oversikt (dashboard)** over behov og ressurser for innloggede brukere
-- **Melde behov:** type, beskrivelse, prioritet (planlagt/akutt), kontaktinfo og posisjon
-- **Tilby ressurser:** type, kapasitet, adresse, tilgjengelighetsperiode, kontaktinfo, posisjon og opptil 5 bilder
-- **Kart** med behov og ressurser som punkter, adressesøk og posisjonsvelger i skjemaene
-- **Tilgangsstyring:** ressurser (posisjon og bilder) vises bare for offentlige aktører
+Tre roller, med tilgang sjekket på serveren (`[Authorize(Roles = ...)]`):
+
+| Rolle | Kan |
+|---|---|
+| **Offentlig aktør** (kommune, sykehus, Heimevernet) | Melde behov med type, prioritet og plassering · se alle behov med filter · se kart med behov og ressurser · finne og forespørre ressurser til egne behov · trekke tilbake egne behov |
+| **Privat aktør** (bedrift, privatperson) | Tilby ressurser med bilder · se status på egne ressurser (venter, godkjent, avvist, tildelt) · **endre** og trekke tilbake egne ressurser · se «Hva trengs» uten å se hvem som har meldt |
+| **Admin** | Godkjenne eller avvise ressurser og offentlige aktører · tildele ressurser til behov med forslag sortert på avstand · godkjenne eller avslå forespørsler · fjerne tildelinger · endre alle ressurser |
+
+I tillegg:
+
+- **Registrering og innlogging** med ASP.NET Core Identity. Offentlige aktører må godkjennes av admin før de kan logge inn.
+- **Kart** (Leaflet + Kartverket) med egne ikoner per type og farge per prioritet. Skjemaene har en posisjonsvelger: klikk i kartet eller søk opp en adresse.
+- **Oversikt** over ressurser og behov: dashbord, liste med filter under kartet, detaljsider og oversikt over tildelinger.
+- **Historikk:** alt som skjer med et behov eller en ressurs (sendt inn, godkjent, endret, tildelt, trukket tilbake) lagres og vises på detaljsiden.
+- **Mobiltilpasset:** responsivt design med Bootstrap og egne `@media`-regler.
 
 ## Teknologi
 
 | Område | Teknologi |
 |---|---|
 | Rammeverk | ASP.NET Core MVC, .NET 10 |
-| Innlogging | Cookie-autentisering. Passord lagres midlertidig i klartekst, og skal byttes til ASP.NET Core Identity |
+| Innlogging | ASP.NET Core Identity (passord-hash med PBKDF2 og salt, roller, utestenging) |
+| Datalagring | MariaDB 11.4 med Entity Framework Core 10 (Microting.EntityFrameworkCore.MySql) og migrations |
 | Kart | [Leaflet](https://leafletjs.com/) med kartfliser fra Kartverket |
 | Adressesøk | Geonorge sitt adresse-API (`ws.geonorge.no/adresser/v1`) |
-| Datalagring | MariaDB 11.4 med Entity Framework Core 10 (Microting.EntityFrameworkCore.MySql) og migrations |
-| Drift | Docker Compose (app og database) |
+| Testing | xUnit og NSubstitute |
+| Drift | Docker Compose (to containere: `web` og `db`) |
 
 ---
 
@@ -71,7 +82,8 @@ Applikasjonen følger **MVC-mønsteret** (Model–View–Controller), med et ege
 flowchart LR
     B[Nettleser] -->|GET / POST| C[Controller]
     C -->|leser/skriver| R[Repository]
-    R --> D[(MariaDB)] 
+    R -->|EF Core| D[(MariaDB i Docker)]
+    C -->|Identity| D
     C -->|ViewModel| V[View .cshtml]
     V -->|HTML| B
     K[kart.js] -->|GET JSON| C
@@ -82,15 +94,20 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 ### Prosjektstruktur
 
 ```
-├── Controllers/        Home, Konto, Oversikt, Behov, Ressurs, Kart
-├── Models/             Behov, Ressurs, Bruker, Enums
+├── Controllers/        Home, Konto, Oversikt, Behov, Ressurs, Kart, HvaTrengs, Tildeling, Foresporsel, Admin
+├── Data/               BeredskapsDbContext, oppstart av database og testbrukere
+├── Migrations/         Tabellene i MariaDB, laget med EF Core migrations
+├── Models/             Behov, Ressurs, Bruker, Tildeling, Foresporsel, Hendelse, Roller, Enums
 │   └── ViewModeller/   Skjemamodeller med validering
-├── Services/           Repository-grensesnitt, InMemory-implementasjoner
+├── Services/           Repository-grensesnitt, EF- og minnebaserte repositories, TildelingTjeneste
+├── Sikkerhet/          Sikkerhetsheadere og norske feilmeldinger fra Identity
 ├── Views/              Én mappe per controller + Shared/_Layout
-├── wwwroot/            CSS, JavaScript (kart.js, posisjonsvelger.js, kartverket.js)
-├── docs/               Dokumentasjon
+├── wwwroot/            CSS og JavaScript (kart, posisjonsvelger, skjemaer, filter)
+├── Beredskapsportal.Tests/   Automatiske tester (xUnit)
+├── docs/               drift.md, arkitektur.md, ki-bruk.md
+├── docker-compose.yml  App og database
 ├── Dockerfile
-└── Program.cs          Oppstart, DI, autentisering og ruting
+└── Program.cs          Oppstart, DI, Identity, sikkerhet og ruting
 ```
 
 ### Sider og endepunkter
@@ -98,19 +115,31 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | Metode | Adresse | Beskrivelse | Tilgang |
 |---|---|---|---|
 | GET | `/` | Forside | Alle |
-| GET / POST | `/Konto/Registrer` | Registrere bruker | Alle |
+| GET / POST | `/Konto/Registrer` | Registrere bruker (offentlig eller privat aktør) | Alle |
 | GET / POST | `/Konto/LoggInn` | Logge inn | Alle |
 | POST | `/Konto/LoggUt` | Logge ut | Innlogget |
-| GET | `/Oversikt` | Dashboard | Innlogget |
-| GET | `/Behov` | Liste over behov | Innlogget |
-| GET / POST | `/Behov/Registrer` | Melde behov | Innlogget |
+| GET | `/Konto/Profil` | Min side | Innlogget |
+| GET | `/Oversikt` | Dashbord | Innlogget |
+| GET | `/HvaTrengs` | Hva som trengs, uten hvem som har meldt | Innlogget |
+| GET | `/Behov` | Alle behov med filter | Offentlig aktør |
+| GET / POST | `/Behov/Registrer` | Melde behov | Offentlig aktør |
+| GET | `/Behov/Detaljer/{id}` | Detaljside med historikk | Offentlig aktør |
+| GET / POST | `/Behov/TrekkTilbake/{id}` | Trekke tilbake eget behov | Offentlig aktør (eier) |
 | GET / POST | `/Ressurs/Registrer` | Tilby ressurs med bilder | Innlogget |
-| GET | `/Ressurs/Bilde/{id}` | Vise bilde av ressurs | Offentlig aktør |
-| GET | `/Kart` | Kartside | Innlogget |
-| GET | `/Kart/Behov` | Behov som JSON (til kartet) | Innlogget |
-| GET | `/Kart/Ressurser` | Ressurser som JSON (til kartet) | Offentlig aktør |
+| GET | `/Ressurs/Detaljer/{id}` | Detaljside med bilder, kart og historikk | Eier, admin, eller offentlig aktør når godkjent |
+| GET / POST | `/Ressurs/Rediger/{id}` | Endre ressurs | Eier og admin |
+| GET / POST | `/Ressurs/TrekkTilbake/{id}` | Trekke tilbake (slette) ressurs | Eier og admin |
+| GET | `/Ressurs/Bilde/{id}` | Bilde av ressurs | Samme som detaljsiden |
+| GET | `/Kart` | Kart med liste og filter | Offentlig aktør |
+| GET | `/Kart/Behov`, `/Kart/Ressurser` | Punkter som JSON til kartet | Offentlig aktør |
+| GET | `/Foresporsel/FinnRessurs/{id}` | Forslag til ressurser for eget behov | Offentlig aktør |
+| POST | `/Foresporsel/Foresporr` | Forespørre en ressurs | Offentlig aktør |
+| GET | `/Tildeling` | Alle tildelinger med filter | Offentlig aktør |
+| GET | `/Admin` | Godkjenning av ressurser, brukere og forespørsler | Admin |
+| GET / POST | `/Admin/Tildel/{id}` | Tildele ressurser til et behov | Admin |
+| POST | `/Admin/GodkjennRessurs`, `AvvisRessurs`, `GodkjennBruker`, `AvvisBruker`, `GodkjennForesporsel`, `AvslaForesporsel`, `FjernTildeling` | Handlinger på adminsiden | Admin |
 
-**Flyt i et skjema (eksempel):** `GET /Behov/Registrer` viser skjemaet → brukeren sender det inn med `POST` → controlleren validerer og lagrer via repository → brukeren sendes videre til `/Behov`, der det nye behovet vises.
+**Flyt i et skjema (eksempel):** `GET /Behov/Registrer` viser skjemaet → brukeren sender det inn med `POST` → controlleren validerer og lagrer i MariaDB via repository → brukeren sendes videre til `/Behov`, der det nye behovet vises.
 
 ---
 
@@ -127,6 +156,23 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | 6 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), arkitektur og [testing](#testing) i denne README | Ferdig |
 | 7 | Dokumentasjon i koden | Norske kommentarer og XML-summaries i koden | Ferdig |
 | 8 | Bruk av KI | Se under | Ferdig |
+
+## Krav i Oppgave 2
+
+| # | Krav | Hvor i koden / dokumentasjonen | Status |
+|---|---|---|---|
+| 1 | Kobling mot MariaDB, app og database i Docker | `docker-compose.yml`, `Data/BeredskapsDbContext.cs`, `Migrations/`, `Services/Ef*Repository.cs`, [docs/drift.md](docs/drift.md) | Ferdig |
+| 2 | Registrering av ny bruker, lagret i databasen | `Controllers/KontoController.cs`, `Models/Bruker.cs` (tabellen `AspNetUsers`) | Ferdig |
+| 3 | Autentisering, autorisering, og legge til, endre og slette ressurs | `KontoController`, `[Authorize(Roles)]` på controllerne, `RessursController` (`Registrer`, `Rediger`, `TrekkTilbake`) | Ferdig |
+| 4 | Funksjoner som beskrevet av oppdragsgiveren | [Funksjoner](#funksjoner), `Services/TildelingTjeneste.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 1 og 5b | Ferdig |
+| 5 | Kartet i skjemaet setter et punkt | `wwwroot/js/posisjonsvelger.js`, `Views/Behov/Registrer.cshtml`, `Views/Ressurs/Registrer.cshtml` | Ferdig |
+| 6 | Mobiltilpasset frontend | `wwwroot/css/site.css` (`@media`), `_Layout.cshtml`, [mobiltest](#mobiltest) | Ferdig |
+| 7 | Enkel oversikt over ressurser | `/Oversikt`, lista under kartet, `/Ressurs/Detaljer`, `/Tildeling` | Ferdig |
+| 8 | Sikkerhetstiltak | `Program.cs`, `Sikkerhet/SikkerhetsheadereMiddleware.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 6 | Ferdig |
+| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/`, [Testing](#testing) | Se [Testing](#testing) |
+| 10 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), [docs/arkitektur.md](docs/arkitektur.md), [Testing](#testing) | Ferdig |
+| 11 | Dokumentasjon i koden | `/// <summary>` på alle klasser, norske kommentarer i C#, Razor (`@* *@`) og JavaScript | Ferdig |
+| 12 | Bruk av KI | [Bruk av KI](#bruk-av-ki), [docs/ki-bruk.md](docs/ki-bruk.md) | Ferdig |
 
 ---
 
@@ -205,28 +251,31 @@ dotnet test Beredskapsportal.Tests
 
 ## Bruk av KI
 
-KI er brukt som støtte gjennom hele prosjektet. Alle endringer laget med KI har gått gjennom pull request og review fra gruppemedlemmer.
+KI er brukt som støtte gjennom hele prosjektet, fra idé til kode. Alle endringer laget med KI har gått gjennom pull request og review fra gruppemedlemmer. Mer utfyllende beskrivelse: [docs/ki-bruk.md](docs/ki-bruk.md).
 
 ### Verktøy
-- **Claude (Anthropic):** koding, feilsøking, skissering, dokumentasjon og planlegging
+- **Claude (Anthropic)**, i chat og som kodeagent (Claude Code): koding, feilsøking, skissering, testing, dokumentasjon og planlegging
 
 ### Bruksområder
 | Fase | Hvordan KI ble brukt |
 |---|---|
-| Idé og design | Oversette Figma-skissen til sider og komponenter |
-| Koding | Grunnstruktur (MVC, repositories, innlogging), testbruker, kartfunksjon |
-| Drift | Veiledning steg for steg for Dockerfile og `.dockerignore` |
-| Dokumentasjon | Utkast til `docs/drift.md` og denne README-en |
-| Planlegging | Oppsett av Trello-tavle med oppgaver, arbeidsflyt og fordeling |
+| Idé og design | Oversette Figma-skissen til sider og komponenter, designutkast for layout og farger |
+| Koding (Oppgave 1) | Grunnstruktur (MVC, repositories, innlogging), kartfunksjon, posisjonsvelger |
+| Koding (Oppgave 2) | ASP.NET Core Identity og roller, sikkerhetsheadere, godkjenning og tildeling, detaljsider og filter, «Endre ressurs» |
+| Testing | Utkast til xUnit-tester og testscenarioer for systemtest og sikkerhetstest |
+| Drift | Veiledning steg for steg for Dockerfile, `docker-compose.yml` og feilsøking |
+| Dokumentasjon | Utkast til `docs/drift.md`, `docs/arkitektur.md` med diagrammer, og denne README-en |
+| Planlegging | Oppsett av Trello-tavle, statusoversikt over kravene i oppgaven |
 
 ### Regler for KI i repoet
 [AGENT.md](AGENT.md) beskriver hvordan KI-agenter skal jobbe: aldri kode direkte i `main`, alltid egen branch og pull request, og KI merger aldri sin egen PR. Commits laget med KI er merket med `Co-Authored-By: Claude`.
 
 ### Eksempler på prompter
-[Fyll inn: 3–5 prompter dere faktisk har brukt, f.eks.:]
 - *«Bygg forsiden etter Figma-skissen, med innlogging og skjema for behov og ressurser»*
 - *«Ta meg gjennom Docker-oppsettet steg for steg og forklar hva som skjer underveis»*
 - *«Se gjennom repoet og sett opp en Trello-tavle med oppgavene som er gjort og det som gjenstår»*
+- *«Gå i git-repoet og gi inspirasjon med figurer og diagrammer for hvordan arkitekturen er og hva vi skal gjøre videre. Vis hvordan jeg kan sette opp diagrammer i markdown-filer»*
+- *«Her er Oppgave 2 og statusoversikten vår. Oppdater repoet, lag det som mangler (endre ressurs), kjør testene og oppdater README»*
 
 ---
 
@@ -239,7 +288,8 @@ KI er brukt som støtte gjennom hele prosjektet. Alle endringer laget med KI har
 
 ## Kjente begrensninger
 
-- Passord lagres midlertidig i klartekst. Den egenlagde passord-hashingen er fjernet, og innloggingen skal flyttes til ASP.NET Core Identity, som har trygg hashing innebygd.
-- Data lagres bare i minnet og forsvinner når appen stopper. Planen er å koble på MariaDB.
-- Appen kjører bare over http i Docker.
+- Appen kjører over http, ikke https, i Docker. Den lytter bare på `127.0.0.1`, så den er ikke tilgjengelig fra andre maskiner.
+- Hver utvikler har sin egen lokale database. Det finnes ingen felles server.
+- Det er ikke satt opp automatisk backup av databasen. Data ligger i Docker-volumet `dbdata`.
+- Kartfliser og adressesøk hentes fra Kartverket, så kartet krever internett.
 - Se [docs/drift.md](docs/drift.md) for detaljer.

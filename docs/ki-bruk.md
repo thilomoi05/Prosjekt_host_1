@@ -10,7 +10,8 @@ I dette prosjektet har vi brukt kunstig intelligens (KI) som en aktiv samarbeids
 ## 2. Bruksområder
 KI har vært involvert i følgende faser av prosjektet:
 * **Idéutvikling og arkitektur:** Brainstorming rundt løsninger og struktur i ASP.NET Core MVC.
-* **Koding og implementasjon:** Hjelp med å skrive oppsett, repositories og integrasjon med kart (Leaflet / Geonorge).
+* **Koding og implementasjon:** Hjelp med å skrive oppsett, repositories og integrasjon med kart (Leaflet / Geonorge). I Oppgave 2 også Identity, roller, sikkerhetsheadere, godkjenning og tildeling, og «Endre ressurs».
+* **Testing:** Utkast til xUnit-tester og scenarioer for system- og sikkerhetstest.
 * **Feilsøking:** Analysere feilmeldinger og finne løsninger i koden eller Dockerfile.
 * **Dokumentasjon:** Strukturere og skrive markdown-filer.
 * **Planlegging:** Organisere oppgaver og arbeidsflyt (Trello).
@@ -23,7 +24,9 @@ Her er eksempler på prompter vi har brukt underveis:
    
 3. «Se gjennom repoet og sett opp en Trello-tavle med oppgavene som er gjort og det som gjenstår»
 
-4.Her får du neste del av det jeg har denne sprinten: Vil at du skal gå i git repoet https://github.com/thilomoi05/Prosjekt_host_1 og gi inspirasjon med figurer og diagrammer hvordan arkitekturen er og hva vi skal gjøre videre / endre. Ønsker at du viser hvordan jeg kan sette opp diagrammer i markdown filer.
+4. «Gå i git-repoet https://github.com/thilomoi05/Prosjekt_host_1 og gi inspirasjon med figurer og diagrammer for hvordan arkitekturen er og hva vi skal gjøre videre / endre. Vis hvordan jeg kan sette opp diagrammer i markdown-filer.»
+
+5. «Her er Oppgave 2 og statusoversikten vår. Oppdater repoet, lag det som mangler (endre ressurs), kjør testene og oppdater README.» (brukt i Oppgave 2: KI skrev `RessursController.Rediger` med tester, og et utkast til system- og sikkerhetstesten, som gruppa gikk gjennom)
 
 ## 4. Retningslinjer og regler (AGENT.md)
 Vi har fulgt reglene i `AGENT.md` for alt arbeid med KI:
