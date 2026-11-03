@@ -174,6 +174,21 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | 11 | Dokumentasjon i koden | `/// <summary>` på alle klasser, norske kommentarer i C#, Razor (`@* *@`) og JavaScript | Ferdig |
 | 12 | Bruk av KI | [Bruk av KI](#bruk-av-ki), [docs/ki-bruk.md](docs/ki-bruk.md) | Ferdig |
 
+### Endret etter tilbakemelding på innlevering 1
+
+| Tilbakemelding | Hva vi har gjort |
+|---|---|
+| Legg inn konkrete prompter i KI-delen | Lagt til flere prompter vi faktisk har brukt, se [Bruk av KI](#bruk-av-ki) og [docs/ki-bruk.md](docs/ki-bruk.md) |
+| Mangler automatiske tester for POST-håndtering av behov og ressurser | Nye tester i `BehovControllerTester.cs` og `RessursControllerTester.cs`: gyldig skjema lagres, ugyldig skjema lagres ikke, manglende plassering, for mange og for store bilder |
+| Mangler tester for validering av skjemaer | Ny `ValideringTester.cs` med de ekte valideringsreglene for behov, ressurs, innlogging og registrering (påkrevde felt, telefon, e-post, maks lengde) |
+| Mangler tester for `/Kart/Behov` og `/Kart/Ressurser` | Ny `KartControllerTester.cs`: riktige felt i JSON-svaret, bare godkjente ressurser, tildelte ressurser merket, bare GET og bare offentlige aktører |
+| Rate limiting, f.eks. ved innlogging | Maks 10 forsøk per minutt per IP på innlogging og registrering (`Sikkerhet/Fartsgrenser.cs`), i tillegg til utestenging etter 5 feil passord |
+| SQL-injeksjon | All databasetilgang går gjennom EF Core med parametere, ingen egen SQL. Testet manuelt, se [sikkerhetstesten](#sikkerhetstest) |
+| Beskyttelse mot XSS | Razor-encoding, ingen `@Html.Raw`, `trygg()` i JavaScript og Content-Security-Policy uten `unsafe-inline`. Testet manuelt, se [sikkerhetstesten](#sikkerhetstest) |
+| Kontroll av opplastede filer | Innholdet i filen sjekkes nå, ikke bare endelsen (`Sikkerhet/Bildesjekk.cs`), og hele skjemaet har en grense på 26 MB. Tester i `SikkerhetTester.cs` |
+
+I tillegg fant vi at tekstfeltene i skjemaene ikke hadde maks lengde, mens kolonnene i databasen har det. For lang tekst ga en feil fra databasen. Nå har feltene `[StringLength]` med samme lengde, og brukeren får en melding.
+
 ---
 
 ## Testing
