@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
 using Beredskapsportal.Services;
+using Beredskapsportal.Sikkerhet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,6 +25,10 @@ public class RessursController : Controller
     private const int MaksAntallBilder = 5;
     private const long MaksBildestorrelse = 5 * 1024 * 1024;   // 5 MB per bilde
     private static readonly string[] TillatteFiltyper = { ".jpg", ".jpeg", ".png", ".webp" };
+
+    // Største skjema vi tar imot: 5 bilder à 5 MB pluss tekstfeltene. Større forespørsler
+    // avvises av serveren før controlleren kjører, så ingen kan fylle opp minnet eller disken.
+    private const long MaksSkjemastorrelse = 26 * 1024 * 1024;
 
     private readonly IRessursRepository _ressursRepository;
     private readonly IBehovRepository _behovRepository;
@@ -68,6 +73,8 @@ public class RessursController : Controller
     // (await), kan serveren gjøre andre ting i stedet for å stå og vente.
     // Anti-forgery-tokenet sjekkes av filteret i Program.cs (gjelder alle POST-metoder).
     [HttpPost]
+    [RequestSizeLimit(MaksSkjemastorrelse)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaksSkjemastorrelse)]
     public async Task<IActionResult> Registrer(RessursViewModel modell)
     {
         // Sjekker bildene i tillegg til de vanlige [Required]-reglene i view-modellen.
@@ -222,6 +229,8 @@ public class RessursController : Controller
     ///    Endringen står uansett i historikken.
     /// </summary>
     [HttpPost]
+    [RequestSizeLimit(MaksSkjemastorrelse)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaksSkjemastorrelse)]
     public async Task<IActionResult> Rediger(int id, RedigerRessursViewModel modell)
     {
         var ressurs = _ressursRepository.HentMedId(id);
@@ -411,8 +420,8 @@ public class RessursController : Controller
         ErEierEllerAdmin(ressurs) || (ErOffentligAktor() && ressurs.Status == RessursStatus.Godkjent);
 
     /// <summary>
-    /// Sjekker at brukeren har lastet opp 1-5 bilder, at de er bildefiler,
-    /// og at ingen er for store. Feil legges i ModelState og vises i skjemaet.
+    /// Sjekker at brukeren har lastet opp 1-5 bilder, at de er bildefiler (både endelse
+    /// og innhold, se Sikkerhet/Bildesjekk.cs), og at ingen er for store. Feil legges i ModelState og vises i skjemaet.
     /// </summary>
     private void SjekkBilder(List<IFormFile> bilder)
     {
@@ -434,6 +443,16 @@ public class RessursController : Controller
             if (!TillatteFiltyper.Contains(filtype))
             {
                 ModelState.AddModelError(nameof(RessursViewModel.Bilder), $"«{bilde.FileName}» er ikke et bilde. Bruk JPG, PNG eller WEBP.");
+            }
+            else
+            {
+                // Endelsen er riktig, men er innholdet et bilde? Et program kan hete "bilde.jpg".
+                // Bildesjekk leser de første bytene i filen og sjekker at de passer med endelsen.
+                using var innhold = bilde.OpenReadStream();
+                if (!Bildesjekk.InnholdPasserMedFiltype(innhold, filtype))
+                {
+                    ModelState.AddModelError(nameof(RessursViewModel.Bilder), $"«{bilde.FileName}» er ikke et gyldig {filtype.TrimStart('.').ToUpperInvariant()}-bilde.");
+                }
             }
 
             if (bilde.Length > MaksBildestorrelse)

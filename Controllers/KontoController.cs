@@ -1,8 +1,10 @@
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
+using Beredskapsportal.Sikkerhet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Beredskapsportal.Controllers;
 
@@ -15,6 +17,8 @@ namespace Beredskapsportal.Controllers;
 /// Vi skriver altså ingen passord- eller cookie-kode selv.
 ///
 /// Anti-forgery-tokenet sjekkes på alle POST-metodene av filteret i Program.cs.
+/// POST til LoggInn og Registrer har i tillegg en fartsgrense (Sikkerhet/Fartsgrenser.cs),
+/// så ingen kan prøve tusenvis av passord eller lage tusenvis av kontoer.
 /// </summary>
 public class KontoController : Controller
 {
@@ -36,6 +40,7 @@ public class KontoController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(Fartsgrenser.Innlogging)]
     public async Task<IActionResult> LoggInn(LoggInnViewModel modell)
     {
         if (!ModelState.IsValid)
@@ -88,6 +93,7 @@ public class KontoController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting(Fartsgrenser.Innlogging)]
     public async Task<IActionResult> Registrer(RegistrerBrukerViewModel modell)
     {
         // Sikkerhetsnett: bare de to rollene i BrukerRolle kan velges. Admin finnes ikke der,

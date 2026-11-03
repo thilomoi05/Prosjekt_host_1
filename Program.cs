@@ -90,6 +90,10 @@ builder.Services.ConfigureApplicationCookie(valg =>
     valg.SlidingExpiration = true;                                // tiden starter på nytt når brukeren er aktiv
 });
 
+// Rate limiting: maks 10 forsøk per minutt per IP-adresse på innlogging og registrering
+// (se Sikkerhet/Fartsgrenser.cs). Kommer i tillegg til utestengingen over.
+builder.Services.LeggTilFartsgrenser();
+
 var app = builder.Build();
 
 // Lager tabellene, rollene, testbrukerne og eksempeldataene første gang appen kobler til databasen.
@@ -122,6 +126,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 });
 
 app.UseRouting();
+
+// Fartsgrensene må komme etter UseRouting, så de ser [EnableRateLimiting] på metoden som blir kalt.
+app.UseRateLimiter();
 
 // Først finner vi ut hvem brukeren er (innloggingscookien fra Identity),
 // deretter om rollen har tilgang til siden ([Authorize]).
