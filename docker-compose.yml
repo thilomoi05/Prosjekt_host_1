@@ -11,8 +11,11 @@ services:
       MARIADB_USER: beredskap
       MARIADB_PASSWORD: ${DB_PASSWORD}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # Porten databasen får på din egen maskin (for dotnet run og databaseverktøy).
+    # Appen i Docker bruker den ikke: den snakker med databasen på db:3306 inne i Docker.
+    # Er 3306 opptatt (lokal MySQL, eller reservert av Hyper-V på Windows), sett DB_PORT=3307 i .env.
     ports:
-      - "127.0.0.1:3306:3306"
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
     volumes:
       - dbdata:/var/lib/mysql
     healthcheck:

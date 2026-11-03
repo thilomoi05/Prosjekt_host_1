@@ -147,7 +147,8 @@ Testbrukerne er bare for testing og skal fjernes før portalen tas i bruk.
 | Problem | Løsning |
 |---|---|
 | `Cannot connect to the Docker daemon` | Start Docker Desktop, og vent til det står «Engine running» |
-| `port is already allocated` | Noe annet bruker port 8080 eller 3306. Endre porten i `docker-compose.yml` |
+| `port is already allocated` eller `ports are not available ... 3306 ... forbidden by its access permissions` | Port 3306 er opptatt. Enten kjører en lokal MySQL/MariaDB (stopp tjenesten i `services.msc`), eller Windows/Hyper-V har reservert porten (sjekk med `netsh interface ipv4 show excludedportrange protocol=tcp`). Enkleste løsning: sett `DB_PORT=3307` i `.env`. Bruker du `dotnet run`, må `Port=` i tilkoblingsstrengen i User Secrets da også være 3307 |
+| Samme feil for port 8080 | Noe annet bruker 8080. Lukk programmet, eller endre `8080:8080` til f.eks. `8081:8080` i `docker-compose.yml` lokalt |
 | `no configuration file provided` | Kjør kommandoen fra rotmappa i prosjektet |
 | `Access denied for user 'beredskap'` | Passordet i `.env` er endret etter at databasen ble laget. Kjør `docker compose down -v` og start på nytt |
 | `En programkontrollpolicy har blokkert denne filen` | Windows Smart App Control. Løst med `UseAppHost=false` i `Beredskapsportal.csproj` |
