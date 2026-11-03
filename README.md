@@ -169,7 +169,7 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | 6 | Mobiltilpasset frontend | `wwwroot/css/site.css` (`@media`), `_Layout.cshtml`, [mobiltest](#mobiltest) | Ferdig |
 | 7 | Enkel oversikt over ressurser | `/Oversikt`, lista under kartet, `/Ressurs/Detaljer`, `/Tildeling` | Ferdig |
 | 8 | Sikkerhetstiltak | `Program.cs`, `Sikkerhet/SikkerhetsheadereMiddleware.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 6 | Ferdig |
-| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/`, [Testing](#testing) | Se [Testing](#testing) |
+| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (127 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
 | 10 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), [docs/arkitektur.md](docs/arkitektur.md), [Testing](#testing) | Ferdig |
 | 11 | Dokumentasjon i koden | `/// <summary>` på alle klasser, norske kommentarer i C#, Razor (`@* *@`) og JavaScript | Ferdig |
 | 12 | Bruk av KI | [Bruk av KI](#bruk-av-ki), [docs/ki-bruk.md](docs/ki-bruk.md) | Ferdig |
@@ -212,7 +212,7 @@ Testene kjører uten Docker og uten database. De bruker de minnebaserte reposito
 dotnet test Beredskapsportal.Tests
 ```
 
-**Resultat:** RESULTAT_FYLLES_INN
+**Resultat (03.11.2026):** 127 av 127 tester bestått ✅ (77 fra før og 50 nye i Oppgave 2)
 
 | Testfil | Hva den sjekker |
 |---|---|
