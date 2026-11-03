@@ -193,13 +193,164 @@ I tillegg fant vi at tekstfeltene i skjemaene ikke hadde maks lengde, mens kolon
 
 ## Testing
 
-Vi har testet appen manuelt i nettleseren, med appen kjørende i Docker (se [Hurtigstart](#hurtigstart)).
+Vi har fire typer tester. Enhetstestene kjører automatisk. System-, sikkerhets- og mobiltesten er kjørt manuelt i nettleseren mot appen i Docker, med MariaDB og ekte data. Brukervennlighetstesten er gjort med personer utenfor gruppa.
 
-**Testmiljø:** Windows, den innebygde nettleseren i VS Code, Docker Desktop · **Dato:** 30.09.2026 · **Testbruker:** `test` / `test`
+| Type | Hva | Hvor |
+|---|---|---|
+| Enhetstesting | Automatiske xUnit-tester av controllere, tjenester, repositoryer, modeller, validering og sikkerhet | [Automatiske tester](#automatiske-tester-xunit) |
+| Systemtesting | Hovedflytene fra start til slutt, med alle tre rollene | [Systemtest](#systemtest) |
+| Sikkerhetstesting | Forsøk på å bryte tilgangskontroll, CSRF, XSS, SQL-injeksjon, filopplasting og innlogging | [Sikkerhetstest](#sikkerhetstest) |
+| Brukervennlighetstesting | Personer utenfor gruppa løser oppgaver i appen | [Brukervennlighetstest](#brukervennlighetstest) |
 
-✅ bestått · ⚠️ bestått med merknad
+✅ bestått · ⚠️ bestått med merknad · ❌ feilet
 
-### Registrere bruker og logge inn/ut
+### Automatiske tester (xUnit)
+
+Testene kjører uten Docker og uten database. De bruker de minnebaserte repositoriene (`InMemory*Repository`), og Identity erstattes med NSubstitute.
+
+```bash
+dotnet test Beredskapsportal.Tests
+```
+
+**Resultat:** RESULTAT_FYLLES_INN
+
+| Testfil | Hva den sjekker |
+|---|---|
+| `BehovControllerTester.cs` | POST av behov: gyldig skjema lagres, tomt skjema og manglende plassering avvises, tekst lagres uendret |
+| `RessursControllerTester.cs` | POST av ressurs: lagres som «venter», ugyldig skjema lagres ikke, bilderegler (antall, størrelse, type, innhold), `/Ressurs/Bilde` kan ikke hente andre filer |
+| `RedigerRessursTester.cs` | Endre ressurs: bare eier og admin, endringer lagres, ny godkjenning etter endring, nye bilder erstatter gamle, historikk |
+| `ValideringTester.cs` | Valideringsreglene i skjemaene for behov, ressurs, innlogging og registrering (påkrevde felt, telefon, e-post, maks lengde) |
+| `KartControllerTester.cs` | `/Kart/Behov` og `/Kart/Ressurser`: feltene kart.js bruker, bare godkjente ressurser, tildelte merket, bare GET og bare offentlige aktører |
+| `KontoControllerTester.cs` | Innlogging (riktig og feil passord, ukjent bruker, låst konto, ikke godkjent) og registrering |
+| `SikkerhetTester.cs` | Sikkerhetsheadere og CSP, roller, norske feilmeldinger, rate limiting, grense på opplasting, sjekk av bildeinnhold |
+| `TilgangTester.cs` | Hvilke roller controllerne krever |
+| `DetaljerTester.cs` | Detaljsidene, og at private aktører bare ser sine egne ressurser |
+| `TildelingTjenesteTester.cs`, `TildelingsforslagTester.cs` | Godkjenning, tildeling, forespørsler, tilbaketrekking og avstand |
+| `ForesporselControllerTester.cs`, `TildelingControllerTester.cs`, `HvaTrengsControllerTester.cs` | Forespørsler, tildelingslista og «Hva trengs» |
+| `BehovRepositoryTester.cs`, `TildelingRepositoryTester.cs`, `ModellTester.cs`, `ControllerTester.cs`, `IdentitetOppsettTester.cs` | Tellinger, eksempeldata, passordregler, forsiden og oppsett av roller og testbrukere |
+
+`TestHjelpere.cs` og `IdentitetHjelpere.cs` inneholder erstatninger for innlogging, filsystem og Identity, så controllerne kan testes uten at appen kjører.
+
+### Systemtest
+
+**Dato:** 03.11.2026 · **Miljø:** Windows, Docker Desktop (app og MariaDB i Docker), Chrome · **Kode:** branchen `feature/oppgave2-endre-ressurs-og-testing` · **Testbrukere:** `test`, `privat` og `admin` (se [docs/drift.md](docs/drift.md#testbrukere))
+
+#### Registrering og innlogging
+
+| Scenario | Steg | Forventet | Faktisk |
+|---|---|---|---|
+| Registrere privat aktør | `/Konto/Registrer`, rolle privat aktør | Logges inn og sendes til Oversikt | ✅ Logget inn, navnet vises i menyen |
+| Registrere offentlig aktør | `/Konto/Registrer`, rolle offentlig aktør | Kontoen lages, men må godkjennes | ✅ «Takk! Kontoen er opprettet, men må godkjennes av en administrator før du kan logge inn.» |
+| Logge inn før godkjenning | Logg inn med den nye offentlige aktøren | Nektes | ✅ «Kontoen din venter på godkjenning fra en administrator.» |
+| Admin godkjenner bruker | `/Admin` → «Godkjenn» | Brukeren kan logge inn og ser kartet | ✅ Logget inn, `/Kart` åpnes |
+| Brukernavn opptatt | Registrer `test` | Feilmelding | ✅ «Brukernavnet «test» er allerede i bruk.» |
+| Svakt passord | Passord uten tall og stor bokstav | Feilmelding | ✅ «Passordet må inneholde minst ett tall. Passordet må inneholde minst én stor bokstav.» |
+| Feil passord | Riktig brukernavn, feil passord | Feilmelding | ✅ «Feil brukernavn eller passord.» |
+| Tomt innloggingsskjema | Trykk «Logg inn» | Feilmelding ved begge felt | ✅ |
+| Logge inn med de tre rollene | `test`, `privat`, `admin` | Sendes til Oversikt | ✅ |
+
+#### Behov (offentlig aktør)
+
+| Scenario | Steg | Forventet | Faktisk |
+|---|---|---|---|
+| Melde behov | Fyll ut `/Behov/Registrer` med punkt i kartet | Lagres, vises i `/Behov`, på kartet og på detaljsiden | ✅ Lagret i MariaDB, vises alle tre steder, historikk «Behovet ble meldt inn» |
+| Tomt behovsskjema | Send uten å fylle ut | Feilmelding for hvert påkrevde felt | ✅ Type, beskrivelse, område, kontaktperson, telefon og plassering |
+| For langt telefonnummer | 31 siffer | Feilmelding, ikke databasefeil | ✅ «Telefonnummeret kan være på maks 30 tegn.» |
+| Kartdata | `/Kart/Behov` og `/Kart/Ressurser` | JSON med feltene kartet bruker | ✅ 13 behov og 28 godkjente ressurser, 5 merket som tildelt. 41 markører på kartet |
+
+#### Ressurser (privat aktør og admin)
+
+| Scenario | Steg | Forventet | Faktisk |
+|---|---|---|---|
+| Tilby ressurs | Fyll ut «Tilby ressurs» med et PNG-bilde | Lagres som «Venter på godkjenning» | ✅ «Takk! Ressursen er sendt inn, og blir synlig når en administrator har godkjent den.» |
+| Ressurs uten bilde | Send uten bilde | Feilmelding | ✅ «Du må legge ved minst ett bilde av ressursen.» |
+| Admin godkjenner ressurs | `/Admin` → godkjenn | Vises på kartet, bildet kan åpnes | ✅ |
+| Endre ressurs uten nye bilder | Detaljside → «Endre ressursen», bytt type og beskrivelse, flytt punktet, lagre | Lagres, må godkjennes på nytt | ❌ → ✅ Første forsøk: nettleseren krevde nye bilder (se [Funnet under testing](#funnet-under-testing)). Etter rettingen: lagret, status «Venter på godkjenning», historikk «Ressursen ble endret og venter på ny godkjenning» |
+| Endre ressurs med nytt bilde | Last opp nytt bilde | Nytt bilde erstatter det gamle | ✅ Ett bilde, det gamle gir 404 |
+| Trekke tilbake ressurs | Detaljside → «Trekk tilbake» → bekreft | Ressursen og bildene slettes | ✅ Detaljsiden og bildet gir 404 |
+| Data blir liggende | Bygg og start containerne på nytt (uten `-v`) | Ressursen finnes fortsatt | ✅ |
+
+#### Docker
+
+| Scenario | Steg | Forventet | Faktisk |
+|---|---|---|---|
+| Starte app og database | `docker compose up --build` | To containere starter, appen svarer på http://localhost:8080 | ⚠️ Port 3306 var reservert av Windows. Rettet med `DB_PORT` i `.env` (se [docs/drift.md](docs/drift.md)), deretter ✅ |
+
+### Sikkerhetstest
+
+Kjørt manuelt samme dag, med de samme brukerne. Forsøkene er gjort fra nettleseren med `fetch`, slik en angriper ville gjort, i tillegg til vanlige klikk.
+
+| Angrep / kontroll | Hva vi gjorde | Forventet | Faktisk |
+|---|---|---|---|
+| Sikkerhetsheadere | Leste svaret fra `/` | CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. Ingen `Server`-header | ✅ Alle på plass, `script-src 'self'` uten `unsafe-inline` |
+| Uinnlogget tilgang | Åpnet `/Oversikt`, `/Kart`, `/Kart/Behov`, `/Kart/Ressurser`, `/Admin`, `/Behov`, `/Ressurs/Rediger/1` | Sendes til innlogging | ✅ Alle 7 |
+| Feil rolle | Som privat aktør: `/Kart`, `/Behov`, `/Admin`, `/Kart/Ressurser`, andres ressurs og `/Ressurs/Rediger/1` | Sendes til Oversikt | ✅ Alle 6 |
+| Endre andres ressurs | Annen privat bruker: GET og POST direkte til `/Ressurs/Rediger/{id}`, og åpne bildet | Nektes, ingenting endres | ✅ Nektet, ressursen uendret |
+| Manipulere skjemaet | Sendte `Status=Godkjent`, `RegistrertAv=admin` og `EksisterendeBilder=../../Program.cs` med «Endre ressurs» | Ignoreres | ✅ Status fortsatt «Venter», eier uendret |
+| CSRF | POST til `/Behov/Registrer` og `/Konto/LoggInn` uten anti-forgery-token | Avvises | ✅ 400 Bad Request |
+| XSS | Beskrivelse med `<img src=x onerror=...>` og `<script>` | Vises som tekst, kjøres ikke | ✅ Vist som tekst på detaljsiden, i kartlista og i JSON. Sidetittelen ble ikke endret |
+| SQL-injeksjon | Beskrivelse med `'); DROP TABLE Behov; --` | Lagres som tekst | ✅ Lagret uendret, tabellen `Behov` virker som før |
+| Falskt bilde | Tekstfil kalt `falsk.jpg`, Windows-program (`MZ`) kalt `program.png` | Avvises | ✅ ««falsk.jpg» er ikke et gyldig JPG-bilde.» og ««program.png» er ikke et gyldig PNG-bilde.» |
+| Stitraversering | `/Ressurs/Bilde/..%2F..%2Fappsettings.json` | Ingen fil sendes | ✅ 404 |
+| Utestenging | 5 feil passord, så riktig passord | Kontoen låses | ✅ «For mange feil forsøk. Kontoen er låst i 5 minutter.» |
+| Rate limiting | 14 innloggingsforsøk på under ett minutt fra samme IP | Fra forsøk 11: 429 | ✅ Forsøk 1–10 slapp gjennom, 11–14 fikk 429 «For mange forsøk på kort tid. Vent ett minutt og prøv igjen.» Vanlige sider virket som før |
+
+### Mobiltest
+
+Chrome-vinduet satt til 500 px bredt (det smaleste Chrome tillater), som er under Bootstraps mobilgrense på 576 px.
+
+| Side | Forventet | Faktisk |
+|---|---|---|
+| Forside | Ingen sidelengs rulling | ✅ |
+| Oversikt | Kortene stables i én kolonne | ✅ |
+| Kart | Kartet fyller skjermen, «Filter» og «Vis liste» kan nås | ✅ |
+| Melde behov, Tilby ressurs | Skjema og kart i én kolonne | ✅ |
+| Behov (liste) | Hele tabellen kan leses | ⚠️ Tabellen rulles sidelengs inne i kortet. Kolonnene «Status» og «Dato» er skjult til man ruller, og ingenting viser at det går an å rulle |
+| Detaljside for behov | Kartet under teksten | ✅ |
+| Tildelinger, Hva trengs | Ingen sidelengs rulling | ✅ |
+
+### Brukervennlighetstest
+
+> **Ikke gjennomført ennå.** Tabellene fylles inn når testen er gjort.
+
+**Hvordan:** 2–3 personer utenfor gruppa får en oppgave om gangen, uten hjelp. De tenker høyt mens de løser den. Vi noterer om de klarte det, hvor lang tid det tok, og hva som var vanskelig. Etterpå retter vi det som flere snublet i.
+
+**Testpersoner:** [Fyll inn: f.eks. «Person A, 22 år, student», uten fulle navn] · **Dato:** [Fyll inn]
+
+| # | Oppgave | Rolle | Person A | Person B | Person C |
+|---|---|---|---|---|---|
+| 1 | Lag en bruker som privat aktør | – | | | |
+| 2 | Tilby et aggregat med bilde, og vis hvor det står | Privat aktør | | | |
+| 3 | Endre beskrivelsen av ressursen du la inn | Privat aktør | | | |
+| 4 | Meld et behov for nødstrøm på Lund med høy prioritet | Offentlig aktør (`test`) | | | |
+| 5 | Finn alle ledige aggregater på kartet | Offentlig aktør | | | |
+| 6 | Finn ut hvilke ressurser som er tildelt behovet ditt | Offentlig aktør | | | |
+| 7 | Godkjenn en ressurs som venter, og tildel den til et behov | Admin | | | |
+
+Skriv ✅ (klarte det alene), ⚠️ (klarte det med nøling) eller ❌ (klarte det ikke), og ev. tid.
+
+| Funn | Hvor mange | Hva vi endret |
+|---|---|---|
+| [Fyll inn] | | |
+
+**Tidligere tilbakemeldinger:** Etter fremføringen og sprint review endret vi blant annet lista under kartet til fullskjerm, la til filter på kartet og laget siden «Hva trengs» (commit `0d355f4`, «Rettelser etter fremføring»).
+
+### Funnet under testing
+
+| Feil | Hvor | Status |
+|---|---|---|
+| «Endre ressurs» kunne ikke lagres uten å velge nye bilder. Nettleseren viste «The Bilder av ressursen field is required.» Årsak: `List<IFormFile>` uten `?` får en skjult `[Required]` fra ASP.NET | `/Ressurs/Rediger` | Rettet: `Bilder` er nå `List<IFormFile>?`, testet på nytt ✅ |
+| Port 3306 var reservert av Windows/Hyper-V, så databasen startet ikke | `docker-compose.yml` | Rettet: porten kan settes med `DB_PORT` i `.env` |
+| Tekstfeltene hadde ikke maks lengde, mens kolonnene i databasen har det. For lang tekst ville gitt databasefeil | Alle skjemaer | Rettet: `[StringLength]` på feltene, testet ✅ |
+| Behovstabellen viser ikke at den kan rulles sidelengs på mobil | `/Behov` | Ikke rettet ennå |
+| Meldingen om manglende plassering ble vist to ganger (Oppgave 1) | `/Behov/Registrer`, `/Ressurs/Registrer` | Rettet i Oppgave 1, sjekket igjen i `ValideringTester` ✅ |
+
+<details>
+<summary>Systemtest fra Oppgave 1 (30.09.2026)</summary>
+
+Kjørt før Identity, MariaDB og godkjenning. Testbruker `test` / `test`.
+
+#### Registrere bruker og logge inn/ut
 
 | Scenario | Steg | Forventet resultat | Faktisk resultat |
 |---|---|---|---|
@@ -207,7 +358,7 @@ Vi har testet appen manuelt i nettleseren, med appen kjørende i Docker (se [Hur
 | Logge ut | Trykk på navnet øverst til høyre | Brukeren sendes til forsiden, og menyen viser «Logg inn» | ✅ Som forventet |
 | Logge inn | Logg inn med testbrukeren og med den nye brukeren | Brukeren sendes til Oversikt | ✅ Som forventet for begge brukerne |
 
-### Feil passord og tomme felt (validering)
+#### Feil passord og tomme felt (validering)
 
 | Scenario | Steg | Forventet resultat | Faktisk resultat |
 |---|---|---|---|
@@ -218,51 +369,20 @@ Vi har testet appen manuelt i nettleseren, med appen kjørende i Docker (se [Hur
 | Brukernavnet er tatt | Registrer en bruker med brukernavnet `test` | Feilmelding | ✅ «Brukernavnet er allerede i bruk.» |
 | Tomt behovsskjema | Trykk «Registrer» på `/Behov/Registrer` uten å fylle ut noe | Feilmelding ved hvert påkrevde felt, også manglende posisjon | ⚠️ Alle feltene får feilmelding, men posisjonsmeldingen vises to ganger (se under) |
 
-### Melde behov og registrere ressurs
+#### Melde behov og registrere ressurs
 
 | Scenario | Steg | Forventet resultat | Faktisk resultat |
 |---|---|---|---|
 | Melde behov | Fyll ut `/Behov/Registrer`, klikk i kartet og trykk «Registrer» | Brukeren sendes til `/Behov`, og det nye behovet står øverst | ✅ Behovet står øverst i listen med dagens dato |
 | Registrere ressurs med posisjon | Fyll ut `/Ressurs/Registrer` med adresse, «Finn på kartet», bekreft plasseringen, legg ved bilde og trykk «Registrer» | Ressursen vises på `/Kart` på riktig sted | ✅ Grønn markør ved riktig adresse. Boblen viser adresse, tilgangsbeskrivelse, kontaktinfo og bildet |
 
-### Docker
+#### Docker
 
 | Scenario | Steg | Forventet resultat | Faktisk resultat |
 |---|---|---|---|
 | Starte appen i Docker | Kjør kommandoene under [Hurtigstart](#hurtigstart) og åpne http://localhost:8080 | Appen starter, og forsiden vises | ✅ Appen starter, og alle testene over ble kjørt i Docker |
 
-### Automatiske tester (xUnit)
-
-I tillegg til de manuelle testene over har vi automatiske enhetstester i `Beredskapsportal.Tests/`. De kjører uten Docker og uten nettleser, og sjekker logikken i controllere, repositoryer og modeller direkte.
-
-Kjør dem fra rotmappen med:
-
-```bash
-dotnet test Beredskapsportal.Tests
-```
-
-| Testfil | Hva den sjekker |
-|---|---|
-| `BehovRepositoryTester.cs` | Tellingene på forsiden og i Oversikt, og at nyeste behov vises først |
-| `BrukerOgPassordTester.cs` | Passordhashing med salt, og oppslag på brukernavn uavhengig av store/små bokstaver |
-| `ModellTester.cs` | Passordreglene i registreringsskjemaet og visningsnavn for behovstyper |
-| `KontoControllerTester.cs` | Innlogging med riktig og feil passord, og opptatt brukernavn ved registrering |
-| `BehovControllerTester.cs`, `ControllerTester.cs` | At gyldige behov lagres og ugyldige ikke, og tallene på forsiden |
-| `RessursControllerTester.cs` | At ressurser må ha bilder av riktig filtype, og at `/Ressurs/Bilde` ikke kan hente filer utenfor bildemappen |
-
-`TestHjelpere.cs` inneholder små erstatninger for innlogging og filsystem, slik at controllerne kan testes uten at appen kjører.
-
-### Funnet under testing
-
-| Feil | Hvor | Status |
-|---|---|---|
-| Meldingen «Du må klikke i kartet for å markere plasseringen.» vises to ganger øverst i skjemaet når posisjon mangler | `/Behov/Registrer`, `/Ressurs/Registrer` | Rettet: bare breddegraden sjekkes med `[Required]`, så meldingen vises én gang |
-
-### Forbedringer vi vil gjøre
-
-- **Adresse fra kartet:** Når brukeren klikker i kartet, skal adressen hentes ut fra koordinatene og fylles inn i adressefeltet automatisk (omvendt adressesøk). I dag går det bare motsatt vei: fra adresse til punkt på kartet.
-
----
+</details>
 
 ## Bruk av KI
 
