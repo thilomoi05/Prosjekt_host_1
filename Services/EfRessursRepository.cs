@@ -43,6 +43,39 @@ public class EfRessursRepository : IRessursRepository
         _db.SaveChanges();
     }
 
+    public void Oppdater(Ressurs endret)
+    {
+        // Henter ressursen som EF følger med på, og kopierer over feltene som kan endres.
+        // Eier (RegistrertAv) og Id kopieres bevisst ikke, de kan aldri endres.
+        var ressurs = _db.Ressurser.Find(endret.Id);
+        if (ressurs is null)
+        {
+            return;
+        }
+        KopierEndringer(endret, ressurs);
+        _db.SaveChanges();
+    }
+
+    /// <summary>
+    /// Feltene som kan endres på en ressurs. Samlet ett sted, så EF- og minnelagringen gjør det samme.
+    /// </summary>
+    internal static void KopierEndringer(Ressurs fra, Ressurs til)
+    {
+        til.Type = fra.Type;
+        til.Status = fra.Status;
+        til.Avvisningsgrunn = fra.Avvisningsgrunn;
+        til.BeskrivelseAvKapasitet = fra.BeskrivelseAvKapasitet;
+        til.Adresse = fra.Adresse;
+        til.Tilgangsbeskrivelse = fra.Tilgangsbeskrivelse;
+        til.Bilder = fra.Bilder.ToList();
+        til.TilgjengeligFra = fra.TilgjengeligFra;
+        til.TilgjengeligTil = fra.TilgjengeligTil;
+        til.Kontaktperson = fra.Kontaktperson;
+        til.Telefon = fra.Telefon;
+        til.Breddegrad = fra.Breddegrad;
+        til.Lengdegrad = fra.Lengdegrad;
+    }
+
     public void Slett(int id)
     {
         var ressurs = _db.Ressurser.Find(id);

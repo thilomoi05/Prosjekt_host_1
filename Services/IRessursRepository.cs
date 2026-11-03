@@ -16,6 +16,10 @@ public interface IRessursRepository
     // Godkjenner eller avviser ressursen. Avvisningsgrunn er bare satt ved avvisning.
     void SettStatus(int id, RessursStatus status, string? avvisningsgrunn = null);
 
+    // Lagrer endringer eieren eller en administrator har gjort i skjemaet "Endre ressurs".
+    // Id-en i ressursen sier hvilken ressurs som endres. Gjør ingenting hvis den ikke finnes.
+    void Oppdater(Ressurs ressurs);
+
     // Sletter ressursen. Brukes når eieren trekker den tilbake.
     void Slett(int id);
 }
