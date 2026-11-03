@@ -170,7 +170,7 @@ public class RedigerRessursTester : IDisposable
     {
         var ressurs = LeggTilRessurs("privat");
         var endring = Endring(ressurs.Id);
-        endring.Bilder.Add(TestHjelpere.LagBilde("nytt.png"));
+        endring.Bilder!.Add(TestHjelpere.LagBilde("nytt.png"));
 
         await LagController("privat", Roller.PrivatAktor).Rediger(ressurs.Id, endring);
 
@@ -185,7 +185,7 @@ public class RedigerRessursTester : IDisposable
     {
         var ressurs = LeggTilRessurs("privat");
         var endring = Endring(ressurs.Id);
-        endring.Bilder.Add(TestHjelpere.LagBilde("virus.exe"));
+        endring.Bilder!.Add(TestHjelpere.LagBilde("virus.exe"));
 
         var resultat = await LagController("privat", Roller.PrivatAktor).Rediger(ressurs.Id, endring);
 
