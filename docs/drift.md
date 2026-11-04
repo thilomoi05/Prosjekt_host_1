@@ -18,8 +18,11 @@ cp .env.example .env
 ```
 DB_ROOT_PASSWORD=ditt-root-passord
 DB_PASSWORD=ditt-app-passord
+DB_PORT=3306
 TESTBRUKER_PASSORD=passordet-til-testbrukerne
 ```
+
+`DB_PORT` er porten databasen får på din maskin. Er 3306 opptatt, bruk 3307 (se [Feilsøking](#feilsøking)).
 
 `TESTBRUKER_PASSORD` er passordet til testbrukerne (se [Testbrukere](#testbrukere)). Er det tomt, lages ingen testbrukere.
 
