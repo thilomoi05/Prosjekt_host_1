@@ -48,9 +48,9 @@ Tre roller, med tilgang sjekket på serveren (`[Authorize(Roles = ...)]`):
 
 | Rolle | Kan |
 |---|---|
-| **Offentlig aktør** (kommune, sykehus, Heimevernet) | Melde behov med type, prioritet og plassering · se alle behov med filter · se kart med behov og ressurser · finne og forespørre ressurser til egne behov · trekke tilbake egne behov |
+| **Offentlig aktør** (kommune, sykehus, Heimevernet) | Melde behov med type, prioritet og plassering · se alle behov med filter · se kart med behov og ressurser · finne og forespørre ressurser til egne behov · **endre** og trekke tilbake egne behov |
 | **Privat aktør** (bedrift, privatperson) | Tilby ressurser med bilder · se status på egne ressurser (venter, godkjent, avvist, tildelt) · **endre** og trekke tilbake egne ressurser · se «Hva trengs» uten å se hvem som har meldt |
-| **Admin** | Godkjenne eller avvise ressurser og offentlige aktører · tildele ressurser til behov med forslag sortert på avstand · godkjenne eller avslå forespørsler · fjerne tildelinger · endre alle ressurser |
+| **Admin** | Godkjenne eller avvise ressurser og offentlige aktører · tildele ressurser til behov med forslag sortert på avstand · godkjenne eller avslå forespørsler · fjerne tildelinger · endre alle behov og ressurser |
 
 I tillegg:
 
@@ -124,7 +124,8 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | GET | `/Behov` | Alle behov med filter | Offentlig aktør |
 | GET / POST | `/Behov/Registrer` | Melde behov | Offentlig aktør |
 | GET | `/Behov/Detaljer/{id}` | Detaljside med historikk | Offentlig aktør |
-| GET / POST | `/Behov/TrekkTilbake/{id}` | Trekke tilbake eget behov | Offentlig aktør (eier) |
+| GET / POST | `/Behov/Rediger/{id}` | Endre behov | Den som meldte det, og admin |
+| GET / POST | `/Behov/TrekkTilbake/{id}` | Trekke tilbake eget behov | Den som meldte det, og admin |
 | GET / POST | `/Ressurs/Registrer` | Tilby ressurs med bilder | Innlogget |
 | GET | `/Ressurs/Detaljer/{id}` | Detaljside med bilder, kart og historikk | Eier, admin, eller offentlig aktør når godkjent |
 | GET / POST | `/Ressurs/Rediger/{id}` | Endre ressurs | Eier og admin |
@@ -218,6 +219,7 @@ dotnet test Beredskapsportal.Tests
 |---|---|
 | `BehovControllerTester.cs` | POST av behov: gyldig skjema lagres, tomt skjema og manglende plassering avvises, tekst lagres uendret |
 | `RessursControllerTester.cs` | POST av ressurs: lagres som «venter», ugyldig skjema lagres ikke, bilderegler (antall, størrelse, type, innhold), `/Ressurs/Bilde` kan ikke hente andre filer |
+| `RedigerBehovTester.cs` | Endre behov: bare den som meldte det og admin, endringer lagres, status, dato og eier endres ikke, endret prioritet i historikken |
 | `RedigerRessursTester.cs` | Endre ressurs: bare eier og admin, endringer lagres, ny godkjenning etter endring, nye bilder erstatter gamle, historikk |
 | `ValideringTester.cs` | Valideringsreglene i skjemaene for behov, ressurs, innlogging og registrering (påkrevde felt, telefon, e-post, maks lengde) |
 | `KartControllerTester.cs` | `/Kart/Behov` og `/Kart/Ressurser`: feltene kart.js bruker, bare godkjente ressurser, tildelte merket, bare GET og bare offentlige aktører |

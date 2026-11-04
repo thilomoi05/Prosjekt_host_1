@@ -47,6 +47,34 @@ public class EfBehovRepository : IBehovRepository
         _db.SaveChanges();
     }
 
+    public void Oppdater(Behov endret)
+    {
+        var behov = _db.Behov.Find(endret.Id);
+        if (behov is null)
+        {
+            return;
+        }
+        KopierEndringer(endret, behov);
+        _db.SaveChanges();
+    }
+
+    /// <summary>
+    /// Feltene som kan endres på et behov. Samlet ett sted, så EF- og minnelagringen gjør det samme.
+    /// Status (styres av tildelingene), Dato (når det ble meldt) og RegistrertAv (hvem som meldte det)
+    /// kopieres bevisst ikke.
+    /// </summary>
+    internal static void KopierEndringer(Behov fra, Behov til)
+    {
+        til.Type = fra.Type;
+        til.Beskrivelse = fra.Beskrivelse;
+        til.GeografiskOmrade = fra.GeografiskOmrade;
+        til.Prioritet = fra.Prioritet;
+        til.Kontaktperson = fra.Kontaktperson;
+        til.Telefon = fra.Telefon;
+        til.Breddegrad = fra.Breddegrad;
+        til.Lengdegrad = fra.Lengdegrad;
+    }
+
     public void Slett(int id)
     {
         var behov = _db.Behov.Find(id);

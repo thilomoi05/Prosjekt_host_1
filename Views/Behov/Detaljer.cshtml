@@ -118,9 +118,11 @@
     <partial name="_Historikk" model="Model.Historikk" />
 
     @* Den som meldte behovet, og administratorer, kan trekke det tilbake. *@
+    @* Den som meldte behovet, og administratorer, kan endre eller trekke det tilbake. *@
     @if (Model.KanTrekkeTilbake)
     {
-        <div>
+        <div class="bp-bekreft-knapper">
+            <a class="btn btn-bp-primær" asp-controller="Behov" asp-action="Rediger" asp-route-id="@behov.Id">Endre behovet</a>
             <a class="btn btn-bp-fare" asp-controller="Behov" asp-action="TrekkTilbake" asp-route-id="@behov.Id">Trekk tilbake behovet</a>
         </div>
     }

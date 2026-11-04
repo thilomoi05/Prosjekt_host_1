@@ -122,6 +122,8 @@ Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view me
 
 `Behov` og `Ressurs` har også `TrekkTilbake`: en «Er du sikker?»-side (GET) og selve slettingen (POST).
 
+`Behov` har `Rediger` (GET og POST) for å endre et behov. Den som meldte behovet og admin kan endre det, samme regel som for `TrekkTilbake`. Behov trenger ikke godkjenning, så endringen gjelder med en gang. Status, dato og hvem som meldte behovet endres ikke, og endret prioritet skrives i historikken (f.eks. «prioritet moderat → høy»).
+
 `Ressurs` har `Rediger` (GET og POST) for å endre en ressurs. Bare eieren og admin slipper til, og tilgangen sjekkes i både GET og POST. Endrer eieren en ressurs som ikke er tildelt, settes den til `Venter` og må godkjennes på nytt, så ingen kan bytte ut innholdet i en godkjent ressurs uten at admin ser det. Nye bilder erstatter de gamle, og endringen skrives i historikken.
 
 Admin har også rollen `OffentligAktor`, så alt som står `OffentligAktor` over, gjelder også for admin.
