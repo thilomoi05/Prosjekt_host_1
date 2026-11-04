@@ -267,6 +267,9 @@ dotnet test Beredskapsportal.Tests
 | Melde behov | Fyll ut `/Behov/Registrer` med punkt i kartet | Lagres, vises i `/Behov`, på kartet og på detaljsiden | ✅ Lagret i MariaDB, vises alle tre steder, historikk «Behovet ble meldt inn» |
 | Tomt behovsskjema | Send uten å fylle ut | Feilmelding for hvert påkrevde felt | ✅ Type, beskrivelse, område, kontaktperson, telefon og plassering |
 | For langt telefonnummer | 31 siffer | Feilmelding, ikke databasefeil | ✅ «Telefonnummeret kan være på maks 30 tegn.» |
+| Endre eget behov (04.11.2026) | Detaljside → «Endre behovet», bytt beskrivelse og prioritet moderat → høy, lagre | Lagres med en gang, vises i historikken | ✅ «Endringene er lagret.», merket «Høy prioritet», historikk «Behovet ble endret, prioritet moderat → høy» |
+| Endre andres behov (04.11.2026) | Annen offentlig aktør og privat aktør: GET og POST til `/Behov/Rediger/{id}` | Nektes, ingen «Endre»-knapp | ✅ Sendt til Oversikt, behovet uendret, knappen vises ikke |
+| Admin endrer behov (04.11.2026) | Som admin: endre et behov meldt av `test` | Lagres, eier uendret | ✅ Historikken viser «av admin», behovet står fortsatt som meldt av `test` |
 | Kartdata | `/Kart/Behov` og `/Kart/Ressurser` | JSON med feltene kartet bruker | ✅ 13 behov og 28 godkjente ressurser, 5 merket som tildelt. 41 markører på kartet |
 
 #### Ressurser (privat aktør og admin)
@@ -316,7 +319,7 @@ Chrome-vinduet satt til 500 px bredt (det smaleste Chrome tillater), som er unde
 | Oversikt | Kortene stables i én kolonne | ✅ |
 | Kart | Kartet fyller skjermen, «Filter» og «Vis liste» kan nås | ✅ |
 | Melde behov, Tilby ressurs | Skjema og kart i én kolonne | ✅ |
-| Behov (liste) | Hele tabellen kan leses | ⚠️ Tabellen rulles sidelengs inne i kortet. Kolonnene «Status» og «Dato» er skjult til man ruller, og ingenting viste at det gikk an. Rettet med teksten «Sveip sidelengs for å se alle kolonnene →» over tabeller på smal skjerm |
+| Behov (liste) | Hele tabellen kan leses | ⚠️ Tabellen rulles sidelengs inne i kortet. Kolonnene «Status» og «Dato» er skjult til man ruller, og ingenting viste at det gikk an. Rettet med teksten «Sveip sidelengs for å se alle kolonnene →» over tabeller på smal skjerm, sjekket 04.11.2026 ✅ |
 | Detaljside for behov | Kartet under teksten | ✅ |
 | Tildelinger, Hva trengs | Ingen sidelengs rulling | ✅ |
 

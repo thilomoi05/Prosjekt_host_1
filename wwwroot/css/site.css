@@ -1191,13 +1191,11 @@ button.bp-meny-lenke:hover {
   }
 
   /* Forteller at tabellen kan rulles sidelengs. Uten dette så det ut som kolonnene
-     «Status» og «Dato» manglet (funnet i mobiltesten 03.11.2026). sticky + left: 0
-     gjør at teksten blir stående mens tabellen rulles. */
+     «Status» og «Dato» manglet (funnet i mobiltesten 03.11.2026). Teksten står over
+     tabellen og rulles bort når man begynner å rulle, da vet brukeren det allerede. */
   .table-responsive::before {
     content: "Sveip sidelengs for å se alle kolonnene →";
     display: block;
-    position: sticky;
-    left: 0;
     margin-bottom: 0.5rem;
     font-size: 0.8rem;
     color: var(--farge-tekst-svak);
