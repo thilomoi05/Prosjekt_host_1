@@ -1,0 +1,40 @@
+@model EndreProfilViewModel
+@{
+    ViewData["Title"] = "Endre navn og e-post";
+}
+
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort">
+        <h1>Endre navn og e-post</h1>
+        <p class="bp-skjema-hjelp">Brukernavnet kan ikke endres, fordi behov og ressurser er knyttet til det.</p>
+
+        <form asp-controller="Konto" asp-action="EndreProfil" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="FulltNavn" class="form-label"></label>
+                <input asp-for="FulltNavn" class="form-control" placeholder="Ola Nordmann" autocomplete="name" />
+                <span asp-validation-for="FulltNavn" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Epost" class="form-label"></label>
+                <input asp-for="Epost" class="form-control" placeholder="ola@uia.no" autocomplete="email" />
+                <span asp-validation-for="Epost" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="NavarendePassord" class="form-label"></label>
+                <input asp-for="NavarendePassord" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="NavarendePassord" class="text-danger"></span>
+                @* Se KontoController.EndreProfil: passordet sjekkes bare når e-posten endres. *@
+                <p class="bp-skjema-hjelp mt-2 mb-0">Trengs bare hvis du endrer e-posten.</p>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a class="btn btn-bp-sekundær" asp-controller="Konto" asp-action="Profil">Avbryt</a>
+                <button type="submit" class="btn btn-bp-primær">Lagre endringer</button>
+            </div>
+        </form>
+    </div>
+</div>

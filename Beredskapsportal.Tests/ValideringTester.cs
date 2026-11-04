@@ -163,4 +163,36 @@ public class ValideringTester
 
         Assert.Contains("Brukernavnet kan være på maks 100 tegn.", Feilmeldinger(skjema));
     }
+
+    // ---------- Profil ----------
+
+    [Fact]
+    public void EndreProfil_PassordTrengsIkkeForANyttNavn()
+    {
+        // Passordet sjekkes i controlleren, og bare hvis e-posten er endret.
+        var skjema = new EndreProfilViewModel { FulltNavn = "Kari Nordmann", Epost = "kari@example.no" };
+
+        Assert.Empty(Feilmeldinger(skjema));
+    }
+
+    [Fact]
+    public void EndreProfil_ForLangtNavnGirFeil()
+    {
+        var skjema = new EndreProfilViewModel { FulltNavn = new string('k', 201), Epost = "kari@example.no" };
+
+        Assert.Contains("Navnet kan være på maks 200 tegn.", Feilmeldinger(skjema));
+    }
+
+    [Fact]
+    public void EndrePassord_UlikeNyePassordGirFeil()
+    {
+        var skjema = new EndrePassordViewModel
+        {
+            NavarendePassord = "Gammelt123",
+            NyttPassord = "Nytt12345",
+            BekreftNyttPassord = "Nytt54321"
+        };
+
+        Assert.Contains("Passordene er ikke like.", Feilmeldinger(skjema));
+    }
 }
