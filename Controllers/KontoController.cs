@@ -9,7 +9,8 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Beredskapsportal.Controllers;
 
 /// <summary>
-/// Håndterer innlogging, registrering, utlogging og profilsiden.
+/// Håndterer innlogging, registrering, utlogging og profilsiden,
+/// der brukeren kan endre navn, e-post og passord.
 ///
 /// Bruker ASP.NET Core Identity (satt opp i Program.cs):
 ///  - UserManager:   lager brukere, hasher passord og gir roller
@@ -17,8 +18,12 @@ namespace Beredskapsportal.Controllers;
 /// Vi skriver altså ingen passord- eller cookie-kode selv.
 ///
 /// Anti-forgery-tokenet sjekkes på alle POST-metodene av filteret i Program.cs.
-/// POST til LoggInn og Registrer har i tillegg en fartsgrense (Sikkerhet/Fartsgrenser.cs),
-/// så ingen kan prøve tusenvis av passord eller lage tusenvis av kontoer.
+/// POST til LoggInn, Registrer, EndreProfil og EndrePassord har i tillegg en fartsgrense
+/// (Sikkerhet/Fartsgrenser.cs), så ingen kan prøve tusenvis av passord eller lage tusenvis av kontoer.
+///
+/// Brukernavnet kan ikke endres: behov, ressurser og forespørsler er koblet til eieren
+/// med brukernavnet (RegistrertAv, ForespurtAv). Én bruker deles av en hel enhet,
+/// f.eks. Heimevernet avdeling Kristiansand.
 /// </summary>
 public class KontoController : Controller
 {
@@ -159,9 +164,7 @@ public class KontoController : Controller
         var bruker = await _brukerManager.GetUserAsync(User);
         if (bruker is null)
         {
-            // Brukeren er slettet fra databasen mens de var logget inn.
-            await _innloggingManager.SignOutAsync();
-            return RedirectToAction(nameof(LoggInn));
+            return await LoggUtSlettetBruker();
         }
 
         var modell = new ProfilViewModel
@@ -173,6 +176,148 @@ public class KontoController : Controller
         };
 
         return View(modell);
+    }
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> EndreProfil()
+    {
+        var bruker = await _brukerManager.GetUserAsync(User);
+        if (bruker is null)
+        {
+            return await LoggUtSlettetBruker();
+        }
+
+        // Skjemaet fylles ut med det som er lagret nå.
+        return View(new EndreProfilViewModel
+        {
+            FulltNavn = bruker.FulltNavn,
+            Epost = bruker.Email ?? string.Empty
+        });
+    }
+
+    /// <summary>
+    /// Lagrer nytt navn og/eller ny e-post for brukeren som er logget inn.
+    /// Brukeren hentes alltid fra innloggingscookien, aldri fra skjemaet,
+    /// så ingen kan endre profilen til en annen bruker.
+    /// </summary>
+    [Authorize]
+    [HttpPost]
+    [EnableRateLimiting(Fartsgrenser.Innlogging)]
+    public async Task<IActionResult> EndreProfil(EndreProfilViewModel modell)
+    {
+        var bruker = await _brukerManager.GetUserAsync(User);
+        if (bruker is null)
+        {
+            return await LoggUtSlettetBruker();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(modell);
+        }
+
+        var nyEpost = modell.Epost.Trim();
+        // Store og små bokstaver teller ikke: Ola@uia.no og ola@uia.no er samme e-post.
+        var epostErEndret = !string.Equals(nyEpost, bruker.Email, StringComparison.OrdinalIgnoreCase);
+
+        // Ny e-post krever passordet. Navnet kan endres uten.
+        if (epostErEndret)
+        {
+            if (string.IsNullOrEmpty(modell.NavarendePassord))
+            {
+                ModelState.AddModelError(nameof(modell.NavarendePassord), "Skriv inn nåværende passord for å endre e-posten.");
+                return View(modell);
+            }
+
+            if (!await _brukerManager.CheckPasswordAsync(bruker, modell.NavarendePassord))
+            {
+                ModelState.AddModelError(nameof(modell.NavarendePassord), "Nåværende passord er feil.");
+                return View(modell);
+            }
+        }
+
+        bruker.FulltNavn = modell.FulltNavn.Trim();
+
+        // SetEmailAsync sjekker at e-posten er gyldig og ikke brukes av en annen bruker
+        // (RequireUniqueEmail i Program.cs), og lagrer hele brukeren, også det nye navnet.
+        // Er bare navnet endret, holder det med UpdateAsync.
+        var resultat = epostErEndret
+            ? await _brukerManager.SetEmailAsync(bruker, nyEpost)
+            : await _brukerManager.UpdateAsync(bruker);
+
+        if (!resultat.Succeeded)
+        {
+            // Feilmeldingene er på norsk (se Sikkerhet/NorskeIdentityFeilmeldinger.cs).
+            foreach (var feil in resultat.Errors)
+            {
+                ModelState.AddModelError(string.Empty, feil.Description);
+            }
+            return View(modell);
+        }
+
+        // Navnet ligger i innloggingscookien (BrukerClaimsFabrikk), og menyen viser det derfra.
+        // RefreshSignInAsync lager cookien på nytt, så det nye navnet vises med en gang.
+        await _innloggingManager.RefreshSignInAsync(bruker);
+
+        TempData["Melding"] = "Profilen er oppdatert.";
+        return RedirectToAction(nameof(Profil));
+    }
+
+    [Authorize]
+    [HttpGet]
+    public IActionResult EndrePassord()
+    {
+        return View(new EndrePassordViewModel());
+    }
+
+    /// <summary>Bytter passordet til brukeren som er logget inn.</summary>
+    [Authorize]
+    [HttpPost]
+    [EnableRateLimiting(Fartsgrenser.Innlogging)]
+    public async Task<IActionResult> EndrePassord(EndrePassordViewModel modell)
+    {
+        var bruker = await _brukerManager.GetUserAsync(User);
+        if (bruker is null)
+        {
+            return await LoggUtSlettetBruker();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(modell);
+        }
+
+        // ChangePasswordAsync sjekker det nåværende passordet og passordreglene,
+        // og lagrer bare hashen av det nye passordet.
+        var resultat = await _brukerManager.ChangePasswordAsync(bruker, modell.NavarendePassord, modell.NyttPassord);
+        if (!resultat.Succeeded)
+        {
+            foreach (var feil in resultat.Errors)
+            {
+                ModelState.AddModelError(string.Empty, feil.Description);
+            }
+            return View(modell);
+        }
+
+        // Nytt passord gir brukeren et nytt "sikkerhetsstempel". Andre som er logget inn
+        // på samme bruker (samme enhet, en annen PC), blir da logget ut innen 30 minutter.
+        // RefreshSignInAsync gir denne nettleseren en ny cookie, så den som byttet passordet
+        // forblir innlogget.
+        await _innloggingManager.RefreshSignInAsync(bruker);
+
+        TempData["Melding"] = "Passordet er endret.";
+        return RedirectToAction(nameof(Profil));
+    }
+
+    /// <summary>
+    /// Brukeren er slettet fra databasen mens de var logget inn (f.eks. avvist av Admin).
+    /// Da logges de ut og sendes til innloggingen.
+    /// </summary>
+    private async Task<IActionResult> LoggUtSlettetBruker()
+    {
+        await _innloggingManager.SignOutAsync();
+        return RedirectToAction(nameof(LoggInn));
     }
 
     /// <summary>Teksten for rollen som vises på profilsiden.</summary>

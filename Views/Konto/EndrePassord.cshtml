@@ -1,0 +1,38 @@
+@model EndrePassordViewModel
+@{
+    ViewData["Title"] = "Endre passord";
+}
+
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort">
+        <h1>Endre passord</h1>
+        <p class="bp-skjema-hjelp">Andre som er logget inn på samme bruker, blir logget ut og må bruke det nye passordet.</p>
+
+        <form asp-controller="Konto" asp-action="EndrePassord" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="NavarendePassord" class="form-label"></label>
+                <input asp-for="NavarendePassord" class="form-control" autocomplete="current-password" />
+                <span asp-validation-for="NavarendePassord" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="NyttPassord" class="form-label"></label>
+                <input asp-for="NyttPassord" class="form-control" placeholder="Minst 8 tegn, med stor og liten bokstav og tall" autocomplete="new-password" />
+                <span asp-validation-for="NyttPassord" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="BekreftNyttPassord" class="form-label"></label>
+                <input asp-for="BekreftNyttPassord" class="form-control" placeholder="Gjenta det nye passordet" autocomplete="new-password" />
+                <span asp-validation-for="BekreftNyttPassord" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a class="btn btn-bp-sekundær" asp-controller="Konto" asp-action="Profil">Avbryt</a>
+                <button type="submit" class="btn btn-bp-primær">Lagre nytt passord</button>
+            </div>
+        </form>
+    </div>
+</div>

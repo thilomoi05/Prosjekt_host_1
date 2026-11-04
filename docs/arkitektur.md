@@ -14,6 +14,8 @@ BeredskapsPortalen samler behov og ressurser under en krise, i vårt scenario et
 
 Rollene står i `Models/Roller.cs`: `OffentligAktor`, `PrivatAktor` og `Admin`. Ved registrering kan man bare velge de to første (`BrukerRolle`). Offentlige aktører må godkjennes av en administrator før de kan logge inn. Admin har også rollen `OffentligAktor`.
 
+Én bruker deles av en hel enhet, f.eks. Heimevernet avdeling Kristiansand. Alle i enheten ser og jobber med de samme behovene. Den som skal kontaktes om et behov eller en ressurs, står i feltet `Kontaktperson`. Brukernavnet kan derfor ikke endres, mens navn, e-post og passord kan endres på profilsiden.
+
 Hvem som ser hva:
 
 | Data | Uinnlogget | `PrivatAktor` | `OffentligAktor` | `Admin` |
@@ -110,7 +112,7 @@ Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view me
 | Controller | Tilgang | Handlinger |
 |---|---|---|
 | `Home` | Åpen | `Index` forside, `Error` |
-| `Konto` | Åpen (`Profil` krever innlogging) | `LoggInn` GET og POST, `Registrer` GET og POST, `LoggUt` POST, `Profil` |
+| `Konto` | Åpen (`Profil`, `EndreProfil` og `EndrePassord` krever innlogging) | `LoggInn` GET og POST, `Registrer` GET og POST, `LoggUt` POST, `Profil`, `EndreProfil` GET og POST (navn og e-post), `EndrePassord` GET og POST |
 | `Oversikt` | Innlogget | `Index` dashbord. Offentlige aktører ser nøkkeltall, behov og de fem siste tildelingene. Private ser sine egne ressurser |
 | `HvaTrengs` | Innlogget | `Index` utstyr som trengs og i hvilke områder, uten hvem som har meldt |
 | `Behov` | `OffentligAktor` | `Index` liste med filter, `Detaljer`, `Registrer` GET og POST |
@@ -246,7 +248,7 @@ Brukere, passord og roller håndteres av **ASP.NET Core Identity**, satt opp i `
 - Passordet lagres aldri. Identity lagrer en hash laget med PBKDF2 og et tilfeldig salt.
 - Passordregler: minst 8 tegn, med stor og liten bokstav og tall.
 - Etter 5 feil passord på rad låses kontoen i 5 minutter.
-- **Rate limiting:** hver IP-adresse får maks 10 forsøk per minutt på `POST /Konto/LoggInn` og `POST /Konto/Registrer` til sammen (`Sikkerhet/Fartsgrenser.cs`, `[EnableRateLimiting]`). Forsøk over grensen får `429 Too Many Requests` uten at passordet sjekkes. Utestengingen beskytter én konto; fartsgrensen stopper også at noen prøver ett passord mot mange brukernavn, eller lager mange kontoer.
+- **Rate limiting:** hver IP-adresse får maks 10 forsøk per minutt på `POST /Konto/LoggInn`, `/Konto/Registrer`, `/Konto/EndreProfil` og `/Konto/EndrePassord` til sammen (`Sikkerhet/Fartsgrenser.cs`, `[EnableRateLimiting]`). Forsøk over grensen får `429 Too Many Requests` uten at passordet sjekkes. Utestengingen beskytter én konto; fartsgrensen stopper også at noen prøver ett passord mot mange brukernavn, eller lager mange kontoer.
 - `KontoController` bruker `UserManager` (lage brukere, roller) og `SignInManager` (sjekke passord, lage cookie). Vi skriver ingen passordkode selv.
 - `Sikkerhet/BrukerClaimsFabrikk.cs` legger det fulle navnet i cookien, så menyen kan vise det.
 - `Sikkerhet/NorskeIdentityFeilmeldinger.cs` gir norske feilmeldinger.

@@ -10,7 +10,7 @@ namespace Beredskapsportal.Tests;
 
 /// <summary>
 /// Tester sikkerhetsheaderne (SikkerhetsheadereMiddleware), rollene, de norske feilmeldingene,
-/// rate limiting på innlogging og registrering, og kontrollen av opplastede bilder.
+/// rate limiting på innlogging, registrering og profilsiden, og kontrollen av opplastede bilder.
 /// </summary>
 public class SikkerhetTester
 {
@@ -71,6 +71,7 @@ public class SikkerhetTester
 
         Assert.Equal("Passordet må være på minst 8 tegn.", feilmeldinger.PasswordTooShort(8).Description);
         Assert.Equal("Brukernavnet «test» er allerede i bruk.", feilmeldinger.DuplicateUserName("test").Description);
+        Assert.Equal("Nåværende passord er feil.", feilmeldinger.PasswordMismatch().Description);
     }
 
     // ---------- Rate limiting ----------
@@ -82,7 +83,9 @@ public class SikkerhetTester
     [Theory]
     [InlineData(nameof(KontoController.LoggInn))]
     [InlineData(nameof(KontoController.Registrer))]
-    public void Fartsgrense_GjelderInnloggingOgRegistrering(string metodenavn)
+    [InlineData(nameof(KontoController.EndreProfil))]
+    [InlineData(nameof(KontoController.EndrePassord))]
+    public void Fartsgrense_GjelderAlleSkjemaerSomSjekkerPassord(string metodenavn)
     {
         var attributt = PostMetode(typeof(KontoController), metodenavn).GetCustomAttribute<EnableRateLimitingAttribute>();
 

@@ -18,6 +18,11 @@
             <dt class="col-sm-4">Brukernavn</dt>
             <dd class="col-sm-8">@Model.Brukernavn</dd>
         </dl>
+
+        <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+            <a class="btn btn-bp-sekundær" asp-controller="Konto" asp-action="EndrePassord">Endre passord</a>
+            <a class="btn btn-bp-primær" asp-controller="Konto" asp-action="EndreProfil">Endre navn og e-post</a>
+        </div>
     </div>
 </div>
 

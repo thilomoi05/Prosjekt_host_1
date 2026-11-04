@@ -1,6 +1,10 @@
+using System.Reflection;
+using System.Security.Claims;
 using Beredskapsportal.Controllers;
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
+using Beredskapsportal.Sikkerhet;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +16,7 @@ using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 namespace Beredskapsportal.Tests;
 
 /// <summary>
-/// Tester innlogging og registrering i KontoController, som bruker ASP.NET Core Identity.
+/// Tester innlogging, registrering og endring av profilen i KontoController, som bruker ASP.NET Core Identity.
 /// UserManager og SignInManager er falske (se IdentitetHjelpere.cs), så testene
 /// bestemmer selv om passordet "stemmer".
 /// </summary>
@@ -170,5 +174,171 @@ public class KontoControllerTester
 
         Assert.IsType<ViewResult>(resultat);
         Assert.Equal("Brukernavnet «kari» er allerede i bruk.", ForsteFeilmelding());
+    }
+
+    // ---------- Profil: endre navn, e-post og passord ----------
+
+    /// <summary>Testbrukeren er logget inn (GetUserAsync finner den ut fra cookien).</summary>
+    private void TestbrukerErInnlogget()
+    {
+        _testbruker.Email = "test@example.com";
+        _brukerManager.GetUserAsync(Arg.Any<ClaimsPrincipal>()).Returns(_testbruker);
+    }
+
+    private static EndreProfilViewModel Profilskjema(string epost, string? passord = null) => new()
+    {
+        FulltNavn = "Heimevernet avdeling Kristiansand",
+        Epost = epost,
+        NavarendePassord = passord
+    };
+
+    private string FeilmeldingForPassordfeltet() =>
+        _controller.ModelState[nameof(EndreProfilViewModel.NavarendePassord)]!.Errors[0].ErrorMessage;
+
+    [Theory]
+    [InlineData(nameof(KontoController.EndreProfil))]
+    [InlineData(nameof(KontoController.EndrePassord))]
+    public void Profilsidene_KreverInnlogging(string metodenavn)
+    {
+        // Både GET og POST skal ha [Authorize].
+        var metoder = typeof(KontoController).GetMethods().Where(m => m.Name == metodenavn).ToList();
+
+        Assert.Equal(2, metoder.Count);
+        Assert.All(metoder, m => Assert.NotNull(m.GetCustomAttribute<AuthorizeAttribute>()));
+    }
+
+    [Fact]
+    public async Task EndreProfil_Get_FyllerInnNavnOgEpost()
+    {
+        TestbrukerErInnlogget();
+
+        var resultat = await _controller.EndreProfil();
+
+        var modell = Assert.IsType<EndreProfilViewModel>(Assert.IsType<ViewResult>(resultat).Model);
+        Assert.Equal("Test Testesen", modell.FulltNavn);
+        Assert.Equal("test@example.com", modell.Epost);
+    }
+
+    [Fact]
+    public async Task EndreProfil_NyttNavnLagresUtenPassordOgCookienFornyes()
+    {
+        TestbrukerErInnlogget();
+        _brukerManager.UpdateAsync(_testbruker).Returns(IdentityResult.Success);
+
+        var resultat = await _controller.EndreProfil(Profilskjema("test@example.com"));
+
+        var videresending = Assert.IsType<RedirectToActionResult>(resultat);
+        Assert.Equal(nameof(KontoController.Profil), videresending.ActionName);
+        Assert.Equal("Heimevernet avdeling Kristiansand", _testbruker.FulltNavn);
+        await _brukerManager.DidNotReceive().SetEmailAsync(Arg.Any<Bruker>(), Arg.Any<string?>());
+        // Ny cookie, så menyen viser det nye navnet med en gang.
+        await _innloggingManager.Received(1).RefreshSignInAsync(_testbruker);
+    }
+
+    [Fact]
+    public async Task EndreProfil_SammeEpostMedStoreBokstaverRegnesIkkeSomNy()
+    {
+        TestbrukerErInnlogget();
+        _brukerManager.UpdateAsync(_testbruker).Returns(IdentityResult.Success);
+
+        var resultat = await _controller.EndreProfil(Profilskjema("TEST@example.com"));
+
+        Assert.IsType<RedirectToActionResult>(resultat);
+        await _brukerManager.DidNotReceive().CheckPasswordAsync(Arg.Any<Bruker>(), Arg.Any<string>());
+        await _brukerManager.DidNotReceive().SetEmailAsync(Arg.Any<Bruker>(), Arg.Any<string?>());
+    }
+
+    [Fact]
+    public async Task EndreProfil_NyEpostUtenPassordAvvises()
+    {
+        TestbrukerErInnlogget();
+
+        var resultat = await _controller.EndreProfil(Profilskjema("ny@example.com"));
+
+        Assert.IsType<ViewResult>(resultat);
+        Assert.Equal("Skriv inn nåværende passord for å endre e-posten.", FeilmeldingForPassordfeltet());
+        await _brukerManager.DidNotReceive().SetEmailAsync(Arg.Any<Bruker>(), Arg.Any<string?>());
+        await _brukerManager.DidNotReceive().UpdateAsync(Arg.Any<Bruker>());
+    }
+
+    [Fact]
+    public async Task EndreProfil_NyEpostMedFeilPassordAvvises()
+    {
+        TestbrukerErInnlogget();
+        _brukerManager.CheckPasswordAsync(_testbruker, "feil").Returns(false);
+
+        var resultat = await _controller.EndreProfil(Profilskjema("ny@example.com", "feil"));
+
+        Assert.IsType<ViewResult>(resultat);
+        Assert.Equal("Nåværende passord er feil.", FeilmeldingForPassordfeltet());
+        await _brukerManager.DidNotReceive().SetEmailAsync(Arg.Any<Bruker>(), Arg.Any<string?>());
+        await _innloggingManager.DidNotReceive().RefreshSignInAsync(Arg.Any<Bruker>());
+    }
+
+    [Fact]
+    public async Task EndreProfil_NyEpostMedRiktigPassordLagres()
+    {
+        TestbrukerErInnlogget();
+        _brukerManager.CheckPasswordAsync(_testbruker, "Riktig123").Returns(true);
+        _brukerManager.SetEmailAsync(_testbruker, "ny@example.com").Returns(IdentityResult.Success);
+
+        var resultat = await _controller.EndreProfil(Profilskjema("ny@example.com", "Riktig123"));
+
+        Assert.IsType<RedirectToActionResult>(resultat);
+        await _brukerManager.Received(1).SetEmailAsync(_testbruker, "ny@example.com");
+        await _innloggingManager.Received(1).RefreshSignInAsync(_testbruker);
+    }
+
+    [Fact]
+    public async Task EndreProfil_EpostSomErIBrukGirFeilmelding()
+    {
+        TestbrukerErInnlogget();
+        _brukerManager.CheckPasswordAsync(_testbruker, "Riktig123").Returns(true);
+        var feil = new NorskeIdentityFeilmeldinger().DuplicateEmail("ny@example.com");
+        _brukerManager.SetEmailAsync(_testbruker, "ny@example.com").Returns(IdentityResult.Failed(feil));
+
+        var resultat = await _controller.EndreProfil(Profilskjema("ny@example.com", "Riktig123"));
+
+        Assert.IsType<ViewResult>(resultat);
+        Assert.Equal("E-posten «ny@example.com» er allerede registrert.", ForsteFeilmelding());
+        await _innloggingManager.DidNotReceive().RefreshSignInAsync(Arg.Any<Bruker>());
+    }
+
+    [Fact]
+    public async Task EndrePassord_RiktigPassordLagresOgCookienFornyes()
+    {
+        TestbrukerErInnlogget();
+        _brukerManager.ChangePasswordAsync(_testbruker, "Gammelt123", "Nytt12345").Returns(IdentityResult.Success);
+
+        var resultat = await _controller.EndrePassord(new EndrePassordViewModel
+        {
+            NavarendePassord = "Gammelt123",
+            NyttPassord = "Nytt12345",
+            BekreftNyttPassord = "Nytt12345"
+        });
+
+        var videresending = Assert.IsType<RedirectToActionResult>(resultat);
+        Assert.Equal(nameof(KontoController.Profil), videresending.ActionName);
+        // Uten ny cookie ville brukeren blitt logget ut, fordi passordbyttet gir nytt sikkerhetsstempel.
+        await _innloggingManager.Received(1).RefreshSignInAsync(_testbruker);
+    }
+
+    [Fact]
+    public async Task EndrePassord_FeilNavarendePassordGirFeilmelding()
+    {
+        TestbrukerErInnlogget();
+        var feil = new NorskeIdentityFeilmeldinger().PasswordMismatch();
+        _brukerManager.ChangePasswordAsync(_testbruker, "feil", "Nytt12345").Returns(IdentityResult.Failed(feil));
+
+        var resultat = await _controller.EndrePassord(new EndrePassordViewModel
+        {
+            NavarendePassord = "feil",
+            NyttPassord = "Nytt12345",
+            BekreftNyttPassord = "Nytt12345"
+        });
+
+        Assert.IsType<ViewResult>(resultat);
+        Assert.Equal("Nåværende passord er feil.", ForsteFeilmelding());
+        await _innloggingManager.DidNotReceive().RefreshSignInAsync(Arg.Any<Bruker>());
     }
 }

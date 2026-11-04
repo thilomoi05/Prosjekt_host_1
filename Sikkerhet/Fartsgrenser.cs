@@ -4,13 +4,14 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Beredskapsportal.Sikkerhet;
 
 /// <summary>
-/// Rate limiting (fartsgrense) for innlogging og registrering.
+/// Rate limiting (fartsgrense) for innlogging, registrering og skjemaene på profilsiden.
 ///
 /// Utestengingen i Identity (Program.cs) låser ÉN konto etter 5 feil passord. Den hjelper ikke
 /// når noen prøver ett passord mot mange ulike brukernavn, eller lager mange kontoer.
 /// Fartsgrensen stopper det: hver IP-adresse får maks 10 forsøk per minutt på
-/// POST /Konto/LoggInn og POST /Konto/Registrer til sammen. Forsøk nummer 11 får svaret
-/// 429 Too Many Requests, uten at passordet sjekkes.
+/// POST /Konto/LoggInn, /Konto/Registrer, /Konto/EndreProfil og /Konto/EndrePassord til sammen.
+/// Profilsidene er med fordi de sjekker passordet, så de kunne ellers brukes til å gjette det.
+/// Forsøk nummer 11 får svaret 429 Too Many Requests, uten at passordet sjekkes.
 ///
 /// Brukes med [EnableRateLimiting(Fartsgrenser.Innlogging)] på metodene i KontoController.
 /// </summary>
