@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Beredskapsportal.Controllers;
 
 /// <summary>
-/// Håndterer listevisning, registrering, detaljsiden og tilbaketrekking av behov.
+/// Håndterer listevisning, registrering, detaljsiden, endring og tilbaketrekking av behov.
 /// Bare offentlige aktører (Heimevernet, kommuner osv.) kan se og melde behov.
 /// Tildeling av ressurser gjøres av Admin (AdminController).
 /// Private aktører skal bare tilby ressurser, og sendes til oversikten hvis de prøver
@@ -70,6 +70,93 @@ public class BehovController : Controller
         };
 
         return View(modell);
+    }
+
+    /// <summary>
+    /// Skjemaet for å endre et behov, f.eks. /Behov/Rediger/5. Feltene er fylt ut med det som er lagret.
+    /// Den som meldte behovet og administratorer kan endre det (samme regel som for å trekke det tilbake).
+    /// Andre offentlige aktører kan se behovet, men ikke endre det.
+    /// </summary>
+    [HttpGet]
+    public IActionResult Rediger(int id)
+    {
+        var behov = _behovRepository.HentMedId(id);
+        if (behov is null)
+        {
+            return NotFound();
+        }
+        if (!KanTrekkeTilbake(behov))
+        {
+            return Forbid();
+        }
+
+        ViewData["BehovId"] = behov.Id;
+        return View(new BehovViewModel
+        {
+            Type = behov.Type,
+            Beskrivelse = behov.Beskrivelse,
+            GeografiskOmrade = behov.GeografiskOmrade,
+            Prioritet = behov.Prioritet,
+            Kontaktperson = behov.Kontaktperson,
+            Telefon = behov.Telefon,
+            Breddegrad = behov.Breddegrad,
+            Lengdegrad = behov.Lengdegrad
+        });
+    }
+
+    /// <summary>
+    /// Lagrer endringene. Tilgangen sjekkes på nytt, fordi en POST kan sendes uten å gå via siden over.
+    /// Behov trenger ikke godkjenning (de meldes av offentlige aktører som allerede er godkjent),
+    /// så endringen gjelder med en gang. Den skrives i historikken, med hva som ble endret i prioritet.
+    /// Status, dato og hvem som meldte behovet endres ikke.
+    /// </summary>
+    [HttpPost]
+    public IActionResult Rediger(int id, BehovViewModel modell)
+    {
+        var behov = _behovRepository.HentMedId(id);
+        if (behov is null)
+        {
+            return NotFound();
+        }
+        if (!KanTrekkeTilbake(behov))
+        {
+            return Forbid();
+        }
+
+        if (modell.Breddegrad is not null && modell.Lengdegrad is null)
+        {
+            ModelState.AddModelError(nameof(modell.Breddegrad), "Du må klikke i kartet for å markere plasseringen.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            ViewData["BehovId"] = id;
+            return View(modell);
+        }
+
+        // Prioriteten er det viktigste å kunne følge med på, så den nevnes i historikken.
+        var gammelPrioritet = behov.Prioritet;
+
+        _behovRepository.Oppdater(new Behov
+        {
+            Id = id,
+            Type = modell.Type!.Value,
+            Beskrivelse = modell.Beskrivelse,
+            GeografiskOmrade = modell.GeografiskOmrade,
+            Prioritet = modell.Prioritet,
+            Kontaktperson = modell.Kontaktperson,
+            Telefon = modell.Telefon,
+            Breddegrad = modell.Breddegrad!.Value,
+            Lengdegrad = modell.Lengdegrad!.Value
+        });
+
+        var beskrivelse = gammelPrioritet == modell.Prioritet
+            ? "Behovet ble endret"
+            : $"Behovet ble endret, prioritet {PrioritetVisning.Tekst(gammelPrioritet).ToLowerInvariant()} → {PrioritetVisning.Tekst(modell.Prioritet).ToLowerInvariant()}";
+        _tildelingTjeneste.Logg(beskrivelse, Brukernavn(), behovId: id);
+
+        TempData["Melding"] = "Endringene er lagret.";
+        return RedirectToAction(nameof(Detaljer), new { id });
     }
 
     /// <summary>

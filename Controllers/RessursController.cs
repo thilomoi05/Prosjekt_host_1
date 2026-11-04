@@ -2,13 +2,14 @@ using System.Security.Claims;
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
 using Beredskapsportal.Services;
+using Beredskapsportal.Sikkerhet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Beredskapsportal.Controllers;
 
 /// <summary>
-/// Håndterer registrering, detaljsiden og tilbaketrekking av ressurser som bedrifter,
+/// Håndterer registrering, detaljsiden, endring og tilbaketrekking av ressurser som bedrifter,
 /// entreprenører og privatpersoner tilbyr, inkludert opplasting og visning av bilder.
 ///
 /// Hvem som ser en ressurs (KanSe under):
@@ -24,6 +25,10 @@ public class RessursController : Controller
     private const int MaksAntallBilder = 5;
     private const long MaksBildestorrelse = 5 * 1024 * 1024;   // 5 MB per bilde
     private static readonly string[] TillatteFiltyper = { ".jpg", ".jpeg", ".png", ".webp" };
+
+    // Største skjema vi tar imot: 5 bilder à 5 MB pluss tekstfeltene. Større forespørsler
+    // avvises av serveren før controlleren kjører, så ingen kan fylle opp minnet eller disken.
+    private const long MaksSkjemastorrelse = 26 * 1024 * 1024;
 
     private readonly IRessursRepository _ressursRepository;
     private readonly IBehovRepository _behovRepository;
@@ -68,9 +73,12 @@ public class RessursController : Controller
     // (await), kan serveren gjøre andre ting i stedet for å stå og vente.
     // Anti-forgery-tokenet sjekkes av filteret i Program.cs (gjelder alle POST-metoder).
     [HttpPost]
+    [RequestSizeLimit(MaksSkjemastorrelse)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaksSkjemastorrelse)]
     public async Task<IActionResult> Registrer(RessursViewModel modell)
     {
         // Sjekker bildene i tillegg til de vanlige [Required]-reglene i view-modellen.
+        modell.Bilder ??= new List<IFormFile>();
         SjekkBilder(modell.Bilder);
 
         // Sikkerhetsnett: kartet setter alltid begge koordinatene samtidig, men
@@ -178,6 +186,141 @@ public class RessursController : Controller
     }
 
     /// <summary>
+    /// Skjemaet for å endre en ressurs, f.eks. /Ressurs/Rediger/7.
+    /// Bare eieren og administratorer. Feltene er fylt inn med det som er lagret nå.
+    /// </summary>
+    [HttpGet]
+    public IActionResult Rediger(int id)
+    {
+        var ressurs = _ressursRepository.HentMedId(id);
+        if (ressurs is null)
+        {
+            return NotFound();
+        }
+        if (!ErEierEllerAdmin(ressurs))
+        {
+            return Forbid();
+        }
+
+        var modell = new RedigerRessursViewModel
+        {
+            Id = ressurs.Id,
+            Type = ressurs.Type,
+            BeskrivelseAvKapasitet = ressurs.BeskrivelseAvKapasitet,
+            Adresse = ressurs.Adresse,
+            Tilgangsbeskrivelse = ressurs.Tilgangsbeskrivelse,
+            TilgjengeligFra = ressurs.TilgjengeligFra,
+            TilgjengeligTil = ressurs.TilgjengeligTil,
+            Kontaktperson = ressurs.Kontaktperson,
+            Telefon = ressurs.Telefon,
+            Breddegrad = ressurs.Breddegrad,
+            Lengdegrad = ressurs.Lengdegrad,
+            EksisterendeBilder = ressurs.Bilder.ToList(),
+            Status = ressurs.Status
+        };
+        return View(modell);
+    }
+
+    /// <summary>
+    /// Lagrer endringene fra skjemaet. Tilgangen sjekkes på nytt her, fordi en POST
+    /// kan sendes uten å gå via siden over (f.eks. med et eget verktøy).
+    ///
+    /// Regler for status etter en endring:
+    ///  - Administratorer: statusen er uendret.
+    ///  - Eieren: ressursen må godkjennes på nytt (Venter), så ingen kan bytte ut innholdet
+    ///    i en godkjent ressurs uten at en administrator ser det. Unntak: er ressursen
+    ///    allerede tildelt et behov, beholdes statusen, så tildelingen ikke blir ugyldig.
+    ///    Endringen står uansett i historikken.
+    /// </summary>
+    [HttpPost]
+    [RequestSizeLimit(MaksSkjemastorrelse)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaksSkjemastorrelse)]
+    public async Task<IActionResult> Rediger(int id, RedigerRessursViewModel modell)
+    {
+        var ressurs = _ressursRepository.HentMedId(id);
+        if (ressurs is null)
+        {
+            return NotFound();
+        }
+        if (!ErEierEllerAdmin(ressurs))
+        {
+            return Forbid();
+        }
+
+        // Id og bildene som vises, hentes alltid fra databasen, ikke fra skjemaet.
+        modell.Id = ressurs.Id;
+        modell.EksisterendeBilder = ressurs.Bilder.ToList();
+        modell.Status = ressurs.Status;
+
+        // Nye bilder er frivillig ved endring. Sjekkes bare hvis brukeren har valgt noen.
+        modell.Bilder ??= new List<IFormFile>();
+        if (modell.Bilder.Count > 0)
+        {
+            SjekkBilder(modell.Bilder);
+        }
+
+        if (modell.Breddegrad is not null && modell.Lengdegrad is null)
+        {
+            ModelState.AddModelError(nameof(modell.Breddegrad), "Du må klikke i kartet for å markere plasseringen.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(modell);
+        }
+
+        // Nye bilder erstatter de gamle. De gamle slettes fra disken etter at endringen er lagret.
+        var gamleBilder = new List<string>();
+        var bilder = ressurs.Bilder.ToList();
+        if (modell.Bilder.Count > 0)
+        {
+            gamleBilder = bilder;
+            bilder = new List<string>();
+            foreach (var bilde in modell.Bilder)
+            {
+                bilder.Add(await LagreBilde(bilde));
+            }
+        }
+
+        var erAdmin = User?.IsInRole(Roller.Admin) == true;
+        var erTildelt = _tildelingRepository.HentAlle().Any(t => t.RessursId == id);
+        var maGodkjennesPaNytt = !erAdmin && !erTildelt;
+
+        var endret = new Ressurs
+        {
+            Id = ressurs.Id,
+            Type = modell.Type!.Value,
+            Status = maGodkjennesPaNytt ? RessursStatus.Venter : ressurs.Status,
+            Avvisningsgrunn = maGodkjennesPaNytt ? null : ressurs.Avvisningsgrunn,
+            BeskrivelseAvKapasitet = modell.BeskrivelseAvKapasitet,
+            Adresse = modell.Adresse,
+            Tilgangsbeskrivelse = modell.Tilgangsbeskrivelse,
+            Bilder = bilder,
+            TilgjengeligFra = modell.TilgjengeligFra,
+            TilgjengeligTil = modell.TilgjengeligTil,
+            Kontaktperson = modell.Kontaktperson,
+            Telefon = modell.Telefon,
+            RegistrertAv = ressurs.RegistrertAv,   // eieren kan aldri endres
+            Breddegrad = modell.Breddegrad!.Value,
+            Lengdegrad = modell.Lengdegrad!.Value
+        };
+
+        _ressursRepository.Oppdater(endret);
+        SlettBilder(gamleBilder);
+
+        _tildelingTjeneste.Logg(maGodkjennesPaNytt
+                ? "Ressursen ble endret og venter på ny godkjenning"
+                : "Ressursen ble endret",
+            Brukernavn(), ressursId: id);
+
+        TempData["Melding"] = maGodkjennesPaNytt
+            ? "Endringene er lagret. Ressursen blir synlig igjen når en administrator har godkjent den."
+            : "Endringene er lagret.";
+
+        return RedirectToAction(nameof(Detaljer), new { id });
+    }
+
+    /// <summary>
     /// "Er du sikker?"-siden før en ressurs trekkes tilbake, f.eks. /Ressurs/TrekkTilbake/7.
     /// Bare eieren og administratorer.
     /// </summary>
@@ -224,14 +367,7 @@ public class RessursController : Controller
         _tildelingTjeneste.TrekkTilbakeRessurs(id, Brukernavn());
 
         // Bildene slettes også fra disken, siden ingen kan se dem lenger.
-        foreach (var filnavn in ressurs.Bilder)
-        {
-            var sti = Path.Combine(_bildemappe, Path.GetFileName(filnavn));
-            if (System.IO.File.Exists(sti))
-            {
-                System.IO.File.Delete(sti);
-            }
-        }
+        SlettBilder(ressurs.Bilder);
 
         TempData["Melding"] = "Ressursen er trukket tilbake.";
         return RedirectToAction("Index", "Oversikt");
@@ -289,8 +425,8 @@ public class RessursController : Controller
         ErEierEllerAdmin(ressurs) || (ErOffentligAktor() && ressurs.Status == RessursStatus.Godkjent);
 
     /// <summary>
-    /// Sjekker at brukeren har lastet opp 1-5 bilder, at de er bildefiler,
-    /// og at ingen er for store. Feil legges i ModelState og vises i skjemaet.
+    /// Sjekker at brukeren har lastet opp 1-5 bilder, at de er bildefiler (både endelse
+    /// og innhold, se Sikkerhet/Bildesjekk.cs), og at ingen er for store. Feil legges i ModelState og vises i skjemaet.
     /// </summary>
     private void SjekkBilder(List<IFormFile> bilder)
     {
@@ -313,10 +449,36 @@ public class RessursController : Controller
             {
                 ModelState.AddModelError(nameof(RessursViewModel.Bilder), $"«{bilde.FileName}» er ikke et bilde. Bruk JPG, PNG eller WEBP.");
             }
+            else
+            {
+                // Endelsen er riktig, men er innholdet et bilde? Et program kan hete "bilde.jpg".
+                // Bildesjekk leser de første bytene i filen og sjekker at de passer med endelsen.
+                using var innhold = bilde.OpenReadStream();
+                if (!Bildesjekk.InnholdPasserMedFiltype(innhold, filtype))
+                {
+                    ModelState.AddModelError(nameof(RessursViewModel.Bilder), $"«{bilde.FileName}» er ikke et gyldig {filtype.TrimStart('.').ToUpperInvariant()}-bilde.");
+                }
+            }
 
             if (bilde.Length > MaksBildestorrelse)
             {
                 ModelState.AddModelError(nameof(RessursViewModel.Bilder), $"«{bilde.FileName}» er større enn 5 MB.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sletter bildefilene fra disken. Brukes når en ressurs trekkes tilbake,
+    /// og når eieren erstatter bildene. Path.GetFileName hindrer at noe utenfor bildemappen slettes.
+    /// </summary>
+    private void SlettBilder(IEnumerable<string> filnavnListe)
+    {
+        foreach (var filnavn in filnavnListe)
+        {
+            var sti = Path.Combine(_bildemappe, Path.GetFileName(filnavn));
+            if (System.IO.File.Exists(sti))
+            {
+                System.IO.File.Delete(sti);
             }
         }
     }

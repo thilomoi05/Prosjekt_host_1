@@ -13,21 +13,28 @@ public class RessursViewModel
 
     [Required(ErrorMessage = "Du må beskrive kapasiteten.")]
     [Display(Name = "Beskrivelse av kapasitet")]
+    [StringLength(2000, ErrorMessage = "Beskrivelsen kan være på maks 2000 tegn.")]
     public string BeskrivelseAvKapasitet { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Du må skrive inn adressen der ressursen er.")]
     [Display(Name = "Adresse")]
+    [StringLength(300, ErrorMessage = "Adressen kan være på maks 300 tegn.")]
     public string Adresse { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Du må beskrive hvordan man får tak i ressursen.")]
     [Display(Name = "Hvordan får man tak i ressursen?")]
+    [StringLength(1000, ErrorMessage = "Beskrivelsen av tilgang kan være på maks 1000 tegn.")]
     public string Tilgangsbeskrivelse { get; set; } = string.Empty;
 
     // IFormFile er ASP.NET Core sin type for en opplastet fil.
     // En liste, fordi brukeren kan laste opp flere bilder samtidig.
-    // Sjekken av bildene (antall, type og størrelse) skjer i RessursController.
+    // Sjekken av bildene (antall, type, innhold og størrelse) skjer i RessursController.
+    //
+    // Spørsmålstegnet (List<IFormFile>?) er med vilje: uten det legger ASP.NET til en skjult
+    // [Required]-regel med engelsk melding, også i nettleseren. Da kunne man ikke lagre
+    // "Endre ressurs" uten å velge nye bilder (funnet i systemtesten 03.11.2026).
     [Display(Name = "Bilder av ressursen")]
-    public List<IFormFile> Bilder { get; set; } = new();
+    public List<IFormFile>? Bilder { get; set; } = new();
 
     [Display(Name = "Tilgjengelig fra")]
     [DataType(DataType.Date)]
@@ -39,11 +46,13 @@ public class RessursViewModel
 
     [Required(ErrorMessage = "Du må oppgi en kontaktperson.")]
     [Display(Name = "Kontaktperson")]
+    [StringLength(200, ErrorMessage = "Kontaktpersonen kan være på maks 200 tegn.")]
     public string Kontaktperson { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Du må oppgi et telefonnummer.")]
     [Phone(ErrorMessage = "Telefonnummeret ser ikke gyldig ut.")]
     [Display(Name = "Telefon")]
+    [StringLength(30, ErrorMessage = "Telefonnummeret kan være på maks 30 tegn.")]
     public string Telefon { get; set; } = string.Empty;
 
     // Fylles ut av det lille kartet i skjemaet (se wwwroot/js/posisjonsvelger.js).

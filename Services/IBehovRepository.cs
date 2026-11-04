@@ -18,6 +18,10 @@ public interface IBehovRepository
     // Endrer status (Venter eller Tildelt). Brukes når ressurser tildeles eller fjernes.
     void SettStatus(int id, BehovStatus status);
 
+    // Lagrer endringer fra skjemaet "Endre behov". Id-en i behovet sier hvilket behov som endres.
+    // Status, dato og hvem som meldte det endres ikke. Gjør ingenting hvis behovet ikke finnes.
+    void Oppdater(Behov behov);
+
     // Sletter behovet. Brukes når den som meldte det, trekker det tilbake.
     void Slett(int id);
     int TellAktive();

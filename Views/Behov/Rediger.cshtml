@@ -1,0 +1,97 @@
+@model BehovViewModel
+@{
+    ViewData["Title"] = "Endre behov";
+
+    // Id-en til behovet som endres (settes av BehovController.Rediger).
+    var behovId = (int)ViewData["BehovId"]!;
+}
+
+@* Skjemaet for å endre et behov (BehovController.Rediger, GET og POST).
+   Samme felt og valideringsregler som "Registrer nytt behov", men fylt ut med det
+   som er lagret. Bare den som meldte behovet og administratorer kommer hit. *@
+
+<div class="bp-skjema-side">
+    <div class="bp-skjema-kort bp-skjema-kort-bred">
+        <h1>Endre behov</h1>
+        <p class="bp-skjema-hjelp">Rett det som er feil eller har endret seg, for eksempel prioriteten. Endringen gjelder med en gang og vises i historikken.</p>
+
+        <form asp-controller="Behov" asp-action="Rediger" asp-route-id="@behovId" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" class="form-select">
+                    <option value="">Velg type (f.eks. Nødstrøm, Drivstoff, Kommunikasjon)</option>
+                    <option value="Nodstrom">Nødstrøm (aggregat)</option>
+                    <option value="Drivstofftransport">Drivstofftransport</option>
+                    <option value="Kommunikasjonsutstyr">Kommunikasjonsutstyr</option>
+                    <option value="Nodbelysning">Nødbelysning</option>
+                    <option value="Oppvarming">Oppvarming (varmeovner)</option>
+                    <option value="Annet">Annet</option>
+                </select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Beskrivelse" class="form-label"></label>
+                <textarea asp-for="Beskrivelse" class="form-control" rows="3" placeholder="Beskriv behovet, omfanget, og hva slags kompetanse eller utstyr som kreves..."></textarea>
+                <span asp-validation-for="Beskrivelse" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="GeografiskOmrade" class="form-label"></label>
+                <input asp-for="GeografiskOmrade" class="form-control" placeholder="F.eks. Vågsbygd, Kristiansand Sentrum, Vennesla" />
+                <span asp-validation-for="GeografiskOmrade" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <span class="form-label d-block">Plassering på kartet</span>
+                <p class="bp-skjema-hjelp">Markøren viser plasseringen som er lagret nå. Klikk i kartet for å flytte den.</p>
+                @* Det lille kartet. Styres av wwwroot/js/posisjonsvelger.js. *@
+                <div id="posisjonsvelger" class="bp-posisjonsvelger"></div>
+                @* Skjulte felt som posisjonsvelger.js fyller inn når brukeren klikker. *@
+                <input asp-for="Breddegrad" type="hidden" />
+                <input asp-for="Lengdegrad" type="hidden" />
+                <span asp-validation-for="Breddegrad" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Prioritet" class="form-label"></label>
+                @* Hjelpeteksten forklarer nivåene, så alle bruker dem likt. *@
+                <p class="bp-skjema-hjelp">Hvor mye haster det?</p>
+                <select asp-for="Prioritet" class="form-select">
+                    <option value="Hoy">Høy – trengs nå (liv, helse eller kritiske funksjoner)</option>
+                    <option value="Moderat">Moderat – trengs i løpet av et døgn</option>
+                    <option value="Lav">Lav – kan vente og planlegges</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Kontaktperson" class="form-label"></label>
+                <input asp-for="Kontaktperson" class="form-control" placeholder="Navn på ansvarlig kontakt" />
+                <span asp-validation-for="Kontaktperson" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Telefon" class="form-label"></label>
+                <input asp-for="Telefon" class="form-control" placeholder="Mobilnummer for direkte oppfølging" />
+                <span asp-validation-for="Telefon" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a class="btn btn-bp-sekundær" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@behovId">Avbryt</a>
+                <button type="submit" class="btn btn-bp-primær">Lagre endringer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
+
+@section Scripts {
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/posisjonsvelger.js" asp-append-version="true"></script>
+}

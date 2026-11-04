@@ -61,10 +61,25 @@ public static class TestHjelpere
 
     /// <summary>
     /// Lager en opplastet fil (IFormFile) i minnet, slik nettleseren ville sendt den.
+    /// Filen starter med de riktige bytene for filtypen (JPG, PNG eller WEBP), så den
+    /// går gjennom innholdssjekken i Sikkerhet/Bildesjekk.cs. Andre filtyper er bare nuller.
+    /// Sett ekteInnhold: false for å lage en fil som heter .jpg, men ikke er et bilde.
     /// </summary>
-    public static IFormFile LagBilde(string filnavn, long storrelse = 100)
+    public static IFormFile LagBilde(string filnavn, long storrelse = 100, bool ekteInnhold = true)
     {
-        var innhold = new MemoryStream(new byte[storrelse]);
+        var bytes = new byte[Math.Max(storrelse, 12)];
+        if (ekteInnhold)
+        {
+            var start = Path.GetExtension(filnavn).ToLowerInvariant() switch
+            {
+                ".jpg" or ".jpeg" => new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 },
+                ".png" => new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A },
+                ".webp" => "RIFF\0\0\0\0WEBP"u8.ToArray(),
+                _ => Array.Empty<byte>()
+            };
+            start.CopyTo(bytes, 0);
+        }
+        var innhold = new MemoryStream(bytes);
         return new FormFile(innhold, 0, storrelse, "Bilder", filnavn);
     }
 }

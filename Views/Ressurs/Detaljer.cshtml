@@ -155,10 +155,11 @@
 
     <partial name="_Historikk" model="Model.Historikk" />
 
-    @* Eieren og administratorer kan trekke ressursen tilbake. *@
+    @* Eieren og administratorer kan endre eller trekke ressursen tilbake. *@
     @if (Model.KanTrekkeTilbake)
     {
-        <div>
+        <div class="bp-bekreft-knapper">
+            <a class="btn btn-bp-primær" asp-controller="Ressurs" asp-action="Rediger" asp-route-id="@ressurs.Id">Endre ressursen</a>
             <a class="btn btn-bp-fare" asp-controller="Ressurs" asp-action="TrekkTilbake" asp-route-id="@ressurs.Id">Trekk tilbake ressursen</a>
         </div>
     }

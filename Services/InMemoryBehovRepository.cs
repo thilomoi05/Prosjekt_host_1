@@ -69,6 +69,19 @@ public class InMemoryBehovRepository : IBehovRepository
         }
     }
 
+    public void Oppdater(Behov endret)
+    {
+        lock (_lasObjekt)
+        {
+            var behov = _behov.FirstOrDefault(b => b.Id == endret.Id);
+            if (behov is not null)
+            {
+                // Samme felt som i databaselagringen (EfBehovRepository.KopierEndringer).
+                EfBehovRepository.KopierEndringer(endret, behov);
+            }
+        }
+    }
+
     public void Slett(int id)
     {
         lock (_lasObjekt)

@@ -1,0 +1,169 @@
+@model RedigerRessursViewModel
+@{
+    ViewData["Title"] = "Endre ressurs";
+
+    // Samme typer som i "Tilby ressurs" (Registrer.cshtml).
+    var typer = new (string Verdi, string Tekst)[]
+    {
+        ("Aggregat", "Aggregat"),
+        ("Drivstoff", "Drivstoff"),
+        ("Ups", "UPS (batteri)"),
+        ("Transport", "Transport"),
+        ("Kommunikasjonsutstyr", "Samband"),
+        ("Annet", "Annet")
+    };
+
+    // Private aktører får vite at en godkjent ressurs må godkjennes på nytt etter endring
+    // (regelen står i RessursController.Rediger).
+    var erAdmin = User.IsInRole(Roller.Admin);
+}
+
+@* =========================================================================
+   Skjemaet for å endre en ressurs (RessursController.Rediger, GET og POST).
+   Samme felt og valideringsregler som "Tilby ressurs", men på én side, siden
+   alt allerede er fylt ut. Bare eieren og administratorer kommer hit.
+   ========================================================================= *@
+<div class="bp-skjema-side">
+    <div class="bp-steg-skjema">
+        <h1>Endre ressurs</h1>
+        <p class="bp-steg-skjema-ingress">
+            Rett det som er feil eller har endret seg, og trykk «Lagre endringer».
+            @if (!erAdmin)
+            {
+                <span>Etter endringen må en administrator godkjenne ressursen på nytt før andre ser den (gjelder ikke ressurser som allerede er tildelt et behov).</span>
+            }
+        </p>
+
+        @* asp-route-id gjør at adressen blir /Ressurs/Rediger/7. Anti-forgery-tokenet legges inn automatisk. *@
+        <form asp-controller="Ressurs" asp-action="Rediger" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="redigerskjema">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <section class="bp-steg-innhold mb-4">
+                <h2>Hva tilbyr du?</h2>
+
+                <fieldset class="mb-4">
+                    <legend class="form-label">Type ressurs</legend>
+                    <div class="bp-type-valg">
+                        @foreach (var (verdi, tekst) in typer)
+                        {
+                            <label class="bp-type-knapp">
+                                <input type="radio" asp-for="Type" value="@verdi" />
+                                <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@verdi"></span>
+                                <span>@tekst</span>
+                            </label>
+                        }
+                    </div>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </fieldset>
+
+                <div class="mb-4">
+                    <label asp-for="BeskrivelseAvKapasitet" class="form-label"></label>
+                    <textarea asp-for="BeskrivelseAvKapasitet" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="BeskrivelseAvKapasitet" class="text-danger"></span>
+                </div>
+
+                @* Bildene ressursen har nå. Bildeadressen går via RessursController.Bilde, som sjekker tilgang. *@
+                <div class="mb-2">
+                    <span class="form-label d-block">Bilder nå</span>
+                    <div class="bp-bilde-forhandsvisning">
+                        @foreach (var filnavn in Model.EksisterendeBilder)
+                        {
+                            <img src="@Url.Action("Bilde", "Ressurs", new { id = filnavn })" alt="Bilde av ressursen" loading="lazy" />
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="Bilder" class="form-label">Bytt bilder (valgfritt)</label>
+                    <div class="bp-bildefelt">
+                        <input asp-for="Bilder" type="file" multiple accept="image/jpeg,image/png,image/webp" />
+                        <span class="bp-bildefelt-tekst">
+                            <strong>Velg nye bilder</strong> eller dra dem hit
+                            <span>Nye bilder erstatter alle de gamle. Velger du ingen, beholdes bildene over. Maks 5, JPG, PNG eller WEBP, opptil 5 MB per bilde.</span>
+                        </span>
+                    </div>
+                    <div class="bp-bilde-forhandsvisning" id="bilde-forhandsvisning"></div>
+                    <span asp-validation-for="Bilder" class="text-danger"></span>
+                </div>
+            </section>
+
+            <section class="bp-steg-innhold mb-4">
+                <h2>Hvor er den?</h2>
+
+                <div class="mb-3">
+                    <label asp-for="Adresse" class="form-label"></label>
+                    <div class="bp-adressesok">
+                        <input asp-for="Adresse" class="form-control" autocomplete="street-address" />
+                        <button type="button" id="finn-adresse" class="btn btn-bp-primær">Finn på kartet</button>
+                    </div>
+                    <span asp-validation-for="Adresse" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <p id="adresse-melding" class="bp-skjema-hjelp">
+                        Markøren viser plasseringen som er lagret nå. Klikk i kartet for å flytte den.
+                    </p>
+                    @* posisjonsvelger.js viser markøren der Breddegrad og Lengdegrad peker (feltene er fylt ut). *@
+                    <div id="posisjonsvelger" class="bp-posisjonsvelger bp-posisjonsvelger-stor"></div>
+                    <input asp-for="Breddegrad" type="hidden" />
+                    <input asp-for="Lengdegrad" type="hidden" />
+                    <span asp-validation-for="Breddegrad" class="text-danger" id="plassering-feil"></span>
+                </div>
+
+                <div class="mb-2">
+                    <label asp-for="Tilgangsbeskrivelse" class="form-label"></label>
+                    <textarea asp-for="Tilgangsbeskrivelse" class="form-control" rows="3"></textarea>
+                    <p class="bp-skjema-hjelp mt-1">Vises bare for Heimevernet og andre autoriserte brukere.</p>
+                    <span asp-validation-for="Tilgangsbeskrivelse" class="text-danger"></span>
+                </div>
+            </section>
+
+            <section class="bp-steg-innhold mb-4">
+                <h2>Når og hvem?</h2>
+
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <label asp-for="TilgjengeligFra" class="form-label"></label>
+                        <input asp-for="TilgjengeligFra" class="form-control" />
+                    </div>
+                    <div class="col-6">
+                        <label asp-for="TilgjengeligTil" class="form-label"></label>
+                        <input asp-for="TilgjengeligTil" class="form-control" />
+                    </div>
+                    <p class="bp-skjema-hjelp mt-1">La datoene stå tomme hvis ressursen er tilgjengelig nå, på ubestemt tid.</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-sm-6 mb-3 mb-sm-0">
+                        <label asp-for="Kontaktperson" class="form-label"></label>
+                        <input asp-for="Kontaktperson" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="Kontaktperson" class="text-danger"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="Telefon" class="form-label"></label>
+                        <input asp-for="Telefon" class="form-control" autocomplete="tel" inputmode="tel" />
+                        <span asp-validation-for="Telefon" class="text-danger"></span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="bp-steg-knapper">
+                <a class="bp-steg-avbryt" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@Model.Id">Avbryt</a>
+                <button type="submit" class="btn btn-bp-primær">Lagre endringer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/lib/leaflet/leaflet.css" />
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/lib/leaflet/leaflet.js"></script>
+    <script src="~/js/kartverket.js" asp-append-version="true"></script>
+    <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    <script src="~/js/posisjonsvelger.js" asp-append-version="true"></script>
+    <script src="~/js/ressursrediger.js" asp-append-version="true"></script>
+}

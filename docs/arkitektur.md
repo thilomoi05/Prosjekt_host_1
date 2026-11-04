@@ -114,13 +114,17 @@ Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view me
 | `Oversikt` | Innlogget | `Index` dashbord. Offentlige aktører ser nøkkeltall, behov og de fem siste tildelingene. Private ser sine egne ressurser |
 | `HvaTrengs` | Innlogget | `Index` utstyr som trengs og i hvilke områder, uten hvem som har meldt |
 | `Behov` | `OffentligAktor` | `Index` liste med filter, `Detaljer`, `Registrer` GET og POST |
-| `Ressurs` | Innlogget | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Detaljer` (private ser bare sine egne), `Bilde` (offentlige aktører, eller eieren av ressursen) |
+| `Ressurs` | Innlogget | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Detaljer` (private ser bare sine egne), `Rediger` GET og POST (eier og admin), `TrekkTilbake`, `Bilde` (offentlige aktører, eller eieren av ressursen) |
 | `Kart` | `OffentligAktor` | `Index` kartside, `Behov` og `Ressurser` som JSON til kart.js |
 | `Tildeling` | `OffentligAktor` | `Index` alle tildelinger med filter |
 | `Foresporsel` | `OffentligAktor` (bare egne behov) | `FinnRessurs` forslag til eget behov, `Foresporr` POST |
 | `Admin` | `Admin` | `Index` de fire køene, `GodkjennForesporsel`, `AvslaForesporsel`, `GodkjennRessurs`, `AvvisRessurs`, `Tildel` GET og POST, `FjernTildeling`, `GodkjennBruker`, `AvvisBruker` |
 
 `Behov` og `Ressurs` har også `TrekkTilbake`: en «Er du sikker?»-side (GET) og selve slettingen (POST).
+
+`Behov` har `Rediger` (GET og POST) for å endre et behov. Den som meldte behovet og admin kan endre det, samme regel som for `TrekkTilbake`. Behov trenger ikke godkjenning, så endringen gjelder med en gang. Status, dato og hvem som meldte behovet endres ikke, og endret prioritet skrives i historikken (f.eks. «prioritet moderat → høy»).
+
+`Ressurs` har `Rediger` (GET og POST) for å endre en ressurs. Bare eieren og admin slipper til, og tilgangen sjekkes i både GET og POST. Endrer eieren en ressurs som ikke er tildelt, settes den til `Venter` og må godkjennes på nytt, så ingen kan bytte ut innholdet i en godkjent ressurs uten at admin ser det. Nye bilder erstatter de gamle, og endringen skrives i historikken.
 
 Admin har også rollen `OffentligAktor`, så alt som står `OffentligAktor` over, gjelder også for admin.
 
@@ -242,6 +246,7 @@ Brukere, passord og roller håndteres av **ASP.NET Core Identity**, satt opp i `
 - Passordet lagres aldri. Identity lagrer en hash laget med PBKDF2 og et tilfeldig salt.
 - Passordregler: minst 8 tegn, med stor og liten bokstav og tall.
 - Etter 5 feil passord på rad låses kontoen i 5 minutter.
+- **Rate limiting:** hver IP-adresse får maks 10 forsøk per minutt på `POST /Konto/LoggInn` og `POST /Konto/Registrer` til sammen (`Sikkerhet/Fartsgrenser.cs`, `[EnableRateLimiting]`). Forsøk over grensen får `429 Too Many Requests` uten at passordet sjekkes. Utestengingen beskytter én konto; fartsgrensen stopper også at noen prøver ett passord mot mange brukernavn, eller lager mange kontoer.
 - `KontoController` bruker `UserManager` (lage brukere, roller) og `SignInManager` (sjekke passord, lage cookie). Vi skriver ingen passordkode selv.
 - `Sikkerhet/BrukerClaimsFabrikk.cs` legger det fulle navnet i cookien, så menyen kan vise det.
 - `Sikkerhet/NorskeIdentityFeilmeldinger.cs` gir norske feilmeldinger.
@@ -278,6 +283,8 @@ Tilgangen håndheves på serveren:
 - `Ressurs.Detaljer` og `Ressurs.Bilde` sjekker selv: offentlige aktører ser alt, private bare sine egne ressurser
 - Bildene ligger utenfor `wwwroot`, i `Opplastinger/bilder`, og sendes bare gjennom `Ressurs.Bilde`. Alt i `wwwroot` kan lastes ned av hvem som helst
 - Opplastede filer får et tilfeldig `Guid`-navn, maks 5 bilder à 5 MB, og bare jpg, jpeg, png eller webp
+- Innholdet sjekkes også, ikke bare endelsen: `Sikkerhet/Bildesjekk.cs` leser de første bytene og sjekker at filen faktisk er et JPG-, PNG- eller WEBP-bilde. Et program som har fått navnet `bilde.jpg`, avvises. SVG er ikke tillatt, fordi det kan inneholde JavaScript
+- Hele skjemaet kan være maks 26 MB (`[RequestSizeLimit]`), så store forespørsler stoppes før de leses inn
 - `Path.GetFileName` på id-en hindrer at noen ber om `../../Program.cs`
 
 Å skjule en knapp i nettleseren er ikke tilgangskontroll. Derfor gjøres sjekken begge steder: viewet skjuler lenken, og serveren nekter kallet.
@@ -288,7 +295,10 @@ Tilgangen håndheves på serveren:
 |---|---|
 | CSRF | `AutoValidateAntiforgeryTokenAttribute` i `Program.cs` sjekker anti-forgery-tokenet på alle POST-forespørsler. Cookien har `SameSite=Lax` |
 | XSS | Razor gjør all tekst trygg (`@`), vi bruker ikke `@Html.Raw`. JavaScript setter tekst inn med `trygg()`. Content-Security-Policy tillater bare skript fra våre egne .js-filer |
-| SQL-injeksjon | All databasetilgang går gjennom EF Core, som sender verdier som parametere. Vi skriver ingen SQL selv |
+| SQL-injeksjon | All databasetilgang går gjennom EF Core, som sender verdier som parametere. Vi skriver ingen SQL selv (ingen `FromSqlRaw` eller `ExecuteSql` i koden) |
+| Passordgjetting (brute force) | Rate limiting per IP på innlogging og registrering, og utestenging av kontoen etter 5 feil |
+| Skadelige filer | Endelse, innhold (magiske bytes) og størrelse sjekkes. Filene lagres utenfor `wwwroot` med tilfeldig navn og sendes bare til den som har tilgang |
+| For lang input | `[StringLength]` på skjemafeltene, samme lengde som kolonnene i databasen, så brukeren får en melding i stedet for en feil fra databasen |
 | Clickjacking | `X-Frame-Options: DENY` og `frame-ancestors 'none'` |
 
 `Sikkerhet/SikkerhetsheadereMiddleware.cs` legger disse headerne på alle svar:
