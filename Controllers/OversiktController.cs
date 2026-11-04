@@ -18,13 +18,15 @@ public class OversiktController : Controller
     private readonly IBehovRepository _behovRepository;
     private readonly IRessursRepository _ressursRepository;
     private readonly ITildelingRepository _tildelingRepository;
+    private readonly TildelingTjeneste _tildelingTjeneste;
 
     public OversiktController(IBehovRepository behovRepository, IRessursRepository ressursRepository,
-        ITildelingRepository tildelingRepository)
+        ITildelingRepository tildelingRepository, TildelingTjeneste tildelingTjeneste)
     {
         _behovRepository = behovRepository;
         _ressursRepository = ressursRepository;
         _tildelingRepository = tildelingRepository;
+        _tildelingTjeneste = tildelingTjeneste;
     }
 
     public IActionResult Index()
@@ -59,6 +61,21 @@ public class OversiktController : Controller
 
         if (User.IsInRole(Roller.OffentligAktor))
         {
+            // Offentlige aktører: de fem nyeste behovene de selv har meldt, og hvor mange
+            // forespørsler til hvert behov som venter på Admin. Alle egne behov: /Behov?meldtav=meg.
+            var brukernavn = User.Identity?.Name ?? string.Empty;
+            var ventendeForesporsler = _tildelingTjeneste.AlleVentendeForesporsler();
+            modell.MineMeldteBehov = alleBehov
+                .Where(b => b.RegistrertAv == brukernavn)
+                .OrderByDescending(b => b.Dato).ThenByDescending(b => b.Id)
+                .Take(5)
+                .Select(b => new MittBehov
+                {
+                    Behov = b,
+                    VentendeForesporsler = ventendeForesporsler.Count(f => f.BehovId == b.Id)
+                })
+                .ToList();
+
             // Offentlige aktører: de fem behovene som sist fikk en ressurs, med alle ressursene de har fått.
             // Resten finnes på siden "Alle tildelte ressurser" (TildelingController).
             modell.TildelteBehov = alleBehov

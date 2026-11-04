@@ -132,10 +132,12 @@ public class InMemoryBehovRepository : IBehovRepository
         };
 
         // Gir hvert eksempelbehov en plassering på kartet ut fra området det gjelder.
-        // Alle eksempelbehovene er meldt av testbrukeren "test" (offentlig aktør).
+        // Eksempelbehovene er fordelt på testbrukerne "test" og "admin", så filteret
+        // "Meldt av: Meg / Andre" på behovssiden viser en forskjell.
+        var meldtAvAdmin = new[] { 2, 5, 7, 10, 12 };
         foreach (var behov in data)
         {
-            behov.RegistrertAv = "test";
+            behov.RegistrertAv = meldtAvAdmin.Contains(behov.Id) ? "admin" : "test";
             // Behov har ingen adresse, bare et område, så adresseteksten (_) brukes ikke her.
             (_, behov.Breddegrad, behov.Lengdegrad) = EksempelPosisjoner.For(behov.GeografiskOmrade);
         }

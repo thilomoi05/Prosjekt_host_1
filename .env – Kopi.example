@@ -1,0 +1,5 @@
+DB_ROOT_PASSWORD=bytt_meg
+DB_PASSWORD=bytt_meg
+# Passordet til testbrukerne (test, privat og admin). Se docs/drift.md.
+# Minst 8 tegn, med stor og liten bokstav og tall.
+TESTBRUKER_PASSORD=
