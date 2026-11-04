@@ -26,16 +26,9 @@ cp .env.example .env      # Windows (PowerShell): copy .env.example .env
 docker compose up --build
 ```
 
-**Før `docker compose up`:** åpne `.env` og fyll inn de tre verdiene. Ellers lages ingen testbrukere, og du kan ikke logge inn:
+`.env.example` fungerer som den er: den har passord til databasen og `TESTBRUKER_PASSORD=Beredt2026`, så testbrukerne under lages første gang appen starter. Bytt gjerne passordene i `.env` til egne.
 
-```
-DB_ROOT_PASSWORD=et-langt-passord-minst-16-tegn
-DB_PASSWORD=et-annet-langt-passord-minst-16-tegn
-DB_PORT=3306
-TESTBRUKER_PASSORD=Beredt2026
-```
-
-Er port 3306 opptatt (feilmelding om `3306` ved oppstart), sett `DB_PORT=3307`. Mer om `.env` og feilsøking: [docs/drift.md](docs/drift.md).
+Er port 3306 opptatt (feilmelding om `3306` ved oppstart), sett `DB_PORT=3307` i `.env`. Mer om `.env` og feilsøking: [docs/drift.md](docs/drift.md).
 
 Åpne **http://localhost:8080** og logg inn med en av testbrukerne:
 
@@ -64,6 +57,7 @@ Tre roller, med tilgang sjekket på serveren (`[Authorize(Roles = ...)]`):
 I tillegg:
 
 - **Registrering og innlogging** med ASP.NET Core Identity. Offentlige aktører må godkjennes av admin før de kan logge inn.
+- **Min side:** alle kan endre navn, e-post og passord. Ny e-post og nytt passord krever det nåværende passordet.
 - **Kart** (Leaflet + Kartverket) med egne ikoner per type og farge per prioritet. Skjemaene har en posisjonsvelger: klikk i kartet eller søk opp en adresse.
 - **Oversikt** over ressurser og behov: dashbord, liste med filter under kartet, detaljsider og oversikt over tildelinger.
 - **Historikk:** alt som skjer med et behov eller en ressurs (sendt inn, godkjent, endret, tildelt, trukket tilbake) lagres og vises på detaljsiden.
@@ -128,6 +122,8 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | GET / POST | `/Konto/LoggInn` | Logge inn | Alle |
 | POST | `/Konto/LoggUt` | Logge ut | Innlogget |
 | GET | `/Konto/Profil` | Min side | Innlogget |
+| GET / POST | `/Konto/EndreProfil` | Endre navn og e-post (e-post krever nåværende passord) | Innlogget |
+| GET / POST | `/Konto/EndrePassord` | Endre passord | Innlogget |
 | GET | `/Oversikt` | Dashbord | Innlogget |
 | GET | `/HvaTrengs` | Hva som trengs, uten hvem som har meldt | Innlogget |
 | GET | `/Behov` | Alle behov med filter | Offentlig aktør |
@@ -172,14 +168,14 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | # | Krav | Hvor i koden / dokumentasjonen | Status |
 |---|---|---|---|
 | 1 | Kobling mot MariaDB, app og database i Docker | `docker-compose.yml`, `Data/BeredskapsDbContext.cs`, `Migrations/`, `Services/Ef*Repository.cs`, [docs/drift.md](docs/drift.md) | Ferdig |
-| 2 | Registrering av ny bruker, lagret i databasen | `Controllers/KontoController.cs`, `Models/Bruker.cs` (tabellen `AspNetUsers`) | Ferdig |
+| 2 | Registrering av ny bruker, lagret i databasen | `Controllers/KontoController.cs` (`Registrer`, og `EndreProfil`/`EndrePassord` på Min side), `Models/Bruker.cs` (tabellen `AspNetUsers`) | Ferdig |
 | 3 | Autentisering, autorisering, og legge til, endre og slette ressurs | `KontoController`, `[Authorize(Roles)]` på controllerne, `RessursController` (`Registrer`, `Rediger`, `TrekkTilbake`) | Ferdig |
 | 4 | Funksjoner som beskrevet av oppdragsgiveren | [Funksjoner](#funksjoner), `Services/TildelingTjeneste.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 1 og 5b | Ferdig |
 | 5 | Kartet i skjemaet setter et punkt | `wwwroot/js/posisjonsvelger.js`, `Views/Behov/Registrer.cshtml`, `Views/Ressurs/Registrer.cshtml` | Ferdig |
 | 6 | Mobiltilpasset frontend | `wwwroot/css/site.css` (`@media`), `_Layout.cshtml`, [mobiltest](#mobiltest) | Ferdig |
 | 7 | Enkel oversikt over ressurser | `/Oversikt`, lista under kartet, `/Ressurs/Detaljer`, `/Tildeling` | Ferdig |
 | 8 | Sikkerhetstiltak | `Program.cs`, `Sikkerhet/SikkerhetsheadereMiddleware.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 6 | Ferdig |
-| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (137 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
+| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (156 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
 | 10 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), [docs/arkitektur.md](docs/arkitektur.md), [Testing](#testing) | Ferdig |
 | 11 | Dokumentasjon i koden | `/// <summary>` på alle klasser, norske kommentarer i C#, Razor (`@* *@`) og JavaScript | Ferdig |
 | 12 | Bruk av KI | [Bruk av KI](#bruk-av-ki), [docs/ki-bruk.md](docs/ki-bruk.md) | Ferdig |
@@ -203,7 +199,7 @@ I tillegg fant vi at tekstfeltene i skjemaene ikke hadde maks lengde, mens kolon
 
 ## Testing
 
-Vi har fire typer tester. Enhetstestene kjører automatisk. System-, sikkerhets- og mobiltesten er kjørt manuelt i nettleseren mot appen i Docker, med MariaDB og ekte data. Brukervennlighetstesten er gjort med personer utenfor gruppa.
+Vi har fire typer tester. Enhetstestene kjører automatisk. System-, sikkerhets- og mobiltesten er kjørt manuelt i nettleseren mot appen i Docker, med MariaDB og ekte data. Brukervennlighetstesten gjøres med personer utenfor gruppa (se [status](#brukervennlighetstest)).
 
 | Type | Hva | Hvor |
 |---|---|---|
@@ -222,7 +218,7 @@ Testene kjører uten Docker og uten database. De bruker de minnebaserte reposito
 dotnet test Beredskapsportal.Tests
 ```
 
-**Resultat (04.11.2026):** 137 av 137 tester bestått ✅ (77 fra før og 60 nye i Oppgave 2)
+**Resultat (04.11.2026):** 156 av 156 tester bestått ✅ (77 fra Oppgave 1 og 79 nye i Oppgave 2)
 
 | Testfil | Hva den sjekker |
 |---|---|
@@ -232,8 +228,9 @@ dotnet test Beredskapsportal.Tests
 | `RedigerRessursTester.cs` | Endre ressurs: bare eier og admin, endringer lagres, ny godkjenning etter endring, nye bilder erstatter gamle, historikk |
 | `ValideringTester.cs` | Valideringsreglene i skjemaene for behov, ressurs, innlogging og registrering (påkrevde felt, telefon, e-post, maks lengde) |
 | `KartControllerTester.cs` | `/Kart/Behov` og `/Kart/Ressurser`: feltene kart.js bruker, bare godkjente ressurser, tildelte merket, bare GET og bare offentlige aktører |
-| `KontoControllerTester.cs` | Innlogging (riktig og feil passord, ukjent bruker, låst konto, ikke godkjent) og registrering |
-| `SikkerhetTester.cs` | Sikkerhetsheadere og CSP, roller, norske feilmeldinger, rate limiting, grense på opplasting, sjekk av bildeinnhold |
+| `KontoControllerTester.cs` | Innlogging (riktig og feil passord, ukjent bruker, låst konto, ikke godkjent), registrering, og endring av navn, e-post og passord på Min side |
+| `OversiktControllerTester.cs` | «Mine meldte behov» på Oversikt |
+| `SikkerhetTester.cs` | Sikkerhetsheadere og CSP, roller, norske feilmeldinger, rate limiting (også på Min side), grense på opplasting, sjekk av bildeinnhold |
 | `TilgangTester.cs` | Hvilke roller controllerne krever |
 | `DetaljerTester.cs` | Detaljsidene, og at private aktører bare ser sine egne ressurser |
 | `TildelingTjenesteTester.cs`, `TildelingsforslagTester.cs` | Godkjenning, tildeling, forespørsler, tilbaketrekking og avstand |
@@ -259,6 +256,13 @@ dotnet test Beredskapsportal.Tests
 | Feil passord | Riktig brukernavn, feil passord | Feilmelding | ✅ «Feil brukernavn eller passord.» |
 | Tomt innloggingsskjema | Trykk «Logg inn» | Feilmelding ved begge felt | ✅ |
 | Logge inn med de tre rollene | `test`, `privat`, `admin` | Sendes til Oversikt | ✅ |
+| Min side uten innlogging (04.11.2026) | Åpne `/Konto/EndreProfil` og `/Konto/EndrePassord` uinnlogget | Sendes til innlogging | ✅ |
+| Endre navn (04.11.2026) | Ny privat aktør → Min side → «Endre profil», nytt navn | Lagres, nytt navn vises med en gang | ✅ «Profilen er oppdatert.», navnet vises i menyen |
+| Endre e-post uten / med feil passord (04.11.2026) | Ny e-post uten nåværende passord, så med feil passord | Avvises | ✅ «Skriv inn nåværende passord for å endre e-posten.» og «Nåværende passord er feil.» |
+| Endre til e-post som er i bruk (04.11.2026) | E-posten til en annen bruker | Avvises | ✅ «E-posten «…» er allerede registrert.» |
+| Endre e-post (04.11.2026) | Ny e-post med riktig passord | Lagres | ✅ Ny e-post vises på Min side |
+| Endre passord, feil input (04.11.2026) | Feil nåværende passord · nye passord ulike · for kort passord | Feilmelding for hver | ✅ «Nåværende passord er feil.» · «Passordene er ikke like.» · «Passordet må være på minst 8 tegn.» |
+| Endre passord (04.11.2026) | Riktig nåværende og gyldig nytt passord, logg ut og inn igjen | Fortsatt innlogget etter byttet, gammelt passord virker ikke, nytt virker | ✅ «Passordet er endret.», gammelt passord gir «Feil brukernavn eller passord.», nytt sender til Oversikt |
 
 #### Behov (offentlig aktør)
 
