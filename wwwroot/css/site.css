@@ -1190,6 +1190,19 @@ button.bp-meny-lenke:hover {
     overflow-x: auto;
   }
 
+  /* Forteller at tabellen kan rulles sidelengs. Uten dette så det ut som kolonnene
+     «Status» og «Dato» manglet (funnet i mobiltesten 03.11.2026). sticky + left: 0
+     gjør at teksten blir stående mens tabellen rulles. */
+  .table-responsive::before {
+    content: "Sveip sidelengs for å se alle kolonnene →";
+    display: block;
+    position: sticky;
+    left: 0;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--farge-tekst-svak);
+  }
+
   .bp-skjema-kort {
     padding: 1.75rem 1.25rem;
   }

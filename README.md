@@ -316,7 +316,7 @@ Chrome-vinduet satt til 500 px bredt (det smaleste Chrome tillater), som er unde
 | Oversikt | Kortene stables i én kolonne | ✅ |
 | Kart | Kartet fyller skjermen, «Filter» og «Vis liste» kan nås | ✅ |
 | Melde behov, Tilby ressurs | Skjema og kart i én kolonne | ✅ |
-| Behov (liste) | Hele tabellen kan leses | ⚠️ Tabellen rulles sidelengs inne i kortet. Kolonnene «Status» og «Dato» er skjult til man ruller, og ingenting viser at det går an å rulle |
+| Behov (liste) | Hele tabellen kan leses | ⚠️ Tabellen rulles sidelengs inne i kortet. Kolonnene «Status» og «Dato» er skjult til man ruller, og ingenting viste at det gikk an. Rettet med teksten «Sveip sidelengs for å se alle kolonnene →» over tabeller på smal skjerm |
 | Detaljside for behov | Kartet under teksten | ✅ |
 | Tildelinger, Hva trengs | Ingen sidelengs rulling | ✅ |
 
@@ -353,7 +353,7 @@ Skriv ✅ (klarte det alene), ⚠️ (klarte det med nøling) eller ❌ (klarte 
 | «Endre ressurs» kunne ikke lagres uten å velge nye bilder. Nettleseren viste «The Bilder av ressursen field is required.» Årsak: `List<IFormFile>` uten `?` får en skjult `[Required]` fra ASP.NET | `/Ressurs/Rediger` | Rettet: `Bilder` er nå `List<IFormFile>?`, testet på nytt ✅ |
 | Port 3306 var reservert av Windows/Hyper-V, så databasen startet ikke | `docker-compose.yml` | Rettet: porten kan settes med `DB_PORT` i `.env` |
 | Tekstfeltene hadde ikke maks lengde, mens kolonnene i databasen har det. For lang tekst ville gitt databasefeil | Alle skjemaer | Rettet: `[StringLength]` på feltene, testet ✅ |
-| Behovstabellen viser ikke at den kan rulles sidelengs på mobil | `/Behov` | Ikke rettet ennå |
+| Tabellene viste ikke at de kan rulles sidelengs på mobil | `/Behov`, `/Tildeling`, `/Admin` | Rettet: tekst over tabellen på skjermer under 768 px (`site.css`) |
 | Meldingen om manglende plassering ble vist to ganger (Oppgave 1) | `/Behov/Registrer`, `/Ressurs/Registrer` | Rettet i Oppgave 1, sjekket igjen i `ValideringTester` ✅ |
 
 <details>
