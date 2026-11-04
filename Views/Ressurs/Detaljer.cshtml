@@ -123,10 +123,18 @@
         </section>
     }
 
-    @* Offentlige aktører kan forespørre en ledig ressurs til et av sine behov. Admin godkjenner. *@
-    @if (Model.MineBehov.Count > 0)
+    @* Offentlige aktører kan forespørre en ledig ressurs til et av sine behov. Admin godkjenner.
+       id="foresporr" gjør at "Forespør" på kartet kan hoppe rett hit (/Ressurs/Detaljer/7#foresporr). *@
+    @if (Model.KanForesporres && Model.MineBehov.Count == 0)
     {
-        <section class="bp-tabell-kort">
+        <section class="bp-tabell-kort" id="foresporr">
+            <h2 class="bp-detaljer-overskrift">Forespør til mitt behov</h2>
+            <p class="bp-oversikt-tom">Du har ikke meldt noen behov ennå. <a asp-controller="Behov" asp-action="Registrer">Meld et behov</a> først, så kan du forespørre ressursen til det.</p>
+        </section>
+    }
+    else if (Model.KanForesporres)
+    {
+        <section class="bp-tabell-kort" id="foresporr">
             <h2 class="bp-detaljer-overskrift">Forespør til mitt behov</h2>
             <form asp-controller="Foresporsel" asp-action="Foresporr" method="post" class="bp-foresporr-skjema">
                 <input type="hidden" name="ressursId" value="@ressurs.Id" />

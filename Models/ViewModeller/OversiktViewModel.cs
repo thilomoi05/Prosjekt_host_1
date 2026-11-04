@@ -29,6 +29,9 @@ public class OversiktViewModel
     // For offentlige aktører: de fem behovene som sist fikk ressurser, med ressursene som er satt inn på dem.
     public List<TildeltBehov> TildelteBehov { get; set; } = new();
 
+    // For offentlige aktører: de fem nyeste behovene brukeren selv har meldt.
+    public List<MittBehov> MineMeldteBehov { get; set; } = new();
+
     // For private aktører: alle ressursene brukeren har registrert, og om de er tildelt.
     public List<MinRessurs> MineRessurser { get; set; } = new();
 }
@@ -48,4 +51,14 @@ public class MinRessurs
 {
     public Ressurs Ressurs { get; set; } = new();
     public bool ErTildelt { get; set; }
+}
+
+/// <summary>
+/// Et behov brukeren selv har meldt, og hvor mange forespørsler om ressurser
+/// til det som venter på en administrator.
+/// </summary>
+public class MittBehov
+{
+    public Behov Behov { get; set; } = new();
+    public int VentendeForesporsler { get; set; }
 }

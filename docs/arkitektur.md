@@ -229,6 +229,8 @@ Offentlig aktør: Forespør ──► Venter ──► Admin: Godkjenn ──►
                                     └──► Admin: Avslå (med begrunnelse)
 ```
 
+**Mine meldte behov.** Offentlige aktører ser sine fem nyeste behov på Oversikt, med status og hvor mange forespørsler som venter på Admin. «Se alle mine behov» åpner behovslista med filteret «Meldt av: Meg» (`/Behov?meldtav=meg`). Filteret gjenbruker `tabellfilter.js` og `_Filtermeny`, som de andre kolonnene.
+
 **Trekke tilbake.** Den som meldte et behov, kan trekke det tilbake. Ressursene som var tildelt det, blir ledige. Eieren av en ressurs kan trekke den tilbake. Var den tildelt, fjernes tildelingen, og behovet venter igjen hvis det ikke har andre ressurser. Administratorer kan trekke tilbake alt.
 
 **Historikk.** Hver hendelse lagres i tabellen `Hendelser` med tidspunkt, hvem og hva, og vises på detaljsidene. Historikken til en ressurs sier ikke hvilket behov den ble tildelt, fordi eieren (en privat aktør) også ser den. Historikken blir liggende selv om behovet eller ressursen trekkes tilbake.

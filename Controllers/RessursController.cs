@@ -162,6 +162,8 @@ public class RessursController : Controller
         // Er ressursen satt inn på et behov? I så fall finnes det en Tildeling med denne ressursen.
         var tildeling = _tildelingRepository.HentAlle().FirstOrDefault(t => t.RessursId == id);
 
+        var kanForesporres = erOffentligAktor && tildeling is null && ressurs.Status == RessursStatus.Godkjent;
+
         var modell = new RessursDetaljerViewModel
         {
             Ressurs = ressurs,
@@ -174,7 +176,8 @@ public class RessursController : Controller
             KanTrekkeTilbake = ErEierEllerAdmin(ressurs),
             Historikk = _tildelingTjeneste.HistorikkForRessurs(id),
             // En offentlig aktør kan forespørre en ledig, godkjent ressurs til et av sine egne behov.
-            MineBehov = erOffentligAktor && tildeling is null && ressurs.Status == RessursStatus.Godkjent
+            KanForesporres = kanForesporres,
+            MineBehov = kanForesporres
                 ? _behovRepository.HentAlle().Where(b => b.RegistrertAv == Brukernavn()).ToList()
                 : new List<Behov>()
         };
