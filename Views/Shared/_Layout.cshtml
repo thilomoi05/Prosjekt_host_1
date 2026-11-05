@@ -97,14 +97,15 @@
                 {
                     <ul class="bp-nav-lenker">
                         <li><a class="bp-nav-link @(ErAktiv("Oversikt") ? "aktiv" : "")" asp-controller="Oversikt" asp-action="Index">Oversikt</a></li>
-                        @* Kart og Behov vises bare for offentlige aktører. Private aktører tilbyr bare ressurser. *@
+                        @* Kart, Behov og Ressurser vises bare for offentlige aktører. Private aktører ser sine egne ressurser på Oversikt. *@
                         @if (User.IsInRole(Roller.OffentligAktor))
                         {
                             <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
                             <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
+                            <li><a class="bp-nav-link @(ErAktiv("Ressurs") && gjeldendeAction != "Registrer" ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
                         }
                         @* Heter "Tilby ressurs" for alle, siden det er det man gjør på siden. *@
-                        <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Tilby ressurs</a></li>
+                        <li><a class="bp-nav-link @(ErAktiv("Ressurs") && gjeldendeAction == "Registrer" ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a></li>
                         @* Hva trengs: utstyr som trengs og hvor (uten hvem). Vises for alle innloggede. *@
                         <li><a class="bp-nav-link @(ErAktiv("HvaTrengs") ? "aktiv" : "")" asp-controller="HvaTrengs" asp-action="Index">Hva trengs</a></li>
                         @* Admin: godkjenning og tildeling. Bare for administratorer (sjekkes også i AdminController). *@

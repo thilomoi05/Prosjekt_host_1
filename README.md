@@ -131,6 +131,7 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | GET | `/Behov/Detaljer/{id}` | Detaljside med historikk | Offentlig aktør |
 | GET / POST | `/Behov/Rediger/{id}` | Endre behov | Den som meldte det, og admin |
 | GET / POST | `/Behov/TrekkTilbake/{id}` | Trekke tilbake eget behov | Den som meldte det, og admin |
+| GET | `/Ressurs` | Liste over ressurser med filter på type, status og hvem som la dem inn | Innlogget. Offentlige ser godkjente, private bare egne, admin alle |
 | GET / POST | `/Ressurs/Registrer` | Tilby ressurs med bilder | Innlogget |
 | GET | `/Ressurs/Detaljer/{id}` | Detaljside med bilder, kart og historikk | Eier, admin, eller offentlig aktør når godkjent |
 | GET / POST | `/Ressurs/Rediger/{id}` | Endre ressurs | Eier og admin |
@@ -224,6 +225,7 @@ dotnet test Beredskapsportal.Tests
 |---|---|
 | `BehovControllerTester.cs` | POST av behov: gyldig skjema lagres, tomt skjema og manglende plassering avvises, tekst lagres uendret |
 | `RessursControllerTester.cs` | POST av ressurs: lagres som «venter», ugyldig skjema lagres ikke, bilderegler (antall, størrelse, type, innhold), `/Ressurs/Bilde` kan ikke hente andre filer |
+| `RessursListeTester.cs` | `/Ressurs`: private ser bare egne ressurser, offentlige bare godkjente, admin alle, og riktig status (tilgjengelig, tildelt, venter, avvist) |
 | `RedigerBehovTester.cs` | Endre behov: bare den som meldte det og admin, endringer lagres, status, dato og eier endres ikke, endret prioritet i historikken |
 | `RedigerRessursTester.cs` | Endre ressurs: bare eier og admin, endringer lagres, ny godkjenning etter endring, nye bilder erstatter gamle, historikk |
 | `ValideringTester.cs` | Valideringsreglene i skjemaene for behov, ressurs, innlogging og registrering (påkrevde felt, telefon, e-post, maks lengde) |

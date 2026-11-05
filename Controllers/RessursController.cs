@@ -50,11 +50,35 @@ public class RessursController : Controller
         _bildemappe = Path.Combine(miljo.ContentRootPath, "Opplastinger", "bilder");
     }
 
-    // Menypunktet "Tilby ressurs" peker hit. Sender rett videre til registreringsskjemaet,
-    // siden det ikke finnes noen egen listeside for ressurser (de vises på kartet og i Oversikt).
+    /// <summary>
+    /// Liste over ressurser med filter, /Ressurs (menypunktet "Ressurser").
+    /// Viser bare ressursene brukeren har lov til å se, med samme regel som detaljsiden (KanSe):
+    /// administratorer ser alle, offentlige aktører ser godkjente, og alle ser sine egne.
+    /// En privat aktør ser altså bare sine egne ressurser her.
+    /// Knappen "Tilby ressurs" på siden går til Registrer.
+    /// </summary>
+    [HttpGet]
     public IActionResult Index()
     {
-        return RedirectToAction(nameof(Registrer));
+        // Id-ene til ressursene som er satt inn på et behov, så vi kan vise "Tildelt".
+        var tildelteIder = _tildelingRepository.HentAlle()
+            .Select(t => t.RessursId)
+            .ToHashSet();
+
+        var brukernavn = Brukernavn();
+
+        var rader = _ressursRepository.HentAlle()
+            .Where(KanSe)
+            .OrderByDescending(r => r.Id)   // nyeste først
+            .Select(r => new RessursListeRad
+            {
+                Ressurs = r,
+                ErTildelt = tildelteIder.Contains(r.Id),
+                ErMin = !string.IsNullOrEmpty(r.RegistrertAv) && r.RegistrertAv == brukernavn
+            })
+            .ToList();
+
+        return View(rader);
     }
 
     [HttpGet]
