@@ -28,7 +28,7 @@ Her er eksempler på prompter vi har brukt underveis:
 
 5. «Her er Oppgave 2 og statusoversikten vår. Oppdater repoet, lag det som mangler (endre ressurs), kjør testene og oppdater README.» (brukt i Oppgave 2: KI skrev `RessursController.Rediger` med tester, og et utkast til system- og sikkerhetstesten, som gruppa gikk gjennom)
 
-6. «Lag en egen side med alle ressursene, med samme filter og design som Behov-siden, og "Tilby ressurs" som en knapp på siden i stedet for en egen fane.» (brukt i Oppgave 2: KI skrev `RessursController.Index`, `Views/Ressurs/Index.cshtml` og `RessursListeTester.cs`. Pelle testet siden med alle tre rollene og tilpasset den etter tilbakemelding fra gruppa)
+6. «Lag en egen side med alle ressursene, med samme filter og design som Behov-siden, og "Tilby ressurs" som en knapp på siden.» (brukt i Oppgave 2: KI skrev `RessursController.Index`, `Views/Ressurs/Index.cshtml` og `RessursListeTester.cs`. Pelle testet siden med alle tre rollene og tilpasset den etter tilbakemelding fra gruppa: private aktører fikk «Mine ressurser» og «Tilby ressurs» som egne faner, og en enklere liste)
 
 ## 4. Retningslinjer og regler (AGENT.md)
 Vi har fulgt reglene i `AGENT.md` for alt arbeid med KI:

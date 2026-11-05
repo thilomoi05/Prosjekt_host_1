@@ -16,16 +16,9 @@
 }
 
 <div class="bp-side-innhold bp-detaljer">
-    @* "Tilbake" går til forrige side. href er reserve hvis siden ble åpnet direkte:
-       offentlige aktører til ressurslista under kartet, private til oversikten. *@
-    @if (Model.ErOffentligAktor)
-    {
-        <a class="bp-tilbake" href="@Url.Action("Index", "Kart", new { liste = "ressurser" })" data-tilbake>&larr; Tilbake</a>
-    }
-    else
-    {
-        <a class="bp-tilbake" asp-controller="Oversikt" asp-action="Index" data-tilbake>&larr; Tilbake</a>
-    }
+    @* "Tilbake" går til forrige side (kartet, lista eller oversikten). href er reserve hvis siden
+       ble åpnet direkte: da går den til ressurslista, som "Tilbake" på Behov/Detaljer går til behovslista. *@
+    <a class="bp-tilbake" asp-controller="Ressurs" asp-action="Index" data-tilbake>&larr; Tilbake</a>
 
     <div class="bp-detaljer-hode">
         <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs" data-ikon-storrelse="48"></span>

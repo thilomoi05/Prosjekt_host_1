@@ -85,6 +85,19 @@ public class RessursListeTester
     }
 
     [Fact]
+    public void Index_OffentligAktorSerSinEgenRessursSomVenter()
+    {
+        // Arrange: en offentlig aktør har selv tilbudt en ressurs som ikke er godkjent ennå
+        var egen = LeggTilRessurs("hv-kristiansand", RessursStatus.Venter);
+
+        // Act
+        var rader = HentRader(LagController("hv-kristiansand", Roller.OffentligAktor));
+
+        // Assert: egne ressurser vises alltid, også før de er godkjent (samme regel som detaljsiden)
+        Assert.Contains(rader, r => r.Ressurs.Id == egen.Id);
+    }
+
+    [Fact]
     public void Index_AdminSerAlleRessurser()
     {
         // Arrange
