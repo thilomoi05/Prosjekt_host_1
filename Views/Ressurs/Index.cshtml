@@ -1,4 +1,4 @@
-@model IReadOnlyList<Beredskapsportal.Models.ViewModeller.RessursListeRad>
+@model List<RessursRad>
 @{
     // Offentlige aktører ser alle godkjente ressurser. Private aktører ser bare sine egne
     // (det sjekkes i RessursController.Index), så overskriften sier det samme.
@@ -12,17 +12,18 @@
         .OrderBy(t => t.Tekst)
         .ToList();
 
-    // Status har faste valg, i den rekkefølgen som gir mening.
+    // Status har faste valg, i den rekkefølgen som gir mening. Samme tekster som på Oversikt og detaljsiden.
     var statuser = new List<(string Verdi, string Tekst)>
     {
-        ("tilgjengelig", "Tilgjengelig"),
-        ("tildelt", "Tildelt et behov"),
-        ("venter", "Venter på godkjenning"),
-        ("avvist", "Avvist")
+        ("Tilgjengelig", "Tilgjengelig"),
+        ("Tildelt", "Tildelt et behov"),
+        ("Venter", "Venter på godkjenning"),
+        ("Avvist", "Avvist")
     };
 
-    // "Lagt inn av": egne ressurser eller andres. /Ressurs?laginnav=meg viser bare egne.
-    var lagtInnAvValg = new List<(string Verdi, string Tekst)> { ("meg", "Meg"), ("andre", "Andre") };
+    // "Meldt av": egne ressurser eller andres, som på Behov-siden. /Ressurs?meldtav=meg viser bare egne.
+    var brukernavn = User.Identity?.Name ?? string.Empty;
+    var meldtAvValg = new List<(string Verdi, string Tekst)> { ("meg", "Meg"), ("andre", "Andre") };
 }
 
 <div class="bp-side-innhold">
@@ -56,54 +57,54 @@
                         <th><partial name="_Filtermeny" model='("Type ressurs", "ressurstype", typer)' /></th>
                         <th>Adresse</th>
                         <th><partial name="_Filtermeny" model='("Status", "status", statuser)' /></th>
-                        <th><partial name="_Filtermeny" model='("Lagt inn av", "laginnav", lagtInnAvValg)' /></th>
+                        <th><partial name="_Filtermeny" model='("Meldt av", "meldtav", meldtAvValg)' /></th>
                         @* Sorterer på når ressursen er tilgjengelig fra. Uten fra-dato er den tilgjengelig nå. *@
                         <th><partial name="_Datosortering" model='"Tilgjengelig fra"' /></th>
-                        @* Kolonne for "Se detaljer"-knappen. Teksten er skjult, men leses av skjermlesere. *@
-                        <th><span class="visually-hidden">Detaljer</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var rad in Model)
                     {
                         var ressurs = rad.Ressurs;
+                        var erMin = ressurs.RegistrertAv == brukernavn;
+
+                        // Status: venter på godkjenning, avvist, tildelt eller tilgjengelig (som på Oversikt).
+                        var (status, cssKlasse, tekst) = ressurs.Status switch
+                        {
+                            RessursStatus.Venter => ("Venter", "bp-badge-godkjenning", "Venter på godkjenning"),
+                            RessursStatus.Avvist => ("Avvist", "bp-badge-avvist", "Avvist"),
+                            _ when rad.ErTildelt => ("Tildelt", "bp-badge-tildelt", "Tildelt et behov"),
+                            _ => ("Tilgjengelig", "bp-badge-venter", "Tilgjengelig")
+                        };
                         @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filteret og sorteringen bruker.
                            Ressurser uten fra-dato får "0000-00-00", så de regnes som eldst (tilgjengelig nå). *@
                         <tr data-rad
                             data-ressurstype="@ressurs.Type"
-                            data-status="@rad.StatusKode"
-                            data-laginnav="@(rad.ErMin ? "meg" : "andre")"
+                            data-status="@status"
+                            data-meldtav="@(erMin ? "meg" : "andre")"
                             data-dato="@(ressurs.TilgjengeligFra?.ToString("yyyy-MM-dd") ?? "0000-00-00")">
                             <td>
-                                @* Samme firkant-ikon som på kartet. Fylles inn av tabellfilter.js. *@
+                                @* Samme firkant-ikon som på kartet. Fylles inn av tabellfilter.js.
+                                   Navnet er en lenke til detaljsiden (Ressurs/Detaljer/id), som på Behov-siden. *@
                                 <span class="bp-kartikon bp-ikon-ressurs" data-ikon-type="@ressurs.Type" data-ikon-form="ressurs"></span>
-                                @ressurs.VisningsNavn
+                                <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">@ressurs.VisningsNavn</a>
                             </td>
                             <td>@ressurs.Adresse</td>
-                            <td><span class="bp-badge @rad.StatusCss">@rad.StatusTekst</span></td>
+                            <td><span class="bp-badge @cssKlasse">@tekst</span></td>
                             @* Samme som "Meldt av" på Behov-siden: brukernavnet, eller "Deg" for egne. *@
-                            <td>@(rad.ErMin ? "Deg" : string.IsNullOrEmpty(ressurs.RegistrertAv) ? "–" : ressurs.RegistrertAv)</td>
-                            <td>
-                                @* Samme datoformat som resten av appen (yyyy-MM-dd), men kortere enn på detaljsiden
-                                   så det får plass i tabellen. Tom fra-dato betyr "fra nå". *@
-                                @{
-                                    var fra = ressurs.TilgjengeligFra?.ToString("yyyy-MM-dd");
-                                    var til = ressurs.TilgjengeligTil?.ToString("yyyy-MM-dd");
-                                    var tilgjengelig = til is null
-                                        ? $"Fra {fra ?? "nå"}"
-                                        : $"{fra ?? "Nå"} – {til}";
-                                }
-                                @tilgjengelig
-                            </td>
-                            @* Samme knapp som i lista under kartet (seDetaljerKnapp i kart.js). *@
-                            <td>
-                                <a class="btn btn-sm btn-outline-primary bp-kart-detaljer text-nowrap" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@ressurs.Id">Se detaljer &rarr;</a>
-                            </td>
+                            <td>@(erMin ? "Deg" : ressurs.RegistrertAv)</td>
+                            @* Samme datoformat som "Dato" på Behov-siden. Tom fra-dato betyr at den er tilgjengelig nå. *@
+                            <td>@(ressurs.TilgjengeligFra?.ToString("yyyy-MM-dd") ?? "Nå")</td>
                         </tr>
                     }
-                    @* Vises av tabellfilter.js når ingen ressurser passer filteret. *@
+                    @* Vises av tabellfilter.js når ingen ressurser passer filteret. Finnes det ingen ressurser
+                       i det hele tatt, står samme tekst som på Oversikt i stedet. *@
                     <tr id="tabell-tom" hidden>
-                        <td colspan="6" class="bp-oversikt-tom">Ingen ressurser passer filteret. Trykk «Nullstill filter» for å se alle.</td>
+                        <td colspan="5" class="bp-oversikt-tom">
+                            @(Model.Count == 0
+                                ? "Du har ikke tilbudt noen ressurser ennå. Trykk «Tilby ressurs» for å registrere den første."
+                                : "Ingen ressurser passer filteret. Trykk «Nullstill filter» for å se alle.")
+                        </td>
                     </tr>
                 </tbody>
             </table>

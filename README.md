@@ -50,8 +50,8 @@ Tre roller, med tilgang sjekket på serveren (`[Authorize(Roles = ...)]`):
 
 | Rolle | Kan |
 |---|---|
-| **Offentlig aktør** (kommune, sykehus, Heimevernet) | Melde behov med type, prioritet og plassering · se alle behov med filter · se kart med behov og ressurser · finne og forespørre ressurser til egne behov · **endre** og trekke tilbake egne behov |
-| **Privat aktør** (bedrift, privatperson) | Tilby ressurser med bilder · se status på egne ressurser (venter, godkjent, avvist, tildelt) · **endre** og trekke tilbake egne ressurser · se «Hva trengs» uten å se hvem som har meldt |
+| **Offentlig aktør** (kommune, sykehus, Heimevernet) | Melde behov med type, prioritet og plassering · se alle behov med filter · se alle godkjente ressurser i en liste med filter · se kart med behov og ressurser · finne og forespørre ressurser til egne behov · **endre** og trekke tilbake egne behov |
+| **Privat aktør** (bedrift, privatperson) | Tilby ressurser med bilder · se egne ressurser i en liste («Mine ressurser») · se status på egne ressurser (venter, godkjent, avvist, tildelt) · **endre** og trekke tilbake egne ressurser · se «Hva trengs» uten å se hvem som har meldt |
 | **Admin** | Godkjenne eller avvise ressurser og offentlige aktører · tildele ressurser til behov med forslag sortert på avstand · godkjenne eller avslå forespørsler · fjerne tildelinger · endre alle behov og ressurser |
 
 I tillegg:
@@ -131,7 +131,7 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | GET | `/Behov/Detaljer/{id}` | Detaljside med historikk | Offentlig aktør |
 | GET / POST | `/Behov/Rediger/{id}` | Endre behov | Den som meldte det, og admin |
 | GET / POST | `/Behov/TrekkTilbake/{id}` | Trekke tilbake eget behov | Den som meldte det, og admin |
-| GET | `/Ressurs` | Liste over ressurser med filter på type, status og hvem som la dem inn | Innlogget. Offentlige ser godkjente, private bare egne, admin alle |
+| GET | `/Ressurs` | Liste over ressurser med filter på type, status og hvem som meldte dem | Innlogget. Offentlige ser godkjente, private bare egne, admin alle |
 | GET / POST | `/Ressurs/Registrer` | Tilby ressurs med bilder | Innlogget |
 | GET | `/Ressurs/Detaljer/{id}` | Detaljside med bilder, kart og historikk | Eier, admin, eller offentlig aktør når godkjent |
 | GET / POST | `/Ressurs/Rediger/{id}` | Endre ressurs | Eier og admin |
@@ -174,9 +174,9 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | 4 | Funksjoner som beskrevet av oppdragsgiveren | [Funksjoner](#funksjoner), `Services/TildelingTjeneste.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 1 og 5b | Ferdig |
 | 5 | Kartet i skjemaet setter et punkt | `wwwroot/js/posisjonsvelger.js`, `Views/Behov/Registrer.cshtml`, `Views/Ressurs/Registrer.cshtml` | Ferdig |
 | 6 | Mobiltilpasset frontend | `wwwroot/css/site.css` (`@media`), `_Layout.cshtml`, [mobiltest](#mobiltest) | Ferdig |
-| 7 | Enkel oversikt over ressurser | `/Oversikt`, lista under kartet, `/Ressurs/Detaljer`, `/Tildeling` | Ferdig |
+| 7 | Enkel oversikt over ressurser | `/Oversikt`, `/Ressurs` (liste med filter), lista under kartet, `/Ressurs/Detaljer`, `/Tildeling` | Ferdig |
 | 8 | Sikkerhetstiltak | `Program.cs`, `Sikkerhet/SikkerhetsheadereMiddleware.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 6 | Ferdig |
-| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (156 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
+| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (160 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
 | 10 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), [docs/arkitektur.md](docs/arkitektur.md), [Testing](#testing) | Ferdig |
 | 11 | Dokumentasjon i koden | `/// <summary>` på alle klasser, norske kommentarer i C#, Razor (`@* *@`) og JavaScript | Ferdig |
 | 12 | Bruk av KI | [Bruk av KI](#bruk-av-ki), [docs/ki-bruk.md](docs/ki-bruk.md) | Ferdig |
@@ -219,13 +219,13 @@ Testene kjører uten Docker og uten database. De bruker de minnebaserte reposito
 dotnet test Beredskapsportal.Tests
 ```
 
-**Resultat (04.11.2026):** 156 av 156 tester bestått ✅ (77 fra Oppgave 1 og 79 nye i Oppgave 2)
+**Resultat (05.11.2026):** 160 av 160 tester bestått ✅ (77 fra Oppgave 1 og 83 nye i Oppgave 2)
 
 | Testfil | Hva den sjekker |
 |---|---|
 | `BehovControllerTester.cs` | POST av behov: gyldig skjema lagres, tomt skjema og manglende plassering avvises, tekst lagres uendret |
 | `RessursControllerTester.cs` | POST av ressurs: lagres som «venter», ugyldig skjema lagres ikke, bilderegler (antall, størrelse, type, innhold), `/Ressurs/Bilde` kan ikke hente andre filer |
-| `RessursListeTester.cs` | `/Ressurs`: private ser bare egne ressurser, offentlige bare godkjente, admin alle, og riktig status (tilgjengelig, tildelt, venter, avvist) |
+| `RessursListeTester.cs` | `/Ressurs`: private ser bare egne ressurser, offentlige bare godkjente, admin alle, og tildelte ressurser merkes |
 | `RedigerBehovTester.cs` | Endre behov: bare den som meldte det og admin, endringer lagres, status, dato og eier endres ikke, endret prioritet i historikken |
 | `RedigerRessursTester.cs` | Endre ressurs: bare eier og admin, endringer lagres, ny godkjenning etter endring, nye bilder erstatter gamle, historikk |
 | `ValideringTester.cs` | Valideringsreglene i skjemaene for behov, ressurs, innlogging og registrering (påkrevde felt, telefon, e-post, maks lengde) |
@@ -289,6 +289,7 @@ dotnet test Beredskapsportal.Tests
 | Endre ressurs med nytt bilde | Last opp nytt bilde | Nytt bilde erstatter det gamle | ✅ Ett bilde, det gamle gir 404 |
 | Trekke tilbake ressurs | Detaljside → «Trekk tilbake» → bekreft | Ressursen og bildene slettes | ✅ Detaljsiden og bildet gir 404 |
 | Data blir liggende | Bygg og start containerne på nytt (uten `-v`) | Ressursen finnes fortsatt | ✅ |
+| Ressurslista (05.11.2026) | Menyen → «Ressurser» som `test` og `admin`, «Mine ressurser» som `privat`. Prøv filtrene og trykk på en ressurs | Offentlig aktør ser godkjente, privat aktør bare egne, admin alle. «Tilby ressurs»-knappen åpner skjemaet, og en ny bruker uten ressurser får teksten fra Oversikt | ✅ |
 
 #### Docker
 

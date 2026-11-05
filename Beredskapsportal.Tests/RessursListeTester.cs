@@ -9,7 +9,7 @@ namespace Beredskapsportal.Tests;
 
 /// <summary>
 /// Tester lista over ressurser (/Ressurs): at hver rolle bare ser de ressursene
-/// den har lov til å se, og at status (tilgjengelig, tildelt, venter) blir riktig.
+/// den har lov til å se, og at tildelte ressurser blir merket.
 /// </summary>
 public class RessursListeTester
 {
@@ -45,10 +45,10 @@ public class RessursListeTester
     });
 
     /// <summary>Kjører Index() og henter ut radene viewet får.</summary>
-    private static List<RessursListeRad> HentRader(RessursController controller)
+    private static List<RessursRad> HentRader(RessursController controller)
     {
         var resultat = Assert.IsType<ViewResult>(controller.Index());
-        return Assert.IsAssignableFrom<IEnumerable<RessursListeRad>>(resultat.Model).ToList();
+        return Assert.IsAssignableFrom<IEnumerable<RessursRad>>(resultat.Model).ToList();
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class RessursListeTester
         // Assert: Kari ser sin egen (selv om den venter), men ikke Ola sin
         Assert.Contains(rader, r => r.Ressurs.Id == egen.Id);
         Assert.DoesNotContain(rader, r => r.Ressurs.Id == andres.Id);
-        Assert.All(rader, r => Assert.True(r.ErMin));
+        Assert.All(rader, r => Assert.Equal("kari", r.Ressurs.RegistrertAv));
     }
 
     [Fact]
@@ -101,9 +101,9 @@ public class RessursListeTester
     }
 
     [Fact]
-    public void Index_GodkjentRessursErTilgjengeligEllerTildelt()
+    public void Index_TildelteRessurserBlirMerket()
     {
-        // Arrange: én tilgjengelig og én som er satt inn på et behov
+        // Arrange: én ledig og én som er satt inn på et behov
         var tilgjengelig = LeggTilRessurs("ola", RessursStatus.Godkjent);
         var tildelt = LeggTilRessurs("ola", RessursStatus.Godkjent);
         _tildelingRepository.LeggTil(new Tildeling
@@ -118,20 +118,7 @@ public class RessursListeTester
         var rader = HentRader(LagController("admin", Roller.Admin, Roller.OffentligAktor));
 
         // Assert
-        Assert.Equal("tilgjengelig", rader.Single(r => r.Ressurs.Id == tilgjengelig.Id).StatusKode);
-        Assert.Equal("tildelt", rader.Single(r => r.Ressurs.Id == tildelt.Id).StatusKode);
-    }
-
-    [Theory]
-    [InlineData(RessursStatus.Venter, false, "venter", "Venter på godkjenning")]
-    [InlineData(RessursStatus.Avvist, false, "avvist", "Avvist")]
-    [InlineData(RessursStatus.Godkjent, false, "tilgjengelig", "Tilgjengelig")]
-    [InlineData(RessursStatus.Godkjent, true, "tildelt", "Tildelt et behov")]
-    public void RessursListeRad_GirRiktigStatus(RessursStatus status, bool erTildelt, string kode, string tekst)
-    {
-        var rad = new RessursListeRad { Ressurs = new Ressurs { Status = status }, ErTildelt = erTildelt };
-
-        Assert.Equal(kode, rad.StatusKode);
-        Assert.Equal(tekst, rad.StatusTekst);
+        Assert.False(rader.Single(r => r.Ressurs.Id == tilgjengelig.Id).ErTildelt);
+        Assert.True(rader.Single(r => r.Ressurs.Id == tildelt.Id).ErTildelt);
     }
 }

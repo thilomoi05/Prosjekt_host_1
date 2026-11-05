@@ -339,7 +339,11 @@
                     <h2>Dine ressurser</h2>
                     <p>Ressursene du har tilbudt, og om de er tildelt et behov.</p>
                 </div>
-                <a class="btn btn-bp-primær" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a>
+                @* "Se alle mine ressurser" åpner ressurslista, som "Se alle mine behov" gjør for behov. *@
+                <div class="d-flex align-items-center gap-3">
+                    <a asp-controller="Ressurs" asp-action="Index">Se alle mine ressurser</a>
+                    <a class="btn btn-bp-primær" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a>
+                </div>
             </div>
 
             @if (antallMine == 0)
