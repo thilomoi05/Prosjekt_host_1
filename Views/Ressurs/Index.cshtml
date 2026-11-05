@@ -36,6 +36,15 @@
                     <button type="button" class="bp-filter-nullstill" id="tabell-nullstill" hidden>Nullstill filter</button>
                 </p>
             </div>
+            @* Samme knapp som "Registrer nytt behov" på Behov-siden. Dette er veien til skjemaet,
+               siden "Tilby ressurs" ikke lenger er en egen fane i menyen. *@
+            <a class="btn btn-bp-primær" asp-controller="Ressurs" asp-action="Registrer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="bp-knapp-ikon" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Tilby ressurs
+            </a>
         </div>
 
         <div class="table-responsive bp-tabell-med-filter">
