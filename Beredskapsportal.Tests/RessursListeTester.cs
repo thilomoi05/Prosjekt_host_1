@@ -134,4 +134,31 @@ public class RessursListeTester
         Assert.False(rader.Single(r => r.Ressurs.Id == tilgjengelig.Id).ErTildelt);
         Assert.True(rader.Single(r => r.Ressurs.Id == tildelt.Id).ErTildelt);
     }
+
+    [Fact]
+    public void Index_SortererTilgjengeligeForstOgAvvisteSist()
+    {
+        // Arrange: én av hver status, lagt inn i "feil" rekkefølge
+        var avvist = LeggTilRessurs("ola", RessursStatus.Avvist);
+        var venter = LeggTilRessurs("ola", RessursStatus.Venter);
+        var tildelt = LeggTilRessurs("ola", RessursStatus.Godkjent);
+        var tilgjengelig = LeggTilRessurs("ola", RessursStatus.Godkjent);
+        _tildelingRepository.LeggTil(new Tildeling
+        {
+            BehovId = _behovRepository.HentAlle()[0].Id,
+            RessursId = tildelt.Id,
+            Tidspunkt = DateTime.Now,
+            TildeltAv = "admin"
+        });
+
+        // Act
+        var rader = HentRader(LagController("admin", Roller.Admin, Roller.OffentligAktor));
+        int Plass(Ressurs ressurs) => rader.FindIndex(r => r.Ressurs.Id == ressurs.Id);
+
+        // Assert: tilgjengelig, så tildelt, så venter på godkjenning, og avvist nederst
+        Assert.True(Plass(tilgjengelig) < Plass(tildelt));
+        Assert.True(Plass(tildelt) < Plass(venter));
+        Assert.True(Plass(venter) < Plass(avvist));
+        Assert.Equal(avvist.Id, rader[^1].Ressurs.Id);
+    }
 }

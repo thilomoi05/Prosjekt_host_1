@@ -131,7 +131,7 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | GET | `/Behov/Detaljer/{id}` | Detaljside med historikk | Offentlig aktør |
 | GET / POST | `/Behov/Rediger/{id}` | Endre behov | Den som meldte det, og admin |
 | GET / POST | `/Behov/TrekkTilbake/{id}` | Trekke tilbake eget behov | Den som meldte det, og admin |
-| GET | `/Ressurs` | Liste over ressurser med filter på type, status og hvem som tilbød dem («Tilbudt av», bare admin). Private aktører («Mine ressurser») ser bare type, adresse og status, og en knapp for å endre | Innlogget. Offentlige ser godkjente og egne, private bare egne, admin alle |
+| GET | `/Ressurs` | Liste over ressurser med filter på type og status, sortert med tilgjengelige øverst og avviste nederst. Private aktører («Mine ressurser») ser bare type, adresse og status, og en knapp for å endre | Innlogget. Offentlige ser godkjente og egne, private bare egne, admin alle |
 | GET / POST | `/Ressurs/Registrer` | Tilby ressurs med bilder | Innlogget |
 | GET | `/Ressurs/Detaljer/{id}` | Detaljside med bilder, kart og historikk | Eier, admin, eller offentlig aktør når godkjent |
 | GET / POST | `/Ressurs/Rediger/{id}` | Endre ressurs | Eier og admin |
@@ -176,7 +176,7 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | 6 | Mobiltilpasset frontend | `wwwroot/css/site.css` (`@media`), `_Layout.cshtml`, [mobiltest](#mobiltest) | Ferdig |
 | 7 | Enkel oversikt over ressurser | `/Oversikt`, `/Ressurs` (liste med filter), lista under kartet, `/Ressurs/Detaljer`, `/Tildeling` | Ferdig |
 | 8 | Sikkerhetstiltak | `Program.cs`, `Sikkerhet/SikkerhetsheadereMiddleware.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 6 | Ferdig |
-| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (161 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
+| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (162 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
 | 10 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), [docs/arkitektur.md](docs/arkitektur.md), [Testing](#testing) | Ferdig |
 | 11 | Dokumentasjon i koden | `/// <summary>` på alle klasser, norske kommentarer i C#, Razor (`@* *@`) og JavaScript | Ferdig |
 | 12 | Bruk av KI | [Bruk av KI](#bruk-av-ki), [docs/ki-bruk.md](docs/ki-bruk.md) | Ferdig |
@@ -219,13 +219,13 @@ Testene kjører uten Docker og uten database. De bruker de minnebaserte reposito
 dotnet test Beredskapsportal.Tests
 ```
 
-**Resultat (05.11.2026):** 161 av 161 tester bestått ✅ (77 fra Oppgave 1 og 84 nye i Oppgave 2)
+**Resultat (05.11.2026):** 162 av 162 tester bestått ✅ (77 fra Oppgave 1 og 85 nye i Oppgave 2)
 
 | Testfil | Hva den sjekker |
 |---|---|
 | `BehovControllerTester.cs` | POST av behov: gyldig skjema lagres, tomt skjema og manglende plassering avvises, tekst lagres uendret |
 | `RessursControllerTester.cs` | POST av ressurs: lagres som «venter», ugyldig skjema lagres ikke, bilderegler (antall, størrelse, type, innhold), `/Ressurs/Bilde` kan ikke hente andre filer |
-| `RessursListeTester.cs` | `/Ressurs`: private ser bare egne ressurser, offentlige godkjente og sine egne (også de som venter), admin alle, og tildelte ressurser merkes |
+| `RessursListeTester.cs` | `/Ressurs`: private ser bare egne ressurser, offentlige godkjente og sine egne (også de som venter), admin alle, tildelte ressurser merkes, og lista sorteres med tilgjengelige først og avviste sist |
 | `RedigerBehovTester.cs` | Endre behov: bare den som meldte det og admin, endringer lagres, status, dato og eier endres ikke, endret prioritet i historikken |
 | `RedigerRessursTester.cs` | Endre ressurs: bare eier og admin, endringer lagres, ny godkjenning etter endring, nye bilder erstatter gamle, historikk |
 | `ValideringTester.cs` | Valideringsreglene i skjemaene for behov, ressurs, innlogging og registrering (påkrevde felt, telefon, e-post, maks lengde) |
@@ -289,7 +289,7 @@ dotnet test Beredskapsportal.Tests
 | Endre ressurs med nytt bilde | Last opp nytt bilde | Nytt bilde erstatter det gamle | ✅ Ett bilde, det gamle gir 404 |
 | Trekke tilbake ressurs | Detaljside → «Trekk tilbake» → bekreft | Ressursen og bildene slettes | ✅ Detaljsiden og bildet gir 404 |
 | Data blir liggende | Bygg og start containerne på nytt (uten `-v`) | Ressursen finnes fortsatt | ✅ |
-| Ressurslista (05.11.2026) | Som `test`: «Ressurser» i menyen. Som `admin`: det samme. Som `privat`: fanene Oversikt · Mine ressurser · Tilby ressurs · Hva trengs. Prøv filtrene, trykk på en ressurs, og sjekk 375 px bredde i DevTools | `test` ser godkjente med status «Tildelt» og dato, ledige nå øverst. `admin` ser alle, også de som venter og er avvist, og «Tilbudt av». `privat` ser bare type, adresse og status («Tildelt et behov») og knappen «Endre ressursen». Ingen feil i konsollen, og ingen sidelengs rulling på mobil | ✅ |
+| Ressurslista (05.11.2026) | Som `test`: «Ressurser» i menyen. Som `admin`: det samme. Som `privat`: fanene Oversikt · Mine ressurser · Tilby ressurs · Hva trengs. Prøv filtrene, trykk på en ressurs, og sjekk 375 px bredde i DevTools | `test` ser godkjente med status «Tildelt» og dato, tilgjengelige øverst og tildelte under. `admin` ser alle, også de som venter og er avvist, og de avviste står nederst. Ingen ser hvem som tilbød ressursen i lista. `privat` ser bare type, adresse og status («Tildelt et behov») og knappen «Endre ressursen». Ingen feil i konsollen, og ingen sidelengs rulling på mobil | ✅ |
 
 #### Docker
 

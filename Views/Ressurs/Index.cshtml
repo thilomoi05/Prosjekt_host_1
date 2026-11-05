@@ -1,18 +1,17 @@
 @model IReadOnlyList<RessursRad>
 @{
     // Samme side for alle roller, men med ulike kolonner (avtalt i gruppa):
-    //  - Offentlige aktører: "Ressurser" med type, adresse, status og "Tilgjengelig fra".
-    //  - Administratorer: det samme, pluss "Tilbudt av" (brukernavnet). Andre offentlige aktører ser
-    //    ikke hvem som tilbød ressursen i lista, av hensyn til personvern. Kontaktinfo står på detaljsiden.
+    //  - Offentlige aktører og admin: "Ressurser" med type, adresse, status og "Tilgjengelig fra".
+    //    Hvem som tilbød ressursen, vises ikke i lista (personvern). Kontaktperson og telefon står på detaljsiden.
     //  - Private aktører: "Mine ressurser" med bare type, adresse og status, og en knapp for å endre ressursen.
-    // Hvilke ressurser hver rolle ser, bestemmes i RessursController.Index (samme regel som detaljsiden).
+    // Hvilke ressurser hver rolle ser, og rekkefølgen (tilgjengelige øverst, avviste nederst),
+    // bestemmes i RessursController.Index.
     var serAlle = User.IsInRole(Roller.OffentligAktor);
-    var erAdmin = User.IsInRole(Roller.Admin);
     ViewData["Title"] = serAlle ? "Ressurser" : "Mine ressurser";
 
-    // Antall kolonner, brukt av tom-raden nederst: type, adresse og status, pluss
-    // "Tilbudt av" (admin) og "Tilgjengelig fra" (offentlige), eller "Endre" (private).
-    var antallKolonner = 3 + (erAdmin ? 1 : 0) + 1;
+    // Antall kolonner, brukt av tom-raden nederst: type, adresse, status, og "Tilgjengelig fra"
+    // (offentlige) eller knappen "Endre ressursen" (private).
+    var antallKolonner = 4;
 
     // Valgene i filtermenyene lages ut fra ressursene som finnes, så nye typer kommer med av seg selv.
     var typer = Model
@@ -25,9 +24,9 @@
     // Private aktører får "Tildelt et behov", som på Oversikt for private.
     var tildeltTekst = serAlle ? "Tildelt" : "Tildelt et behov";
 
-    // Status har faste valg, i den rekkefølgen som gir mening. "Venter på godkjenning" og "Avvist"
-    // er bare med når noen av ressursene har den statusen (offentlige aktører ser stort sett bare
-    // godkjente), så menyen ikke har valg som aldri treffer noe.
+    // Status har faste valg, i samme rekkefølge som lista. "Venter på godkjenning" og "Avvist" er bare
+    // med når noen av ressursene har den statusen (offentlige aktører ser stort sett bare godkjente),
+    // så menyen ikke har valg som aldri treffer noe.
     var statuser = new List<(string Verdi, string Tekst)> { ("Tilgjengelig", "Tilgjengelig"), ("Tildelt", tildeltTekst) };
     if (Model.Any(r => r.Ressurs.Status == RessursStatus.Venter))
     {
@@ -38,14 +37,16 @@
         statuser.Add(("Avvist", "Avvist"));
     }
 
-    // Sortering på "Tilgjengelig fra": ressurser som er ledige nå (ingen fra-dato, eller en dato som har
-    // passert) får dagens dato i data-dato, og lista sorteres eldste først (data-dato-start="eldst" på
-    // tabellen). Da står de som er ledige nå øverst, og deretter de som blir ledige snart.
-    var iDag = DateOnly.FromDateTime(DateTime.Now);
+    // Plassen til hver status i lista (data-gruppe på raden), samme rekkefølge som Statusrekkefolge i
+    // RessursController. tabellfilter.js sorterer først på denne, så tilgjengelige står øverst og avviste
+    // nederst også når man sorterer på dato.
+    var statusrekkefolge = new[] { "Tilgjengelig", "Tildelt", "Venter", "Avvist" };
 
-    // "Tilbudt av": egne ressurser eller andres (bare for admin).
-    var brukernavn = User.Identity?.Name ?? string.Empty;
-    var tilbudtAvValg = new List<(string Verdi, string Tekst)> { ("meg", "Meg"), ("andre", "Andre") };
+    // Sortering på "Tilgjengelig fra" innenfor hver status: ressurser som er ledige nå (ingen fra-dato,
+    // eller en dato som har passert) får dagens dato i data-dato, og lista sorteres eldste først
+    // (data-dato-start="eldst" på tabellen). Da står de som er ledige nå først, og deretter de som
+    // blir ledige snart.
+    var iDag = DateOnly.FromDateTime(DateTime.Now);
 }
 
 <div class="bp-side-innhold">
@@ -72,7 +73,7 @@
 
         <div class="table-responsive bp-tabell-med-filter">
             @* data-enhet er ordet i "Viser 8 av 12 ressurser" (tabellfilter.js).
-               data-dato-start="eldst" gjør at lista starter med de som er ledige nå (se iDag over). *@
+               data-dato-start="eldst" gjør at hver status starter med de som er ledige nå (se iDag over). *@
             <table class="bp-tabell bp-tabell-ikoner" id="filtertabell" data-enhet="ressurser" data-dato-start="eldst">
                 <thead>
                     <tr>
@@ -80,11 +81,6 @@
                         <th><partial name="_Filtermeny" model='("Type ressurs", "ressurstype", typer)' /></th>
                         <th>Adresse</th>
                         <th><partial name="_Filtermeny" model='("Status", "status", statuser)' /></th>
-                        @* "Tilbudt av" bare for admin. Behov "meldes", ressurser "tilbys". *@
-                        @if (erAdmin)
-                        {
-                            <th><partial name="_Filtermeny" model='("Tilbudt av", "tilbudtav", tilbudtAvValg)' /></th>
-                        }
                         @if (serAlle)
                         {
                             @* Sorterer på når ressursen er tilgjengelig fra. *@
@@ -103,7 +99,6 @@
                     @foreach (var rad in Model)
                     {
                         var ressurs = rad.Ressurs;
-                        var erMin = ressurs.RegistrertAv == brukernavn;
 
                         // Status: venter på godkjenning, avvist, tildelt eller tilgjengelig.
                         var (status, cssKlasse, tekst) = ressurs.Status switch
@@ -121,7 +116,7 @@
                         <tr data-rad
                             data-ressurstype="@ressurs.Type"
                             data-status="@status"
-                            data-tilbudtav="@(erMin ? "meg" : "andre")"
+                            data-gruppe="@Array.IndexOf(statusrekkefolge, status)"
                             data-dato="@sorteringsdato.ToString("yyyy-MM-dd")">
                             <td>
                                 @* Samme firkant-ikon som på kartet. Fylles inn av tabellfilter.js.
@@ -131,11 +126,6 @@
                             </td>
                             <td>@ressurs.Adresse</td>
                             <td><span class="bp-badge @cssKlasse">@tekst</span></td>
-                            @if (erAdmin)
-                            {
-                                @* Brukernavnet, eller "Deg" for egne. Eksempelressursene har ingen eier, så de får "–". *@
-                                <td>@(erMin ? "Deg" : string.IsNullOrEmpty(ressurs.RegistrertAv) ? "–" : ressurs.RegistrertAv)</td>
-                            }
                             @if (serAlle)
                             {
                                 @* Samme datoformat som "Dato" på Behov-siden. Tom fra-dato betyr at den er tilgjengelig nå. *@

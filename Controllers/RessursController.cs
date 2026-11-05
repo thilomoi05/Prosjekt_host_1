@@ -61,12 +61,15 @@ public class RessursController : Controller
             .Select(t => t.RessursId)
             .ToHashSet();
 
-        // Én rad per ressurs, nyeste først. For offentlige aktører sorterer tabellfilter.js lista på nytt
-        // etter "Tilgjengelig fra". Private aktører har ingen datokolonne, så der blir denne rekkefølgen stående.
+        // Én rad per ressurs, sortert på status så lista ikke ser rotete ut: tilgjengelige øverst,
+        // så tildelte, så de som venter på godkjenning, og avviste nederst. Innenfor hver status
+        // står de nyeste først. tabellfilter.js beholder statusrekkefølgen når den sorterer på dato
+        // (data-gruppe i viewet), og private aktører har ingen datokolonne, så der står denne rekkefølgen.
         var rader = _ressursRepository.HentAlle()
             .Where(KanSe)
-            .OrderByDescending(r => r.Id)
             .Select(r => new RessursRad { Ressurs = r, ErTildelt = tildelteRessursIder.Contains(r.Id) })
+            .OrderBy(rad => Statusrekkefolge(rad))
+            .ThenByDescending(rad => rad.Ressurs.Id)
             .ToList();
 
         return View(rader);
@@ -422,6 +425,16 @@ public class RessursController : Controller
 
         return PhysicalFile(sti, filtype);
     }
+
+    // Plassen til en ressurs i lista: 0 tilgjengelig, 1 tildelt, 2 venter på godkjenning, 3 avvist.
+    // Samme rekkefølge som valgene i statusfilteret i Views/Ressurs/Index.cshtml.
+    private static int Statusrekkefolge(RessursRad rad) => rad.Ressurs.Status switch
+    {
+        RessursStatus.Avvist => 3,
+        RessursStatus.Venter => 2,
+        _ when rad.ErTildelt => 1,
+        _ => 0
+    };
 
     // Hjelpere for tilgangssjekkene over. "?." gjør at de også virker i tester uten innlogget bruker.
     private bool ErOffentligAktor() => User?.IsInRole(Roller.OffentligAktor) == true;

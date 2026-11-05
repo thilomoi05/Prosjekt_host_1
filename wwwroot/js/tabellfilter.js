@@ -10,6 +10,8 @@
 //  2. Sorterer på dato, nyeste eller eldste først (Views/Shared/_Datosortering.cshtml).
 //     Datosorteringen er valgfri: har siden ingen id="dato-meny", står radene i rekkefølgen
 //     fra serveren. data-dato-start="eldst" på tabellen gjør at den starter med eldste først.
+//     Har radene data-gruppe (et tall), sorteres de først på den og så på dato innenfor hver
+//     gruppe. Ressurslista bruker det til å ha tilgjengelige øverst og avviste nederst.
 //  3. Viser "Viser 8 av 12 behov", tellere på kolonnene og "Nullstill filter".
 //  4. Leser filter fra adressen, f.eks. /Behov?status=Venter, så andre sider
 //     kan lenke rett til en filtrert liste.
@@ -76,7 +78,8 @@ function filtrer() {
     }
 }
 
-/** Sorterer radene på dato. Datoene står som "2026-09-02", så de kan sammenlignes som tekst. */
+/** Sorterer radene på dato (og først på data-gruppe hvis radene har det).
+ *  Datoene står som "2026-09-02", så de kan sammenlignes som tekst. */
 function sorter() {
     // Ressurslista for private aktører har ingen datokolonne. Da står radene i rekkefølgen fra serveren.
     if (!document.getElementById('dato-meny')) {
@@ -85,6 +88,11 @@ function sorter() {
     const nyestForst = document.querySelector('input[name="dato-sortering"]:checked').value === 'nyest';
 
     const sorterte = [...rader].sort((a, b) => {
+        // Rader uten data-gruppe (Behov og Tildelinger) får 0, så for dem er det bare datoen som teller.
+        const gruppeForskjell = Number(a.dataset.gruppe || 0) - Number(b.dataset.gruppe || 0);
+        if (gruppeForskjell !== 0) {
+            return gruppeForskjell;
+        }
         if (a.dataset.dato !== b.dataset.dato) {
             const forst = a.dataset.dato < b.dataset.dato ? -1 : 1;
             return nyestForst ? -forst : forst;
