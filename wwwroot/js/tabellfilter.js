@@ -1,12 +1,17 @@
 // =========================================================================
 // tabellfilter.js
 // Filter og datosortering for tabeller med filtermenyer i kolonneoverskriftene.
-// Brukes av Behov-siden (Views/Behov/Index.cshtml) og Tildelinger-siden
-// (Views/Tildeling/Index.cshtml), så filterlogikken bare finnes ett sted.
+// Brukes av Behov-siden (Views/Behov/Index.cshtml), Tildelinger-siden
+// (Views/Tildeling/Index.cshtml) og ressurslista (Views/Ressurs/Index.cshtml),
+// så filterlogikken bare finnes ett sted.
 //
 // Hva filen gjør:
 //  1. Filtrerer radene ut fra avkrysningene i menyene (Views/Shared/_Filtermeny.cshtml).
 //  2. Sorterer på dato, nyeste eller eldste først (Views/Shared/_Datosortering.cshtml).
+//     Datosorteringen er valgfri: har siden ingen id="dato-meny", står radene i rekkefølgen
+//     fra serveren. data-dato-start="eldst" på tabellen gjør at den starter med eldste først.
+//     Har radene data-gruppe (et tall), sorteres de først på den og så på dato innenfor hver
+//     gruppe. Ressurslista bruker det til å ha tilgjengelige øverst og avviste nederst.
 //  3. Viser "Viser 8 av 12 behov", tellere på kolonnene og "Nullstill filter".
 //  4. Leser filter fra adressen, f.eks. /Behov?status=Venter, så andre sider
 //     kan lenke rett til en filtrert liste.
@@ -73,11 +78,21 @@ function filtrer() {
     }
 }
 
-/** Sorterer radene på dato. Datoene står som "2026-09-02", så de kan sammenlignes som tekst. */
+/** Sorterer radene på dato (og først på data-gruppe hvis radene har det).
+ *  Datoene står som "2026-09-02", så de kan sammenlignes som tekst. */
 function sorter() {
+    // Ressurslista for private aktører har ingen datokolonne. Da står radene i rekkefølgen fra serveren.
+    if (!document.getElementById('dato-meny')) {
+        return;
+    }
     const nyestForst = document.querySelector('input[name="dato-sortering"]:checked').value === 'nyest';
 
     const sorterte = [...rader].sort((a, b) => {
+        // Rader uten data-gruppe (Behov og Tildelinger) får 0, så for dem er det bare datoen som teller.
+        const gruppeForskjell = Number(a.dataset.gruppe || 0) - Number(b.dataset.gruppe || 0);
+        if (gruppeForskjell !== 0) {
+            return gruppeForskjell;
+        }
         if (a.dataset.dato !== b.dataset.dato) {
             const forst = a.dataset.dato < b.dataset.dato ? -1 : 1;
             return nyestForst ? -forst : forst;
@@ -107,7 +122,7 @@ menyer.forEach(meny => meny.addEventListener('click', function (hendelse) {
 }));
 
 // Datosortering
-document.getElementById('dato-meny').addEventListener('change', sorter);
+document.getElementById('dato-meny')?.addEventListener('change', sorter);
 
 // "Nullstill filter": alt krysses av igjen.
 nullstillKnapp.addEventListener('click', function () {
@@ -123,6 +138,14 @@ for (const meny of menyer) {
     if (fraAdressen) {
         const verdier = fraAdressen.split(',');
         meny.querySelectorAll('input[type="checkbox"]').forEach(boks => { boks.checked = verdier.includes(boks.value); });
+    }
+}
+
+// Tabellen kan be om å starte med eldste først, f.eks. ressurslista (data-dato-start="eldst").
+if (filtertabell.dataset.datoStart === 'eldst') {
+    const eldst = document.querySelector('input[name="dato-sortering"][value="eldst"]');
+    if (eldst) {
+        eldst.checked = true;
     }
 }
 
