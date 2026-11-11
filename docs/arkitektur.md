@@ -23,6 +23,7 @@ Hvem som ser hva:
 | Forside | Ja | Ja | Ja | Ja |
 | Oversikt, tilby ressurs, hva trengs | Nei | Ja | Ja | Ja |
 | Behovsliste, kart | Nei | Nei | Ja | Ja |
+| Ressurslista (`/Ressurs`) | Nei | Sine egne («Mine ressurser», bare type, adresse og status) | Godkjente og sine egne | Alle |
 | Ressurser på kartet, med adresse, tilgangsbeskrivelse og bilder | Nei | Nei | Ja | Ja |
 | Adminsiden: godkjenne ressurser og offentlige aktører, tildele ressurser | Nei | Nei | Nei | Ja |
 | Forespørre ressurser til et behov | Nei | Nei | Sine egne | Alle |
@@ -116,7 +117,7 @@ Controlleren sjekker `ModelState.IsValid`. Er noe feil, returneres samme view me
 | `Oversikt` | Innlogget | `Index` dashbord. Offentlige aktører ser nøkkeltall, behov og de fem siste tildelingene. Private ser sine egne ressurser |
 | `HvaTrengs` | Innlogget | `Index` utstyr som trengs og i hvilke områder, uten hvem som har meldt |
 | `Behov` | `OffentligAktor` | `Index` liste med filter, `Detaljer`, `Registrer` GET og POST |
-| `Ressurs` | Innlogget | `Index` som sender videre til `Registrer`, `Registrer` GET og POST, `Detaljer` (private ser bare sine egne), `Rediger` GET og POST (eier og admin), `TrekkTilbake`, `Bilde` (offentlige aktører, eller eieren av ressursen) |
+| `Ressurs` | Innlogget | `Index` liste med filter (samme regel som `Detaljer`: offentlige ser godkjente og egne, private bare sine egne, admin alle). Lista viser ikke hvem som tilbød ressursen (personvern; kontaktinfo står på detaljsiden), og sorteres med tilgjengelige øverst og avviste nederst. Private aktører ser en enklere liste uten dato, med knappen «Endre ressursen». `Registrer` GET og POST (knappen «Tilby ressurs» på lista, og egen fane for private), `Detaljer` (private ser bare sine egne), `Rediger` GET og POST (eier og admin), `TrekkTilbake`, `Bilde` (offentlige aktører, eller eieren av ressursen) |
 | `Kart` | `OffentligAktor` | `Index` kartside, `Behov` og `Ressurser` som JSON til kart.js |
 | `Tildeling` | `OffentligAktor` | `Index` alle tildelinger med filter |
 | `Foresporsel` | `OffentligAktor` (bare egne behov) | `FinnRessurs` forslag til eget behov, `Foresporr` POST |

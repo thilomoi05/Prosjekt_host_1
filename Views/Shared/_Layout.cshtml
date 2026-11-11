@@ -103,8 +103,18 @@
                             <li><a class="bp-nav-link @(ErAktiv("Kart") ? "aktiv" : "")" asp-controller="Kart" asp-action="Index">Kart</a></li>
                             <li><a class="bp-nav-link @(ErAktiv("Behov") ? "aktiv" : "")" asp-controller="Behov" asp-action="Index">Behov</a></li>
                         }
-                        @* Heter "Tilby ressurs" for alle, siden det er det man gjør på siden. *@
-                        <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Tilby ressurs</a></li>
+                        @* Ressurslista. Offentlige aktører får "Ressurser" (alle godkjente) og tilbyr ressurser med
+                           knappen på lista. Private aktører får "Mine ressurser" og en egen "Tilby ressurs"-fane:
+                           Oversikt · Mine ressurser · Tilby ressurs · Hva trengs. *@
+                        @if (User.IsInRole(Roller.OffentligAktor))
+                        {
+                            <li><a class="bp-nav-link @(ErAktiv("Ressurs") ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Ressurser</a></li>
+                        }
+                        else
+                        {
+                            <li><a class="bp-nav-link @(ErAktiv("Ressurs") && gjeldendeAction != "Registrer" ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Index">Mine ressurser</a></li>
+                            <li><a class="bp-nav-link @(ErAktiv("Ressurs") && gjeldendeAction == "Registrer" ? "aktiv" : "")" asp-controller="Ressurs" asp-action="Registrer">Tilby ressurs</a></li>
+                        }
                         @* Hva trengs: utstyr som trengs og hvor (uten hvem). Vises for alle innloggede. *@
                         <li><a class="bp-nav-link @(ErAktiv("HvaTrengs") ? "aktiv" : "")" asp-controller="HvaTrengs" asp-action="Index">Hva trengs</a></li>
                         @* Admin: godkjenning og tildeling. Bare for administratorer (sjekkes også i AdminController). *@
