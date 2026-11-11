@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 namespace Beredskapsportal.Models;
 
 /// <summary>
-/// En registrert bruker av BeredskapsPortalen.
+/// En registrert bruker av Beredt.
 ///
 /// Arver fra IdentityUser (ASP.NET Core Identity). Derfra får brukeren blant annet:
 ///  - UserName og Email (brukernavn og e-post)

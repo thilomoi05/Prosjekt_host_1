@@ -1,12 +1,12 @@
 # Arkitektur
 
-Denne siden forklarer hvordan BeredskapsPortalen er bygget opp. Den er skrevet for en som ikke kjenner prosjektet fra før. Alt som står her stemmer med koden per 02.11.2026 (branchen `feature/Identitetshandteringogwebsikkerhet`, som bygger på `main`).
+Denne siden forklarer hvordan Beredt er bygget opp. Den er skrevet for en som ikke kjenner prosjektet fra før. Alt som står her stemmer med koden per 02.11.2026 (branchen `feature/Identitetshandteringogwebsikkerhet`, som bygger på `main`).
 
 Se [drift.md](drift.md) for hvordan du starter appen.
 
 ## 1. Hva portalen er
 
-BeredskapsPortalen samler behov og ressurser under en krise, i vårt scenario et cyberangrep mot strømnettet i Kristiansand.
+Beredt samler behov og ressurser under en krise, i vårt scenario et cyberangrep mot strømnettet i Kristiansand.
 
 - **Offentlige aktører** (kommune, sykehus, brann, politi, Heimevernet) melder inn **behov**: nødstrøm, drivstoff, samband, nødbelysning, oppvarming.
 - **Private aktører** (bedrifter, entreprenører, privatpersoner) registrerer **ressurser** de kan stille med: aggregat, drivstoff, UPS, transport, kommunikasjonsutstyr.

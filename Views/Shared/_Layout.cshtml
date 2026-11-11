@@ -19,7 +19,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - BeredskapsPortalen</title>
+    <title>@ViewData["Title"] - Beredt</title>
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
     <script type="importmap"></script>
     @* Skrifttype: Outfit (Google Fonts) ligner den geometriske skriften Forsvaret bruker.
@@ -87,9 +87,9 @@
                 </div>
             </div>
 
-            <a class="bp-logo" asp-controller="Home" asp-action="Index" aria-label="BeredskapsPortalen, til forsiden">
+            <a class="bp-logo" asp-controller="Home" asp-action="Index" aria-label="Beredt, til forsiden">
                 <partial name="_Logo" />
-                <span class="bp-logo-tekst">BeredskapsPortalen</span>
+                <span class="bp-logo-tekst">Beredt</span>
             </a>
 
             <nav class="bp-nav @(erInnlogget ? "bp-nav-innlogget" : "")" aria-label="Hovedmeny">
@@ -153,7 +153,7 @@
         <footer class="bp-footer">
             <div class="bp-footer-innhold">
                 <div>
-                    <p class="bp-footer-navn">BeredskapsPortalen</p>
+                    <p class="bp-footer-navn">Beredt</p>
                     <p>Et studentprosjekt for koordinering av ressurser ved en nasjonal krise.</p>
                 </div>
                 <p class="bp-footer-liten">&copy; 2026 Gruppe 19. Levert som del av beredskap og krisehåndtering.</p>
