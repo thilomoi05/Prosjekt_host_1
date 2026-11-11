@@ -43,6 +43,11 @@
                 </svg>
             </button>
         </div>
+        @* Vises av kart.js når det er søkt i listen, så man ser hvorfor punkter mangler på kartet. *@
+        <p class="bp-filter-sok-info" id="filter-sok-info" hidden>
+            <span>Søk: «<span id="filter-sok-tekst"></span>»</span>
+            <button type="button" class="bp-filter-nullstill" id="filter-sok-tom">Tøm søket</button>
+        </p>
         <div class="bp-filter-innhold" id="filter-innhold">
             <p class="bp-filter-laster">Laster ...</p>
         </div>
@@ -69,7 +74,8 @@
             </h2>
             @* "Viser 9 av 40" og "Nullstill filter" oppdateres av kart.js (visTabell). *@
             <p class="bp-filter-status">
-                <span id="kart-antall"></span>
+                @* aria-live: skjermlesere leser opp antallet når søket eller filteret endrer det *@
+                <span id="kart-antall" aria-live="polite"></span>
                 <button type="button" class="bp-filter-nullstill" id="liste-nullstill" hidden>Nullstill filter</button>
             </p>
         </div>
@@ -80,6 +86,8 @@
         </button>
     </div>
     <div class="offcanvas-body">
+        @* Søket gjøres av kart.js. Det er en del av filteret, så det skjuler punkter på kartet også. *@
+        <partial name="_Sokefelt" model='("kart-sok", "Søk i punktene")' />
         <table class="bp-tabell">
             @* Filtermenyene i overskriftene (Hva, Type, Prioritet, Status) lages av kart.js
                (byggListemenyer). De er koblet til filterpanelet, så kartet og listen viser det samme. *@
@@ -106,5 +114,7 @@
     <script src="~/lib/leaflet/leaflet.js"></script>
     <script src="~/js/kartverket.js" asp-append-version="true"></script>
     <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    @* sokefelt.js har søkefunksjonene kart.js bruker, så den må komme først. *@
+    <script src="~/js/sokefelt.js" asp-append-version="true"></script>
     <script src="~/js/kart.js" asp-append-version="true"></script>
 }

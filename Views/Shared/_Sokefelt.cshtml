@@ -1,0 +1,26 @@
+@model (string Id, string Plassholder)
+@* =========================================================================
+   Søkefelt over en liste. Brukes på Behov-siden, ressurslista, Tildelinger-siden,
+   lista under kartet og Admin › Tildel ressurs, så det ser likt ut overalt.
+   Selve søket gjøres i nettleseren av skriptet til siden (tabellfilter.js, kart.js
+   eller tildelsok.js). Det felles (krysset, Esc og ?sok= i adressen) ligger i sokefelt.js.
+   Feltet har ikke name, så det sendes aldri med et skjema (viktig på Tildel-siden).
+   aria-label i stedet for skjult <label>: visually-hidden gjorde siden bredere enn skjermen
+   på mobil (se ressurslista).
+   Brukes slik: <partial name="_Sokefelt" model='("tabell-sok", "Søk i behov")' />
+   ========================================================================= *@
+<div class="bp-sokefelt" role="search" data-sokefelt>
+    @* Forstørrelsesglass, samme strekstil som de andre ikonene på siden *@
+    <svg class="bp-sokefelt-ikon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <line x1="16.5" y1="16.5" x2="21" y2="21" />
+    </svg>
+    <input type="search" id="@Model.Id" class="form-control" placeholder="@Model.Plassholder" aria-label="@Model.Plassholder"
+           autocomplete="off" spellcheck="false" enterkeyhint="search" />
+    @* Krysset tømmer søket. Vises av sokefelt.js når det står noe i feltet. *@
+    <button type="button" class="bp-sokefelt-tom" data-sok-tom aria-label="Tøm søket" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+    </button>
+</div>

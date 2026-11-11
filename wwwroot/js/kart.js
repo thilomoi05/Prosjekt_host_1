@@ -11,6 +11,9 @@
 //  5. Viser bare punktene som passer filteret, både på kartet og i listen.
 //  6. Lager filtermenyene i kolonneoverskriftene i listen. De er koblet til
 //     boksene i filterpanelet, så kartet og listen alltid viser det samme.
+//  7. Søker i punktene mens man skriver i søkefeltet over listen. Søket er en del av
+//     filteret, så det skjuler punkter både i listen og på kartet. sokeord() og
+//     passerSok() kommer fra sokefelt.js, som må lastes før denne filen.
 // =========================================================================
 
 const kart = lagKart('kart');
@@ -31,6 +34,9 @@ const punkterTilTabell = [];
 //  - "alle": listen åpnes med en gang og viser alle punktene.
 //  - ingenting: kartet vises som vanlig.
 const listeValg = new URLSearchParams(window.location.search).get('liste');
+
+// Søkefeltet over listen (Views/Shared/_Sokefelt.cshtml).
+const kartSok = document.getElementById('kart-sok');
 
 // Ikonene (form + symbol for type) lages i kartikoner.js.
 
@@ -143,7 +149,9 @@ async function visBehov() {
             fargeKlasse: fargeKlasse,
             hva: 'Behov',
             type: behov.type,
-            sted: behov.omrade
+            sted: behov.omrade,
+            // Teksten søket leter i: det som står i listen, pluss beskrivelsen.
+            sokTekst: ['Behov', behov.type, behov.omrade, behov.prioritetTekst, behov.status, behov.beskrivelse].join(' ')
         });
     }
 }
@@ -198,7 +206,10 @@ async function visRessurser() {
             // "Tilgjengelig" eller "Tildelt", brukes av filteret og vises i listen.
             status: ressurs.tildelt ? 'Tildelt' : 'Tilgjengelig',
             type: ressurs.type,
-            sted: ressurs.adresse
+            sted: ressurs.adresse,
+            // Teksten søket leter i: det som står i listen, pluss beskrivelsen. Kontaktpersonen er ikke med,
+            // samme regel som i ressurslista (hvem som tilbød ressursen skal ikke kunne søkes frem).
+            sokTekst: ['Ressurs', ressurs.type, ressurs.adresse, ressurs.tildelt ? 'Tildelt' : 'Tilgjengelig', ressurs.beskrivelse].join(' ')
         });
     }
 }
@@ -213,10 +224,11 @@ function visTabell() {
     document.getElementById('kart-antall').textContent = punkter.length < totalt
         ? 'Viser ' + punkter.length + ' av ' + totalt
         : 'Viser alle ' + totalt;
-    document.getElementById('liste-nullstill').hidden = punkter.length === totalt;
+    // Knappen vises også når bare søket er i bruk, for den tømmer søket også.
+    document.getElementById('liste-nullstill').hidden = punkter.length === totalt && sokeord(kartSok).length === 0;
 
     if (punkter.length === 0) {
-        tabell.innerHTML = '<tr><td colspan="6" class="text-muted">Ingen punkter passer filteret. Trykk «Nullstill filter» for å se alle.</td></tr>';
+        tabell.innerHTML = '<tr><td colspan="6" class="text-muted">Ingen punkter passer søket eller filteret. Trykk «Nullstill filter» for å se alle.</td></tr>';
         return;
     }
 
@@ -371,6 +383,9 @@ function filtrer() {
         valgteStatuser[boks.dataset.status] = boks.checked;
     });
 
+    // Ordene i søkefeltet, f.eks. ["aggregat", "lund"]. [] når feltet er tomt.
+    const ord = sokeord(kartSok);
+
     let antallSynlige = 0;
     for (const punkt of punkterTilTabell) {
         let synlig = valgteTyper[punkt.form + ':' + punkt.typeKode] === true;
@@ -378,6 +393,9 @@ function filtrer() {
             synlig = false;
         }
         if (!valgteStatuser[punkt.form + ':' + punkt.status]) {
+            synlig = false;
+        }
+        if (!passerSok(punkt.sokTekst, ord)) {
             synlig = false;
         }
 
@@ -397,6 +415,10 @@ function filtrer() {
     document.getElementById('filter-knapp-status').textContent =
         antallSynlige < totalt ? '(' + antallSynlige + ' av ' + totalt + ')' : '';
 
+    // I filterpanelet står det hva man har søkt på, så det er lett å se hvorfor punkter mangler på kartet.
+    document.getElementById('filter-sok-info').hidden = ord.length === 0;
+    document.getElementById('filter-sok-tekst').textContent = kartSok.value.trim();
+
     visTabell();
     oppdaterListemenyer();
 }
@@ -413,12 +435,25 @@ filterInnhold.addEventListener('change', function (hendelse) {
     filtrer();
 });
 
-// "Nullstill": alt vises igjen
+// "Nullstill": alt vises igjen, og søket tømmes.
 document.getElementById('filter-nullstill').addEventListener('click', function () {
     filterInnhold.querySelectorAll('input[type="checkbox"]').forEach(boks => { boks.checked = true; });
     oppdaterHovedboks('behov');
     oppdaterHovedboks('ressurs');
-    filtrer();
+    tomSokefelt(kartSok);   // sender en input-hendelse: krysset skjules (sokefelt.js) og filtrer() kjører (under)
+});
+
+// Søket: listen og kartet oppdateres for hver bokstav man skriver.
+kartSok.addEventListener('input', function () {
+    // Punktene er ikke hentet ennå hvis man skriver før kartet har lastet. Da filtrerer start() senere.
+    if (punkterTilTabell.length > 0) {
+        filtrer();
+    }
+});
+
+// "Tøm søket" i filterpanelet
+document.getElementById('filter-sok-tom').addEventListener('click', function () {
+    tomSokefelt(kartSok);
 });
 
 // "Filter"-knappen åpner panelet, og krysset i panelet lukker det.

@@ -37,7 +37,8 @@
                 <h2>Alle meldte behov</h2>
                 @* Teksten og "Nullstill filter" oppdateres av tabellfilter.js. *@
                 <p class="bp-filter-status">
-                    <span id="tabell-antall">Viser @Model.Count behov</span>
+                    @* aria-live: skjermlesere leser opp antallet når søket eller filteret endrer det *@
+                    <span id="tabell-antall" aria-live="polite">Viser @Model.Count behov</span>
                     <button type="button" class="bp-filter-nullstill" id="tabell-nullstill" hidden>Nullstill filter</button>
                 </p>
             </div>
@@ -49,6 +50,9 @@
                 Registrer nytt behov
             </a>
         </div>
+
+        @* Søket gjøres av tabellfilter.js, sammen med filtrene i kolonneoverskriftene. *@
+        <partial name="_Sokefelt" model='("tabell-sok", "Søk i behov")' />
 
         <div class="table-responsive bp-tabell-med-filter">
             @* data-enhet er ordet i "Viser 8 av 12 behov" (tabellfilter.js). *@
@@ -67,9 +71,11 @@
                 <tbody>
                     @foreach (var behov in Model)
                     {
-                        @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filteret og sorteringen bruker. *@
+                        @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filteret og sorteringen bruker.
+                           data-sok er tekst søket skal treffe selv om den ikke står i tabellen: beskrivelsen og kontaktpersonen. *@
                         var erMitt = behov.RegistrertAv == brukernavn;
                         <tr data-rad
+                            data-sok="@behov.Beskrivelse @behov.Kontaktperson"
                             data-meldtav="@(erMitt ? "meg" : "andre")"
                             data-type="@behov.Type"
                             data-omrade="@behov.GeografiskOmrade"
@@ -101,9 +107,9 @@
                             <td>@behov.Dato.ToString("yyyy-MM-dd")</td>
                         </tr>
                     }
-                    @* Vises av tabellfilter.js når ingen behov passer filteret. *@
+                    @* Vises av tabellfilter.js når ingen behov passer søket eller filteret. *@
                     <tr id="tabell-tom" hidden>
-                        <td colspan="6" class="bp-oversikt-tom">Ingen behov passer filteret. Trykk «Nullstill filter» for å se alle.</td>
+                        <td colspan="6" class="bp-oversikt-tom">Ingen behov passer søket eller filteret. Trykk «Nullstill filter» for å se alle.</td>
                     </tr>
                 </tbody>
             </table>
@@ -114,5 +120,7 @@
 @section Scripts {
     @* kartikoner.js har funksjonen lagIkonSvg, som lager de samme ikonene som på kartet. *@
     <script src="~/js/kartikoner.js" asp-append-version="true"></script>
+    @* sokefelt.js har søkefunksjonene tabellfilter.js bruker, så den må komme først. *@
+    <script src="~/js/sokefelt.js" asp-append-version="true"></script>
     <script src="~/js/tabellfilter.js" asp-append-version="true"></script>
 }
