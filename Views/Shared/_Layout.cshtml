@@ -61,7 +61,9 @@
                         </div>
 
                         <a class="bp-meny-lenke @(ErAktiv("Konto") ? "aktiv" : "")" asp-controller="Konto" asp-action="Profil">Min side</a>
-                        <span class="bp-meny-lenke deaktivert">Innstillinger <span class="bp-kommer">Kommer</span></span>
+                            
+                        @* Dummy-knapp: klikkbar, men gjør ingenting ennå. *@
+                        <button type="button" class="bp-meny-lenke">Innstillinger</button>
                     }
                     else
                     {
@@ -69,12 +71,13 @@
                         <a class="bp-meny-lenke" asp-controller="Konto" asp-action="Registrer">Registrer bruker</a>
                     }
 
-                    @* Engelsk versjon er ikke laget ennå, så "English" er bare vist. *@
-                    <div class="bp-meny-sprak">
-                        <span class="bp-meny-sprak-etikett">Språk / Language</span>
+                    @* Dummy-knapper: begge er klikkbare, men siden er bare på norsk ennå.
+                       Norsk står alltid som valgt (aria-pressed="true"). *@
+                    <div class="bp-meny-sprak" role="group" aria-labelledby="bp-sprak-etikett">
+                        <span id="bp-sprak-etikett" class="bp-meny-sprak-etikett">Språk / Language</span>
                         <span class="bp-meny-sprak-valg">
-                            <span class="aktiv">Norsk</span>
-                            <span class="deaktivert" title="Kommer senere">English</span>
+                            <button type="button" class="bp-meny-sprak-knapp aktiv" aria-pressed="true" lang="nb">Norsk</button>
+                            <button type="button" class="bp-meny-sprak-knapp" aria-pressed="false" lang="en">English</button>
                         </span>
                     </div>
 
