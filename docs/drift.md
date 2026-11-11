@@ -1,6 +1,6 @@
 # Drift
 
-Denne siden forklarer hvordan Beredskapsportalen startes, enten med Docker Compose eller lokalt med .NET.
+Denne siden forklarer hvordan Beredt startes, enten med Docker Compose eller lokalt med .NET.
 
 ## Forutsetninger
 
