@@ -280,7 +280,20 @@ button.bp-meny-lenke:hover {
   text-decoration: underline;
   text-underline-offset: 0.25em;
 }
+/* Språkknappene: ser ut som tekst, men er klikkbare */
+.bp-meny-sprak-knapp {
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  color: var(--farge-tekst);
+  cursor: pointer;
+}
 
+.bp-meny-sprak-knapp:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
 .bp-meny form {
   margin: 0;
 }
