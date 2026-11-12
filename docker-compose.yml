@@ -33,6 +33,7 @@ services:
       ConnectionStrings__BeredskapsDb: "Server=db;Port=3306;Database=beredskapsportal;User=beredskap;Password=${DB_PASSWORD}"
       # Passordet til testbrukerne test, privat og admin (Data/IdentitetOppsett.cs). Tomt = ingen testbrukere.
       Testbrukere__Passord: "${TESTBRUKER_PASSORD}"
+      TZ: Europe/Oslo
     volumes:
       - opplastinger:/app/Opplastinger
     depends_on:
