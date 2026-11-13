@@ -37,4 +37,14 @@ public class InMemoryHendelseRepository : IHendelseRepository
                 .OrderByDescending(h => h.Tidspunkt).ThenByDescending(h => h.Id).ToList();
         }
     }
+
+    public IReadOnlyList<Hendelse> HentSiste(int antall)
+    {
+        lock (_lasObjekt)
+        {
+            return _hendelser
+                .OrderByDescending(h => h.Tidspunkt).ThenByDescending(h => h.Id)
+                .Take(antall).ToList();
+        }
+    }
 }

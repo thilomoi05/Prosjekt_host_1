@@ -1,0 +1,120 @@
+@model List<LoggRad>
+@{
+    ViewData["Title"] = "Logg";
+
+    // Valgene i filtermenyene lages ut fra radene som finnes. Samme oppbygning som på Behov-siden.
+    var kategorier = new[] { "Konto", "Behov", "Ressurs" }
+        .Where(k => Model.Any(r => r.Kategori == k))
+        .Select(k => (Verdi: k, Tekst: k))
+        .ToList();
+
+    var alvor = new List<(string Verdi, string Tekst)> { ("advarsel", "Advarsler"), ("vanlig", "Vanlige hendelser") };
+
+    var brukere = Model
+        .Select(r => r.Hendelse.UtfortAv)
+        .Distinct()
+        .OrderBy(b => b)
+        .Select(b => (Verdi: b, Tekst: b))
+        .ToList();
+
+    var antallAdvarsler = Model.Count(r => r.ErAdvarsel);
+}
+
+@* Adminloggen (AdminController.Logg): hva som har skjedd i portalen, når og av hvem.
+   Bruker samme tabell, søk og filtre som Behov-siden (tabellfilter.js).
+   Lenken /Admin/Logg?alvor=advarsel åpner siden med bare advarslene. *@
+<div class="bp-side-innhold">
+    <div class="bp-tabell-kort">
+        <div class="bp-tabell-kort-hode">
+            <div>
+                <h2>Logg</h2>
+                @* Teksten og "Nullstill filter" oppdateres av tabellfilter.js. *@
+                <p class="bp-filter-status">
+                    <span id="tabell-antall" aria-live="polite">Viser @Model.Count hendelser</span>
+                    <button type="button" class="bp-filter-nullstill" id="tabell-nullstill" hidden>Nullstill filter</button>
+                </p>
+            </div>
+            <a class="bp-tilbake" asp-controller="Admin" asp-action="Index">&larr; Til admin</a>
+        </div>
+
+        @if (antallAdvarsler > 0)
+        {
+            @* Kort oppsummering øverst, så admin ser med en gang om noen prøver å gjette passord. *@
+            <p class="bp-logg-varsel">
+                <span class="bp-badge bp-badge-avvist">@antallAdvarsler @(antallAdvarsler == 1 ? "advarsel" : "advarsler")</span>
+                Feilede innlogginger og låste kontoer.
+                <a class="bp-oversikt-lenke" asp-action="Logg" asp-route-alvor="advarsel">Vis bare advarslene</a>
+            </p>
+        }
+
+        <partial name="_Sokefelt" model='("tabell-sok", "Søk i loggen")' />
+
+        <div class="table-responsive bp-tabell-med-filter">
+            @* data-enhet er ordet i "Viser 12 av 80 hendelser" (tabellfilter.js). *@
+            <table class="bp-tabell bp-logg" id="filtertabell" data-enhet="hendelser">
+                <thead>
+                    <tr>
+                        <th><partial name="_Datosortering" model='"Tidspunkt"' /></th>
+                        <th><partial name="_Filtermeny" model='("Kategori", "kategori", kategorier)' /></th>
+                        <th><partial name="_Filtermeny" model='("Hendelse", "alvor", alvor)' /></th>
+                        <th>Gjelder</th>
+                        <th><partial name="_Filtermeny" model='("Utført av", "bruker", brukere)' /></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rad in Model)
+                    {
+                        var h = rad.Hendelse;
+                        @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filtrene bruker.
+                           data-dato har med sekunder, så hendelser i samme minutt sorteres riktig. *@
+                        <tr data-rad
+                            class="@(rad.ErAdvarsel ? "bp-logg-advarsel" : null)"
+                            data-kategori="@rad.Kategori"
+                            data-alvor="@(rad.ErAdvarsel ? "advarsel" : "vanlig")"
+                            data-bruker="@h.UtfortAv"
+                            data-dato="@h.Tidspunkt.ToString("yyyy-MM-dd HH:mm:ss")">
+                            <td class="bp-logg-tid">
+                                <time datetime="@h.Tidspunkt.ToString("yyyy-MM-ddTHH:mm:ss")">@h.Tidspunkt.ToString("dd.MM.yyyy HH:mm")</time>
+                            </td>
+                            <td><span class="bp-badge bp-badge-kategori">@rad.Kategori</span></td>
+                            <td>
+                                @if (rad.ErAdvarsel)
+                                {
+                                    <span class="bp-badge bp-badge-avvist">Advarsel</span>
+                                }
+                                @h.Beskrivelse
+                            </td>
+                            <td>
+                                @* Lenke til behovet eller ressursen. Er den trukket tilbake, gir lenken "Fant ikke siden",
+                                   men historikken blir liggende (Hendelser har ingen fremmednøkler). *@
+                                @if (h.BehovId is not null)
+                                {
+                                    <a class="bp-oversikt-lenke" asp-controller="Behov" asp-action="Detaljer" asp-route-id="@h.BehovId">Behov #@h.BehovId</a>
+                                }
+                                else if (h.RessursId is not null)
+                                {
+                                    <a class="bp-oversikt-lenke" asp-controller="Ressurs" asp-action="Detaljer" asp-route-id="@h.RessursId">Ressurs #@h.RessursId</a>
+                                }
+                                else
+                                {
+                                    <span class="bp-logg-tom">–</span>
+                                }
+                            </td>
+                            <td>@h.UtfortAv</td>
+                        </tr>
+                    }
+                    @* Vises av tabellfilter.js når ingen rader passer søket eller filteret. *@
+                    <tr id="tabell-tom" hidden>
+                        <td colspan="5" class="bp-oversikt-tom">Ingen hendelser passer søket eller filteret. Trykk «Nullstill filter» for å se alle.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* sokefelt.js har søkefunksjonene tabellfilter.js bruker, så den må komme først. *@
+    <script src="~/js/sokefelt.js" asp-append-version="true"></script>
+    <script src="~/js/tabellfilter.js" asp-append-version="true"></script>
+}

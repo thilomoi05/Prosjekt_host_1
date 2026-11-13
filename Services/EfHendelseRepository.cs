@@ -29,4 +29,10 @@ public class EfHendelseRepository : IHendelseRepository
     public IReadOnlyList<Hendelse> HentForRessurs(int ressursId) =>
         _db.Hendelser.AsNoTracking().Where(h => h.RessursId == ressursId)
             .OrderByDescending(h => h.Tidspunkt).ThenByDescending(h => h.Id).ToList();
+
+    // Take(antall) blir LIMIT i SQL-en, så databasen sender bare radene som vises.
+    public IReadOnlyList<Hendelse> HentSiste(int antall) =>
+        _db.Hendelser.AsNoTracking()
+            .OrderByDescending(h => h.Tidspunkt).ThenByDescending(h => h.Id)
+            .Take(antall).ToList();
 }

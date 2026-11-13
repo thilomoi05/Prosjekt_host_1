@@ -14,4 +14,7 @@ public interface IHendelseRepository
 
     // Historikken til én ressurs, nyeste først.
     IReadOnlyList<Hendelse> HentForRessurs(int ressursId);
+
+    // De siste hendelsene i hele portalen, nyeste først. Brukes av adminloggen (/Admin/Logg).
+    IReadOnlyList<Hendelse> HentSiste(int antall);
 }

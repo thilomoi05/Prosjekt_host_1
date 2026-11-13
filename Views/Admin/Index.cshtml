@@ -6,9 +6,13 @@
 @* Adminsiden: fire køer Admin jobber med (AdminController.Index).
    Knappene som endrer noe, er små skjemaer med POST. Anti-forgery-tokenet legges inn automatisk. *@
 <div class="bp-side-innhold bp-admin">
-    <div>
-        <h1 class="bp-admin-tittel">Admin</h1>
-        <p class="bp-admin-ingress">Behandle forespørsler, godkjenn nye ressurser og offentlige aktører, og tildel ressurser til behov som venter.</p>
+    <div class="bp-admin-hode">
+        <div>
+            <h1 class="bp-admin-tittel">Admin</h1>
+            <p class="bp-admin-ingress">Behandle forespørsler, godkjenn nye ressurser og offentlige aktører, og tildel ressurser til behov som venter.</p>
+        </div>
+        @* Loggen: alt som har skjedd i portalen, også innlogginger (AdminController.Logg). *@
+        <a class="btn btn-bp-sekundær" asp-action="Logg">Se logg</a>
     </div>
 
     @* 1. Forespørsler fra offentlige aktører. Godkjenn tildeler ressursen med en gang. *@

@@ -17,7 +17,8 @@ public class Hendelse
     // Brukernavnet til den som gjorde det.
     public string UtfortAv { get; set; } = string.Empty;
 
-    // Hvilket behov og/eller hvilken ressurs hendelsen gjelder. Minst én av dem er satt.
+    // Hvilket behov eller hvilken ressurs hendelsen gjelder. Begge er tomme når hendelsen
+    // gjelder en konto, f.eks. en innlogging (se Kontohendelser og adminloggen på /Admin/Logg).
     public int? BehovId { get; set; }
     public int? RessursId { get; set; }
 

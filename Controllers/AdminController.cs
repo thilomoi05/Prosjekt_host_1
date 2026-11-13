@@ -193,6 +193,7 @@ public class AdminController : Controller
         bruker.VenterPaGodkjenning = false;
         await _brukerManager.UpdateAsync(bruker);
         await _brukerManager.AddToRoleAsync(bruker, Roller.OffentligAktor);
+        _tildelingTjeneste.Logg($"Godkjente {bruker.UserName} som offentlig aktør", Brukernavn());
 
         TempData["Melding"] = $"{bruker.FulltNavn} er godkjent som offentlig aktør og kan logge inn.";
         return RedirectToAction(nameof(Index));
@@ -212,9 +213,31 @@ public class AdminController : Controller
         }
 
         await _brukerManager.DeleteAsync(bruker);
+        _tildelingTjeneste.Logg($"Avviste og slettet kontoen til {bruker.UserName}", Brukernavn());
 
         TempData["Melding"] = $"Kontoen til {bruker.FulltNavn} er avvist og slettet.";
         return RedirectToAction(nameof(Index));
+    }
+
+    // ---------------------------------------------------------------------
+    // Logg
+    // ---------------------------------------------------------------------
+
+    // Så mange hendelser vises på loggsiden. Holder for en demo og gjør siden rask.
+    private const int MaksLoggrader = 500;
+
+    /// <summary>
+    /// Adminloggen (/Admin/Logg): de siste hendelsene i hele portalen, nyeste først.
+    /// Viser både historikken til behov og ressurser og hendelser på kontoer, som
+    /// innlogging, feilede forsøk og godkjenning av brukere.
+    /// </summary>
+    [HttpGet]
+    public IActionResult Logg()
+    {
+        var rader = _tildelingTjeneste.SisteHendelser(MaksLoggrader)
+            .Select(h => new LoggRad { Hendelse = h })
+            .ToList();
+        return View(rader);
     }
 
     // ---------------------------------------------------------------------

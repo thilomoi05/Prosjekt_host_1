@@ -43,6 +43,9 @@ public class TildelingTjeneste
 
     public IReadOnlyList<Hendelse> HistorikkForRessurs(int ressursId) => _hendelseRepository.HentForRessurs(ressursId);
 
+    // De siste hendelsene i hele portalen, til adminloggen (AdminController.Logg).
+    public IReadOnlyList<Hendelse> SisteHendelser(int antall) => _hendelseRepository.HentSiste(antall);
+
     /// <summary>Skriver én linje i historikken til et behov og/eller en ressurs.</summary>
     public void Logg(string beskrivelse, string utfortAv, int? behovId = null, int? ressursId = null)
     {

@@ -2705,6 +2705,15 @@ a.bp-nokkeltall-kort:hover {
   margin: 0.25rem 0 0;
 }
 
+/* Toppen av adminsiden: tittel til venstre, "Se logg" til høyre (under på smal skjerm) */
+.bp-admin-hode {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 /* Antallet bak overskriftene, f.eks. "Ressurser til godkjenning  3" */
 .bp-admin-antall {
   display: inline-block;
@@ -2848,4 +2857,49 @@ a.bp-nokkeltall-kort:hover {
   display: block;
   font-size: 0.9rem;
   color: var(--farge-tekst-svak);
+}
+
+/* -------------------------------------------------------------------------
+   Adminloggen (Views/Admin/Logg.cshtml)
+   ------------------------------------------------------------------------- */
+/* Kategorien (Konto, Behov, Ressurs): nøytralt grått merke, så advarslene er det som skiller seg ut */
+.bp-badge-kategori {
+  background-color: var(--farge-flate-mork);
+  color: var(--farge-tekst);
+}
+
+/* Tidspunktet holder seg på én linje, og sifrene står rett under hverandre */
+.bp-logg-tid {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--farge-tekst-svak);
+}
+
+/* Advarsler (feil passord, ukjent brukernavn, låst konto) får en rød strek til venstre */
+.bp-logg tr.bp-logg-advarsel td:first-child {
+  box-shadow: inset 3px 0 0 var(--farge-badge-ny-tekst);
+}
+
+.bp-logg .bp-badge-avvist {
+  margin-right: 0.5rem;
+}
+
+/* "–" når hendelsen ikke gjelder et behov eller en ressurs */
+.bp-logg-tom {
+  color: var(--farge-tekst-lysere);
+}
+
+/* Oppsummeringen av advarsler over tabellen */
+.bp-logg-varsel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0 0 1rem;
+  color: var(--farge-tekst-svak);
+}
+
+.bp-logg-varsel a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
