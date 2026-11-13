@@ -29,8 +29,7 @@ public class ControllerTester
     {
         // Arrange
         var brukerManager = IdentitetHjelpere.LagBrukerManager();
-        var controller = new KontoController(brukerManager, IdentitetHjelpere.LagInnloggingManager(brukerManager),
-            new InMemoryHendelseRepository());
+        var controller = new KontoController(brukerManager, IdentitetHjelpere.LagInnloggingManager(brukerManager));
 
         // Act: samme som å åpne /Konto/Registrer?rolle=PrivatAktor
         var resultat = controller.Registrer(BrukerRolle.PrivatAktor);

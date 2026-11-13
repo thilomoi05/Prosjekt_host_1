@@ -2,13 +2,16 @@
 @{
     ViewData["Title"] = "Logg";
 
-    // Valgene i filtermenyene lages ut fra radene som finnes. Samme oppbygning som på Behov-siden.
-    var kategorier = new[] { "Konto", "Behov", "Ressurs" }
-        .Where(k => Model.Any(r => r.Kategori == k))
-        .Select(k => (Verdi: k, Tekst: k))
+    // De tre kategoriene i fast rekkefølge, med antall hendelser i hver.
+    // Brukes både i forklaringen øverst og i kategorifilteret i tabellen.
+    var kategorier = new[] { "Behov", "Ressurs", "Brukere" }
+        .Select(k => (Navn: k, Antall: Model.Count(r => r.Kategori == k)))
         .ToList();
 
-    var alvor = new List<(string Verdi, string Tekst)> { ("advarsel", "Advarsler"), ("vanlig", "Vanlige hendelser") };
+    var kategoriValg = kategorier
+        .Where(k => k.Antall > 0)
+        .Select(k => (Verdi: k.Navn, Tekst: k.Navn))
+        .ToList();
 
     var brukere = Model
         .Select(r => r.Hendelse.UtfortAv)
@@ -16,13 +19,11 @@
         .OrderBy(b => b)
         .Select(b => (Verdi: b, Tekst: b))
         .ToList();
-
-    var antallAdvarsler = Model.Count(r => r.ErAdvarsel);
 }
 
-@* Adminloggen (AdminController.Logg): hva som har skjedd i portalen, når og av hvem.
-   Bruker samme tabell, søk og filtre som Behov-siden (tabellfilter.js).
-   Lenken /Admin/Logg?alvor=advarsel åpner siden med bare advarslene. *@
+@* Adminloggen (AdminController.Logg): hva som har skjedd med behov, ressurser og brukere,
+   når og av hvem. Bruker samme tabell, søk og filtre som Behov-siden (tabellfilter.js).
+   Hver kategori har sin farge (se "Adminloggen" i site.css). *@
 <div class="bp-side-innhold">
     <div class="bp-tabell-kort">
         <div class="bp-tabell-kort-hode">
@@ -37,15 +38,31 @@
             <a class="bp-tilbake" asp-controller="Admin" asp-action="Index">&larr; Til admin</a>
         </div>
 
-        @if (antallAdvarsler > 0)
-        {
-            @* Kort oppsummering øverst, så admin ser med en gang om noen prøver å gjette passord. *@
-            <p class="bp-logg-varsel">
-                <span class="bp-badge bp-badge-avvist">@antallAdvarsler @(antallAdvarsler == 1 ? "advarsel" : "advarsler")</span>
-                Feilede innlogginger og låste kontoer.
-                <a class="bp-oversikt-lenke" asp-action="Logg" asp-route-alvor="advarsel">Vis bare advarslene</a>
-            </p>
-        }
+        @* Forklaring på fargene. Hver lenke åpner loggen med bare den kategorien,
+           f.eks. /Admin/Logg?kategori=Behov (tabellfilter.js leser filteret fra adressen). *@
+        <nav class="bp-logg-forklaring" aria-label="Kategorier i loggen">
+            @foreach (var (navn, antall) in kategorier)
+            {
+                var klasse = $"bp-logg-kategori bp-logg-{navn.ToLowerInvariant()}";
+                if (antall > 0)
+                {
+                    <a class="@klasse" asp-action="Logg" asp-route-kategori="@navn">
+                        <span class="bp-logg-prikk" aria-hidden="true"></span>
+                        @navn
+                        <span class="bp-logg-kategori-antall">@antall</span>
+                    </a>
+                }
+                else
+                {
+                    @* Ingen hendelser i kategorien ennå: vises, men er ikke en lenke. *@
+                    <span class="@klasse bp-logg-kategori-tom">
+                        <span class="bp-logg-prikk" aria-hidden="true"></span>
+                        @navn
+                        <span class="bp-logg-kategori-antall">0</span>
+                    </span>
+                }
+            }
+        </nav>
 
         <partial name="_Sokefelt" model='("tabell-sok", "Søk i loggen")' />
 
@@ -55,8 +72,8 @@
                 <thead>
                     <tr>
                         <th><partial name="_Datosortering" model='"Tidspunkt"' /></th>
-                        <th><partial name="_Filtermeny" model='("Kategori", "kategori", kategorier)' /></th>
-                        <th><partial name="_Filtermeny" model='("Hendelse", "alvor", alvor)' /></th>
+                        <th><partial name="_Filtermeny" model='("Kategori", "kategori", kategoriValg)' /></th>
+                        <th>Hendelse</th>
                         <th>Gjelder</th>
                         <th><partial name="_Filtermeny" model='("Utført av", "bruker", brukere)' /></th>
                     </tr>
@@ -66,24 +83,18 @@
                     {
                         var h = rad.Hendelse;
                         @* data-rad markerer raden for tabellfilter.js. De andre data-* er verdiene filtrene bruker.
-                           data-dato har med sekunder, så hendelser i samme minutt sorteres riktig. *@
+                           data-dato har med sekunder, så hendelser i samme minutt sorteres riktig.
+                           Fargeklassen gir streken til venstre og fargen på merket. *@
                         <tr data-rad
-                            class="@(rad.ErAdvarsel ? "bp-logg-advarsel" : null)"
+                            class="@rad.Fargeklasse"
                             data-kategori="@rad.Kategori"
-                            data-alvor="@(rad.ErAdvarsel ? "advarsel" : "vanlig")"
                             data-bruker="@h.UtfortAv"
                             data-dato="@h.Tidspunkt.ToString("yyyy-MM-dd HH:mm:ss")">
                             <td class="bp-logg-tid">
                                 <time datetime="@h.Tidspunkt.ToString("yyyy-MM-ddTHH:mm:ss")">@h.Tidspunkt.ToString("dd.MM.yyyy HH:mm")</time>
                             </td>
-                            <td><span class="bp-badge bp-badge-kategori">@rad.Kategori</span></td>
-                            <td>
-                                @if (rad.ErAdvarsel)
-                                {
-                                    <span class="bp-badge bp-badge-avvist">Advarsel</span>
-                                }
-                                @h.Beskrivelse
-                            </td>
+                            <td><span class="bp-badge bp-badge-logg">@rad.Kategori</span></td>
+                            <td>@h.Beskrivelse</td>
                             <td>
                                 @* Lenke til behovet eller ressursen. Er den trukket tilbake, gir lenken "Fant ikke siden",
                                    men historikken blir liggende (Hendelser har ingen fremmednøkler). *@

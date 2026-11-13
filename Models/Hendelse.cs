@@ -18,7 +18,7 @@ public class Hendelse
     public string UtfortAv { get; set; } = string.Empty;
 
     // Hvilket behov eller hvilken ressurs hendelsen gjelder. Begge er tomme når hendelsen
-    // gjelder en konto, f.eks. en innlogging (se Kontohendelser og adminloggen på /Admin/Logg).
+    // gjelder en bruker, f.eks. når admin godkjenner en offentlig aktør (se adminloggen på /Admin/Logg).
     public int? BehovId { get; set; }
     public int? RessursId { get; set; }
 

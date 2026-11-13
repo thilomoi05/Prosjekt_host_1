@@ -2861,11 +2861,65 @@ a.bp-nokkeltall-kort:hover {
 
 /* -------------------------------------------------------------------------
    Adminloggen (Views/Admin/Logg.cshtml)
+   Hver kategori har sin farge, de samme som på kartet: behov i magenta,
+   ressurser i marineblå. Brukere får grønt, samme grønne som merket for fullført.
+   Fargen brukes tre steder: prikken i forklaringen, merket og streken til venstre i raden.
    ------------------------------------------------------------------------- */
-/* Kategorien (Konto, Behov, Ressurs): nøytralt grått merke, så advarslene er det som skiller seg ut */
-.bp-badge-kategori {
-  background-color: var(--farge-flate-mork);
+.bp-logg-behov   { --logg-farge: var(--kart-hoy); }
+.bp-logg-ressurs { --logg-farge: var(--kart-ressurs); }
+.bp-logg-brukere { --logg-farge: var(--farge-badge-fullfort-tekst); }
+
+/* Forklaringen øverst: én lenke per kategori med farge, navn og antall */
+.bp-logg-forklaring {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.bp-logg-kategori {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--farge-kant);
+  background-color: var(--farge-kort);
   color: var(--farge-tekst);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.bp-logg-kategori:hover,
+.bp-logg-kategori:focus-visible {
+  border-color: var(--logg-farge);
+  color: var(--farge-tekst);
+}
+
+.bp-logg-kategori-tom {
+  color: var(--farge-tekst-lysere);
+}
+
+.bp-logg-prikk {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--logg-farge);
+}
+
+.bp-logg-kategori-antall {
+  color: var(--farge-tekst-svak);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Merket i Kategori-kolonnen: lys bakgrunn og mørk tekst i kategoriens farge */
+.bp-badge-logg {
+  background-color: color-mix(in srgb, var(--logg-farge) 12%, white);
+  color: var(--logg-farge);
+}
+
+/* Fargestrek til venstre i hver rad, så kategoriene skilles når man blar */
+.bp-logg tbody tr[data-rad] td:first-child {
+  box-shadow: inset 3px 0 0 var(--logg-farge);
 }
 
 /* Tidspunktet holder seg på én linje, og sifrene står rett under hverandre */
@@ -2875,31 +2929,7 @@ a.bp-nokkeltall-kort:hover {
   color: var(--farge-tekst-svak);
 }
 
-/* Advarsler (feil passord, ukjent brukernavn, låst konto) får en rød strek til venstre */
-.bp-logg tr.bp-logg-advarsel td:first-child {
-  box-shadow: inset 3px 0 0 var(--farge-badge-ny-tekst);
-}
-
-.bp-logg .bp-badge-avvist {
-  margin-right: 0.5rem;
-}
-
 /* "–" når hendelsen ikke gjelder et behov eller en ressurs */
 .bp-logg-tom {
   color: var(--farge-tekst-lysere);
-}
-
-/* Oppsummeringen av advarsler over tabellen */
-.bp-logg-varsel {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin: 0 0 1rem;
-  color: var(--farge-tekst-svak);
-}
-
-.bp-logg-varsel a {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
 }

@@ -1,6 +1,5 @@
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
-using Beredskapsportal.Services;
 using Beredskapsportal.Sikkerhet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -31,15 +30,10 @@ public class KontoController : Controller
     private readonly UserManager<Bruker> _brukerManager;
     private readonly SignInManager<Bruker> _innloggingManager;
 
-    // Adminloggen: innlogginger, feilede forsøk, registreringer osv. (se Logg nederst).
-    private readonly IHendelseRepository _hendelseRepository;
-
-    public KontoController(UserManager<Bruker> brukerManager, SignInManager<Bruker> innloggingManager,
-        IHendelseRepository hendelseRepository)
+    public KontoController(UserManager<Bruker> brukerManager, SignInManager<Bruker> innloggingManager)
     {
         _brukerManager = brukerManager;
         _innloggingManager = innloggingManager;
-        _hendelseRepository = hendelseRepository;
     }
 
     // returnUrl er siden brukeren prøvde å åpne før de ble sendt til innlogging,
@@ -69,7 +63,6 @@ public class KontoController : Controller
 
             if (resultat.IsLockedOut)
             {
-                Logg(Kontohendelser.KontoLast, bruker.UserName);
                 ModelState.AddModelError(string.Empty, "For mange feil forsøk. Kontoen er låst i 5 minutter.");
                 return View(modell);
             }
@@ -80,23 +73,14 @@ public class KontoController : Controller
                 // passordet, så meldingen bare vises til den som faktisk eier kontoen.
                 if (bruker.VenterPaGodkjenning)
                 {
-                    Logg(Kontohendelser.VenterPaGodkjenning, bruker.UserName);
                     ModelState.AddModelError(string.Empty, "Kontoen din venter på godkjenning fra en administrator.");
                     return View(modell);
                 }
 
                 // Lager innloggingscookien. isPersistent: false betyr at den slettes når nettleseren lukkes.
                 await _innloggingManager.SignInAsync(bruker, isPersistent: false);
-                Logg(Kontohendelser.LoggetInn, bruker.UserName);
                 return TilSidenBrukerKomFra(modell.ReturnUrl);
             }
-
-            Logg(Kontohendelser.FeilPassord, bruker.UserName);
-        }
-        else
-        {
-            // Brukernavnet finnes ikke. Det som ble skrevet inn, lagres ikke (se Kontohendelser.UkjentBruker).
-            Logg(Kontohendelser.UkjentBrukernavn, null);
         }
 
         // Samme melding for ukjent brukernavn og feil passord, så ingen kan bruke
@@ -154,8 +138,6 @@ public class KontoController : Controller
 
         if (erOffentligAktor)
         {
-            Logg(Kontohendelser.RegistrertOffentlig, nyBruker.UserName);
-
             // Rollen OffentligAktor gis først når en administrator godkjenner kontoen
             // (kommer sammen med siden for Admin). Brukeren logges derfor ikke inn nå.
             TempData["Melding"] = "Takk! Kontoen er opprettet, men må godkjennes av en administrator før du kan logge inn.";
@@ -164,19 +146,12 @@ public class KontoController : Controller
 
         await _brukerManager.AddToRoleAsync(nyBruker, Roller.PrivatAktor);
         await _innloggingManager.SignInAsync(nyBruker, isPersistent: false);
-        Logg(Kontohendelser.RegistrertPrivat, nyBruker.UserName);
         return RedirectToAction("Index", "Oversikt");
     }
 
     [HttpPost]
     public async Task<IActionResult> LoggUt()
     {
-        // Logges før utloggingen, mens vi fortsatt vet hvem brukeren er.
-        if (User?.Identity?.IsAuthenticated == true)
-        {
-            Logg(Kontohendelser.LoggetUt, User.Identity.Name);
-        }
-
         await _innloggingManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }
@@ -330,25 +305,9 @@ public class KontoController : Controller
         // RefreshSignInAsync gir denne nettleseren en ny cookie, så den som byttet passordet
         // forblir innlogget.
         await _innloggingManager.RefreshSignInAsync(bruker);
-        Logg(Kontohendelser.PassordEndret, bruker.UserName);
 
         TempData["Melding"] = "Passordet er endret.";
         return RedirectToAction(nameof(Profil));
-    }
-
-    /// <summary>
-    /// Skriver én linje i adminloggen (/Admin/Logg). Kontohendelser gjelder ikke et behov
-    /// eller en ressurs, så BehovId og RessursId står tomme. Det er slik loggen ser at
-    /// hendelsen hører til kategorien Konto (se LoggRad.Kategori).
-    /// </summary>
-    private void Logg(string beskrivelse, string? brukernavn)
-    {
-        _hendelseRepository.LeggTil(new Hendelse
-        {
-            Tidspunkt = DateTime.Now,
-            UtfortAv = string.IsNullOrEmpty(brukernavn) ? Kontohendelser.UkjentBruker : brukernavn,
-            Beskrivelse = beskrivelse
-        });
     }
 
     /// <summary>

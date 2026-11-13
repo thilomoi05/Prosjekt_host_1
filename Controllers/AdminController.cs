@@ -228,8 +228,7 @@ public class AdminController : Controller
 
     /// <summary>
     /// Adminloggen (/Admin/Logg): de siste hendelsene i hele portalen, nyeste først.
-    /// Viser både historikken til behov og ressurser og hendelser på kontoer, som
-    /// innlogging, feilede forsøk og godkjenning av brukere.
+    /// Viser historikken til behov og ressurser, og når admin godkjenner eller avviser brukere.
     /// </summary>
     [HttpGet]
     public IActionResult Logg()

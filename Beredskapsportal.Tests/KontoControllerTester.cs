@@ -3,7 +3,6 @@ using System.Security.Claims;
 using Beredskapsportal.Controllers;
 using Beredskapsportal.Models;
 using Beredskapsportal.Models.ViewModeller;
-using Beredskapsportal.Services;
 using Beredskapsportal.Sikkerhet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -27,15 +26,12 @@ public class KontoControllerTester
     private readonly SignInManager<Bruker> _innloggingManager;
     private readonly KontoController _controller;
 
-    // Adminloggen. Ekte minnebasert lagring, så testene kan sjekke hva som ble logget.
-    private readonly InMemoryHendelseRepository _hendelser = new();
-
     private readonly Bruker _testbruker = new() { UserName = "test", FulltNavn = "Test Testesen" };
 
     public KontoControllerTester()
     {
         _innloggingManager = IdentitetHjelpere.LagInnloggingManager(_brukerManager);
-        _controller = new KontoController(_brukerManager, _innloggingManager, _hendelser)
+        _controller = new KontoController(_brukerManager, _innloggingManager)
         {
             // TempData brukes til meldingen etter registrering som offentlig aktør.
             TempData = new TempDataDictionary(new DefaultHttpContext(), Substitute.For<ITempDataProvider>())
@@ -104,47 +100,6 @@ public class KontoControllerTester
 
         Assert.IsType<ViewResult>(resultat);
         Assert.Equal("Feil brukernavn eller passord.", ForsteFeilmelding());
-    }
-
-    [Fact]
-    public async Task LoggInn_RiktigPassordLoggesIAdminloggen()
-    {
-        PassordSjekkGir(SignInResult.Success);
-
-        await _controller.LoggInn(new LoggInnViewModel { Brukernavn = "test", Passord = "Riktig123" });
-
-        var hendelse = Assert.Single(_hendelser.HentSiste(10));
-        Assert.Equal(Kontohendelser.LoggetInn, hendelse.Beskrivelse);
-        Assert.Equal("test", hendelse.UtfortAv);
-        Assert.Null(hendelse.BehovId);     // gjelder en konto, ikke et behov eller en ressurs
-        Assert.Null(hendelse.RessursId);
-    }
-
-    [Fact]
-    public async Task LoggInn_FeilPassordLoggesSomAdvarsel()
-    {
-        PassordSjekkGir(SignInResult.Failed);
-
-        await _controller.LoggInn(new LoggInnViewModel { Brukernavn = "test", Passord = "Feil123" });
-
-        var hendelse = Assert.Single(_hendelser.HentSiste(10));
-        Assert.Equal(Kontohendelser.FeilPassord, hendelse.Beskrivelse);
-        Assert.Equal("test", hendelse.UtfortAv);
-        Assert.True(Kontohendelser.ErAdvarsel(hendelse.Beskrivelse));
-    }
-
-    [Fact]
-    public async Task LoggInn_UkjentBrukernavnLagrerIkkeDetSomBleSkrevet()
-    {
-        // Noen har skrevet passordet sitt i brukernavnfeltet ved en feil. Det skal ikke havne i loggen.
-        _brukerManager.FindByNameAsync("MittPassord123").Returns((Bruker?)null);
-
-        await _controller.LoggInn(new LoggInnViewModel { Brukernavn = "MittPassord123", Passord = "x" });
-
-        var hendelse = Assert.Single(_hendelser.HentSiste(10));
-        Assert.Equal(Kontohendelser.UkjentBrukernavn, hendelse.Beskrivelse);
-        Assert.Equal(Kontohendelser.UkjentBruker, hendelse.UtfortAv);
-        Assert.DoesNotContain("MittPassord123", hendelse.Beskrivelse);
     }
 
     [Fact]
