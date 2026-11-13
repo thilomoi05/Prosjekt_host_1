@@ -176,7 +176,7 @@ Full beskrivelse av lagene, innlogging, kartet og alle endepunkter: **[docs/arki
 | 6 | Mobiltilpasset frontend | `wwwroot/css/site.css` (`@media`), `_Layout.cshtml`, [mobiltest](#mobiltest) | Ferdig |
 | 7 | Enkel oversikt over ressurser | `/Oversikt`, `/Ressurs` (liste med filter), lista under kartet, `/Ressurs/Detaljer`, `/Tildeling` | Ferdig |
 | 8 | Sikkerhetstiltak | `Program.cs`, `Sikkerhet/SikkerhetsheadereMiddleware.cs`, [docs/arkitektur.md](docs/arkitektur.md) avsnitt 6 | Ferdig |
-| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (162 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest gjenstår |
+| 9 | Testing (enhet, system, sikkerhet, brukervennlighet) | `Beredskapsportal.Tests/` (162 tester), [Testing](#testing) | Enhet, system, sikkerhet og mobil ferdig. Brukervennlighetstest delvis (privat aktør testet 12.11.2026) |
 | 10 | Dokumentasjon om drift, arkitektur og testing | [docs/drift.md](docs/drift.md), [docs/arkitektur.md](docs/arkitektur.md), [Testing](#testing) | Ferdig |
 | 11 | Dokumentasjon i koden | `/// <summary>` på alle klasser, norske kommentarer i C#, Razor (`@* *@`) og JavaScript | Ferdig |
 | 12 | Bruk av KI | [Bruk av KI](#bruk-av-ki), [docs/ki-bruk.md](docs/ki-bruk.md) | Ferdig |
@@ -332,27 +332,32 @@ Chrome-vinduet satt til 500 px bredt (det smaleste Chrome tillater), som er unde
 
 ### Brukervennlighetstest
 
-> **Ikke gjennomført ennå.** Tabellene fylles inn når testen er gjort.
+> **Delvis gjennomført:** rollen privat aktør er testet med én person (12.11.2026). Offentlig aktør og admin gjenstår.
 
-**Hvordan:** 2–3 personer utenfor gruppa får en oppgave om gangen, uten hjelp. De tenker høyt mens de løser den. Vi noterer om de klarte det, hvor lang tid det tok, og hva som var vanskelig. Etterpå retter vi det som flere snublet i.
+**Hvordan:** Testpersonen fikk én oppgave om gangen, uten hjelp, og tenkte høyt mens hun løste den. Etter hver oppgave ga hun en karakter fra 1 (veldig vanskelig) til 5 (veldig lett). Til slutt svarte hun på noen spørsmål om hva som var lett, vanskelig og manglet. Én i gruppa observerte og noterte.
 
-**Testpersoner:** [Fyll inn: f.eks. «Person A, 22 år, student», uten fulle navn] · **Dato:** [Fyll inn]
+**Testpersoner:** Person A, 24 år, jobber i barnevernstjenesten, vant med apper, har ikke sett appen før, kjenner en i gruppa · **Dato:** 12.11.2026 · **Enhet:** Mac, Safari
 
 | # | Oppgave | Rolle | Person A | Person B | Person C |
 |---|---|---|---|---|---|
-| 1 | Lag en bruker som privat aktør | – | | | |
-| 2 | Tilby et aggregat med bilde, og vis hvor det står | Privat aktør | | | |
-| 3 | Endre beskrivelsen av ressursen du la inn | Privat aktør | | | |
-| 4 | Meld et behov for nødstrøm på Lund med høy prioritet | Offentlig aktør (`test`) | | | |
-| 5 | Finn alle ledige aggregater på kartet | Offentlig aktør | | | |
-| 6 | Finn ut hvilke ressurser som er tildelt behovet ditt | Offentlig aktør | | | |
-| 7 | Godkjenn en ressurs som venter, og tildel den til et behov | Admin | | | |
+| 1 | Lag en bruker som privat aktør | – | Klarte alene (5/5) | | |
+| 2 | Tilby et aggregat med bilde, og vis hvor det står | Privat aktør | Klarte alene (5/5) | | |
+| 3 | Endre beskrivelsen av ressursen du la inn | Privat aktør | Klarte alene (5/5) | | |
+| 4 | Meld et behov for nødstrøm på Lund med høy prioritet | Offentlig aktør (`test`) | Ikke testet | | |
+| 5 | Finn alle ledige aggregater på kartet | Offentlig aktør | Ikke testet | | |
+| 6 | Finn ut hvilke ressurser som er tildelt behovet ditt | Offentlig aktør | Ikke testet | | |
+| 7 | Godkjenn en ressurs som venter, og tildel den til et behov | Admin | Ikke testet | | |
+| 8 | Finn ressursen du la inn, og se hvilken status den har | Privat aktør | Klarte alene (5/5) | | |
+| 9 | Finn ut hva som trengs akkurat nå i området ditt | Privat aktør | Klarte det, med nøling (5/5) | | |
 
-Skriv ✅ (klarte det alene), ⚠️ (klarte det med nøling) eller ❌ (klarte det ikke), og ev. tid.
+Tallet i parentes er testpersonens egen karakter fra 1 (veldig vanskelig) til 5 (veldig lett).
 
 | Funn | Hvor mange | Hva vi endret |
 |---|---|---|
-| [Fyll inn] | | |
+| Uklart hvem man skal kontakte, og hva man gjør videre, fra «Hva trengs». Nølte med å finne området nærmest seg | 1 av 1 | Ikke endret ennå |
+| Savnet informasjon om hva som skjer med ressursen etter at den er meldt inn | 1 av 1 | Ikke endret ennå |
+| «Venter på godkjenning» og «Tildelt et behov» ble forstått riktig | 1 av 1 | Ingen endring nødvendig |
+| Ville brukt appen fordi det er «kjekt å hjelpe», men spurte også «hva får en igjen for å bidra?» | 1 av 1 | Ikke en feil i appen. Tas med som innspill |
 
 **Tidligere tilbakemeldinger:** Etter fremføringen og sprint review endret vi blant annet lista under kartet til fullskjerm, la til filter på kartet og laget siden «Hva trengs» (commit `0d355f4`, «Rettelser etter fremføring»).
 
