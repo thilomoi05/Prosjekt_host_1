@@ -280,20 +280,7 @@ button.bp-meny-lenke:hover {
   text-decoration: underline;
   text-underline-offset: 0.25em;
 }
-/* Språkknappene: ser ut som tekst, men er klikkbare */
-.bp-meny-sprak-knapp {
-  padding: 0;
-  background: none;
-  border: none;
-  font: inherit;
-  color: var(--farge-tekst);
-  cursor: pointer;
-}
 
-.bp-meny-sprak-knapp:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-}
 .bp-meny form {
   margin: 0;
 }
@@ -1052,6 +1039,32 @@ button.bp-meny-lenke:hover {
   padding: 0.4rem 1.5rem;
 }
 
+/* På mobil er det ikke plass midt på: knappen la seg oppå overskriften «Punkter på kartet».
+   Der står den i stedet til høyre for overskriften, som en vanlig del av raden. */
+@media (max-width: 767.98px) {
+  .bp-kart-liste-panel .offcanvas-header {
+    gap: 1rem;
+  }
+
+  .bp-kart-skjulknapp {
+    position: static;
+    transform: none;
+    margin-left: auto;            /* skyves helt til høyre */
+    flex-shrink: 0;               /* knappen skal ikke presses sammen */
+    padding: 0.4rem 1rem;
+  }
+
+  /* "Viser 22 av 40" og "Nullstill filter" brytes ikke midt i, men "Nullstill filter" kan gå ned på neste linje */
+  .bp-kart-liste-panel .bp-filter-status {
+    flex-wrap: wrap;
+    row-gap: 0.1rem;
+  }
+
+  .bp-kart-liste-panel .bp-filter-status > * {
+    white-space: nowrap;
+  }
+}
+
 /* Panelet med listen: hele skjermhøyden under menyen, så listen får all plassen */
 .bp-kart-liste-panel {
   --bs-offcanvas-height: calc(100vh - var(--header-hoyde));
@@ -1787,6 +1800,22 @@ a.bp-nokkeltall-kort:hover {
 }
 
 /* Selve valgene. Rulles hvis det er flere enn det er plass til. */
+/* "Søk: «lund» Tøm søket" øverst i filterpanelet når det er søkt i listen under kartet */
+.bp-filter-sok-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin: 0;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    background-color: var(--farge-flate);
+    border-bottom: 1px solid var(--farge-kant);
+}
+
+.bp-filter-sok-info[hidden] {
+    display: none;
+}
+
 .bp-filter-innhold {
     flex: 1;
     overflow-y: auto;
@@ -2248,6 +2277,75 @@ a.bp-nokkeltall-kort:hover {
     margin: 0.3rem 0 0;
     font-size: 0.9rem;
     color: var(--farge-tekst-svak);
+}
+
+/* -------------------------------------------------------------------------
+   Søkefelt over listene (Views/Shared/_Sokefelt.cshtml + sokefelt.js)
+   Samme kant, rette hjørner og fokusramme som de andre skjemafeltene, og samme høyde
+   som knappene. Forstørrelsesglass til venstre og et kryss til høyre for å tømme.
+   ------------------------------------------------------------------------- */
+.bp-sokefelt {
+    position: relative;
+    max-width: 26rem;                      /* ikke over hele bredden på PC, da blir det et for langt felt */
+    margin-bottom: 1.25rem;
+}
+
+.bp-sokefelt .form-control {
+    padding: 0.65rem 2.6rem;               /* plass til forstørrelsesglasset og krysset */
+    font-size: max(1rem, 16px);            /* minst 16px, ellers zoomer iPhone inn når man trykker i feltet */
+}
+
+/* Nettleserens eget kryss i søkefelt skjules, vi har vårt eget som ser likt ut i alle nettlesere */
+.bp-sokefelt .form-control::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.bp-sokefelt .form-control::placeholder {
+    color: var(--farge-tekst-lysere);
+}
+
+.bp-sokefelt-ikon {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--farge-tekst-svak);
+    pointer-events: none;                  /* klikk på ikonet går til feltet */
+}
+
+.bp-sokefelt-tom {
+    position: absolute;
+    right: 0.35rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--farge-tekst-svak);
+    cursor: pointer;
+}
+
+.bp-sokefelt-tom:hover {
+    color: var(--farge-tekst);
+    background-color: var(--farge-flate);
+}
+
+/* [hidden] må vinne over display: flex over */
+.bp-sokefelt-tom[hidden] {
+    display: none;
+}
+
+/* På mobil går feltet over hele bredden */
+@media (max-width: 767.98px) {
+    .bp-sokefelt {
+        max-width: none;
+    }
 }
 
 /* Menyene må få stikke ut av tabellen (ellers kuttes de av rammen som ruller sidelengs) */

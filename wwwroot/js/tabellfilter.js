@@ -16,11 +16,18 @@
 //  4. Leser filter fra adressen, f.eks. /Behov?status=Venter, så andre sider
 //     kan lenke rett til en filtrert liste.
 //  5. Setter inn kartikonene der det står data-ikon-type.
+//  6. Søker i radene mens man skriver i søkefeltet (Views/Shared/_Sokefelt.cshtml).
+//     Søket treffer teksten i raden og det som står i data-sok (tekst som ikke vises
+//     i tabellen, f.eks. beskrivelsen). Søket og filtrene virker sammen: en rad vises
+//     bare hvis den passer begge.
 //
 // Siden må ha:
 //  - en tabell med id="filtertabell" og data-enhet="behov" (ordet i "Viser 8 av 12 behov")
-//  - rader med data-rad og én data-* per filter, f.eks. data-prioritet="hoy", og data-dato
+//  - rader med data-rad og én data-* per filter, f.eks. data-prioritet="hoy"
 //  - id="tabell-antall", id="tabell-nullstill" og en tom-rad med id="tabell-tom"
+// Siden kan ha:
+//  - data-dato på radene og datosortering (id="dato-meny"), se punkt 2
+//  - data-sok på radene og et søkefelt med id="tabell-sok". Da må sokefelt.js lastes før denne filen
 // =========================================================================
 
 const filtertabell = document.getElementById('filtertabell');
@@ -30,6 +37,7 @@ const tomRad = document.getElementById('tabell-tom');
 const menyer = [...document.querySelectorAll('.bp-kolonne-meny[data-filter]')];
 const nullstillKnapp = document.getElementById('tabell-nullstill');
 const enhet = filtertabell.dataset.enhet;   // f.eks. "behov" eller "tildelinger"
+const sokefelt = document.getElementById('tabell-sok');   // null hvis siden ikke har søkefelt
 
 // Setter inn kartikonene. data-ikon-form="ressurs" gir firkant, ellers nål (behov).
 // Ikonene i menyene er mindre (data-ikon-storrelse="22").
@@ -42,18 +50,28 @@ document.querySelectorAll('[data-ikon-type]').forEach(element => {
 // Husker den opprinnelige rekkefølgen, så sorteringen er stabil når to rader har samme dato.
 rader.forEach((rad, indeks) => { rad.dataset.indeks = indeks; });
 
+// Teksten søket leter i for hver rad: det som står i cellene, pluss data-sok.
+// Celler med en knapp (f.eks. "Endre ressursen") hoppes over, ellers ville "endre" treffe alle radene.
+// Lages én gang, så søket går fort mens man skriver.
+const sokeTekster = new Map(rader.map(rad => {
+    const celler = [...rad.cells].filter(celle => !celle.querySelector('.btn'));
+    return [rad, celler.map(celle => celle.textContent).join(' ') + ' ' + (rad.dataset.sok || '')];
+}));
+
 /** Hvilke verdier som er krysset av i menyen for et filter, f.eks. ["hoy", "moderat"]. */
 function valgteVerdier(meny) {
     return [...meny.querySelectorAll('input[type="checkbox"]:checked')].map(boks => boks.value);
 }
 
-/** Viser bare radene som passer alle filtrene, og oppdaterer tekstene. */
+/** Viser bare radene som passer alle filtrene og søket, og oppdaterer tekstene. */
 function filtrer() {
     let antallSynlige = 0;
+    const ord = sokeord(sokefelt);   // [] når søkefeltet er tomt eller mangler
 
     for (const rad of rader) {
-        // En rad vises hvis verdien dens er krysset av i hver eneste meny.
-        const passer = menyer.every(meny => valgteVerdier(meny).includes(rad.dataset[meny.dataset.filter]));
+        // En rad vises hvis verdien dens er krysset av i hver eneste meny, og den passer søket.
+        const passer = menyer.every(meny => valgteVerdier(meny).includes(rad.dataset[meny.dataset.filter]))
+            && passerSok(sokeTekster.get(rad), ord);
         rad.hidden = !passer;
         if (passer) {
             antallSynlige++;
@@ -62,7 +80,8 @@ function filtrer() {
 
     tomRad.hidden = antallSynlige > 0;
 
-    const erFiltrert = antallSynlige < rader.length;
+    // "Nullstill filter" vises også når bare søket skjuler rader, for den tømmer søket også.
+    const erFiltrert = antallSynlige < rader.length || ord.length > 0;
     document.getElementById('tabell-antall').textContent = erFiltrert
         ? 'Viser ' + antallSynlige + ' av ' + rader.length + ' ' + enhet
         : 'Viser alle ' + rader.length + ' ' + enhet;
@@ -124,11 +143,17 @@ menyer.forEach(meny => meny.addEventListener('click', function (hendelse) {
 // Datosortering
 document.getElementById('dato-meny')?.addEventListener('change', sorter);
 
-// "Nullstill filter": alt krysses av igjen.
+// "Nullstill filter": alt krysses av igjen, og søket tømmes.
 nullstillKnapp.addEventListener('click', function () {
     document.querySelectorAll('.bp-kolonne-meny[data-filter] input[type="checkbox"]').forEach(boks => { boks.checked = true; });
+    if (sokefelt) {
+        tomSokefelt(sokefelt);   // sier fra med en input-hendelse, så filtrer() kjører
+    }
     filtrer();
 });
+
+// Søket: lista oppdateres for hver bokstav man skriver.
+sokefelt?.addEventListener('input', filtrer);
 
 // Filter fra adressen, f.eks. /Behov?status=Venter eller /Behov?prioritet=hoy,moderat.
 // Da krysses bare de verdiene av i den menyen.

@@ -45,11 +45,16 @@
         }
         else
         {
+            @* Søket gjøres av tildelsok.js. Feltet har ikke name, så det sendes ikke med skjemaet,
+               og Enter i feltet sender ikke skjemaet (sokefelt.js). *@
+            <partial name="_Sokefelt" model='("tildel-sok", "Søk på adresse eller type")' />
+
             <ul class="bp-admin-liste">
                 @foreach (var forslag in Model.Forslag)
                 {
                     var ressurs = forslag.Ressurs;
-                    <li>
+                    @* data-forslag markerer raden for tildelsok.js *@
+                    <li data-forslag>
                         @* Avkrysningsboksene sender id-ene som en liste (ressursIder) til AdminController.Tildel *@
                         <label class="bp-tildel-valg">
                             <input type="checkbox" name="ressursIder" value="@ressurs.Id" />
@@ -64,6 +69,8 @@
                     </li>
                 }
             </ul>
+            @* Vises av tildelsok.js når ingen forslag passer søket *@
+            <p class="bp-oversikt-tom" id="tildel-tom" hidden>Ingen ressurser passer søket. Trykk på krysset i søkefeltet for å se alle.</p>
 
             <div class="mb-3">
                 <label for="kommentar" class="form-label">Kommentar (valgfri)</label>
@@ -79,4 +86,7 @@
 @section Scripts {
     <script src="~/js/kartikoner.js" asp-append-version="true"></script>
     <script src="~/js/ikoner.js" asp-append-version="true"></script>
+    @* sokefelt.js har søkefunksjonene tildelsok.js bruker, så den må komme først. *@
+    <script src="~/js/sokefelt.js" asp-append-version="true"></script>
+    <script src="~/js/tildelsok.js" asp-append-version="true"></script>
 }
